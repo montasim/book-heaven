@@ -57,6 +57,15 @@ export async function POST(request: NextRequest) {
 
         const { email: rawEmail, name: rawName, password } = body
 
+        // Extract firstName and lastName from the name field (for compatibility)
+        // The sign-up form sends 'name' but we'll store it as firstName and lastName
+        const nameParts = rawName.trim().split(/\s+/)
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
+        // For UI compatibility, we'll store firstName and lastName but create a combined name
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName
+
         // Sanitize and validate email
         const email = sanitizeEmail(rawEmail)
         if (!validateEmail(email)) {
@@ -64,7 +73,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Sanitize and validate name
-        const name = sanitizeName(rawName)
+        const name = sanitizeName(fullName)
         if (!validateName(name)) {
             return errorResponse('Invalid name. Name must be between 1 and 100 characters.', 400)
         }
@@ -118,7 +127,8 @@ export async function POST(request: NextRequest) {
             const newAdmin = await tx.admin.create({
                 data: {
                     email,
-                    name,
+                    firstName,
+                    lastName,
                     passwordHash,
                 },
             })
@@ -132,7 +142,8 @@ export async function POST(request: NextRequest) {
         })
 
         // Create authenticated login session (auto-login)
-        await createLoginSession(admin.id, admin.email, admin.name)
+        const fullName = admin.lastName ? `${admin.firstName} ${admin.lastName}` : admin.firstName
+        await createLoginSession(admin.id, admin.email, fullName)
 
         // Return success response
         const response: CreateAccountResponse = {
