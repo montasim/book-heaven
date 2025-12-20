@@ -146,7 +146,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         description: 'Logged in successfully',
       })
 
-      router.push('/')
+      router.push('/dashboard')
       router.refresh()
     } catch (error) {
       console.error('Login error:', error)
