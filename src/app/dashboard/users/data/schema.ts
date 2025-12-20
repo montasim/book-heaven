@@ -18,15 +18,18 @@ export type UserRole = z.infer<typeof userRoleSchema>
 
 export const userSchema = z.object({
   id: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  username: z.string(),
-  email: z.string(),
-  phoneNumber: z.string(),
-  status: userStatusSchema,
-  role: userRoleSchema,
+  name: z.string(), // This comes from Admin.firstName + Admin.lastName (full name)
+  email: z.string().email(),
+  status: userStatusSchema.default('active'), // All registered admins are active
+  role: userRoleSchema.default('admin'), // All admins have admin role for now
   createdAt: z.string(),
   updatedAt: z.string(),
+
+  // All UI fields (derived from Admin model)
+  firstName: z.string(),
+  lastName: z.string().optional(), // Optional field
+  username: z.string(),
+  phoneNumber: z.string().optional(), // Optional field
 })
 export type User = z.infer<typeof userSchema>
 
