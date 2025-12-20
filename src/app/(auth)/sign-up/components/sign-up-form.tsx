@@ -92,6 +92,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const [email, setEmail] = useState('')
   const [otpExpiresAt, setOtpExpiresAt] = useState<string>('')
   const [showResend, setShowResend] = useState(false)
+  const [resendSuccessful, setResendSuccessful] = useState(false)
 
   // Get prefilled data from query parameters
   const prefilledEmail = searchParams?.get('email') || ''
@@ -284,6 +285,42 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
   // Render Resend State
   if (showResend) {
+    // Show success state after resend
+    if (resendSuccessful) {
+      return (
+        <div className={cn('grid gap-6', className)} {...props}>
+          <div className='mb-2 flex flex-col space-y-2 text-left'>
+            <h1 className='text-lg font-semibold tracking-tight'>
+              Invitation Sent
+            </h1>
+            <p className='text-sm text-green-600'>
+              ✅ A new invitation link has been sent to your email address.
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              Please check your email inbox (and spam folder) for further instructions to complete your registration.
+              The invitation link will be valid for 24 hours.
+            </p>
+          </div>
+          <div className='text-center'>
+            <p className='text-xs text-muted-foreground mb-4'>
+              Didn't receive the email? Check your spam folder or try again later.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setShowResend(false)
+                setResendSuccessful(false)
+              }}
+            >
+              Back to Sign Up
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    // Show resend option
     return (
       <div className={cn('grid gap-6', className)} {...props}>
         <div className='mb-2 flex flex-col space-y-2 text-left'>
@@ -307,11 +344,11 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
               })
               const data = await res.json()
               if (res.ok) {
+                setResendSuccessful(true)
                 toast({
-                  title: 'Invitation Sent',
-                  description: 'Check your email for the new link.',
+                  title: 'Invitation Sent Successfully',
+                  description: 'Please check your email inbox (and spam folder) for further instructions to complete your registration.',
                 })
-                // Optional: Change UI to show success state permanently or just toast
               } else {
                 toast({
                   variant: 'destructive',
