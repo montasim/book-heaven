@@ -9,7 +9,10 @@ datasource db {
 model Admin {
   id           String   @id @default(uuid())
   email        String   @unique
-  name         String
+  name         String   @default("") // Keep for backward compatibility
+  firstName    String   @default("")
+  lastName     String?
+  phoneNumber  String?  @unique
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
