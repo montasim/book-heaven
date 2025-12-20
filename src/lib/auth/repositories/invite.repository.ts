@@ -34,8 +34,17 @@ export async function createInvite(data: {
     // Generate secure token
     const token = generateToken()
 
-    return prisma.invite.create({
-        data: {
+    return prisma.invite.upsert({
+        where: { email: data.email },
+        update: {
+            token,
+            invitedBy: data.invitedBy,
+            expiresAt: data.expiresAt,
+            used: false,
+            usedAt: null,
+            createdAt: new Date(),
+        },
+        create: {
             email: data.email,
             token,
             invitedBy: data.invitedBy,
@@ -56,6 +65,15 @@ export async function findValidInviteByToken(token: string) {
                 gt: new Date(),
             },
         },
+    })
+}
+
+/**
+ * Find invite by token (including used)
+ */
+export async function findInviteByToken(token: string) {
+    return prisma.invite.findUnique({
+        where: { token },
     })
 }
 

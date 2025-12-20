@@ -31,7 +31,7 @@ import {
     successResponse,
 } from '@/lib/auth/request-utils'
 import { AuthIntent, SendOtpResponse } from '@/lib/auth/types'
-import { findValidInviteByToken, markInviteAsUsed } from '@/lib/auth/repositories/invite.repository'
+import { findValidInviteByToken, markInviteAsUsed, findInviteByToken } from '@/lib/auth/repositories/invite.repository'
 
 const OTP_EXPIRY_MINUTES = 10
 
@@ -75,9 +75,16 @@ export async function POST(request: NextRequest) {
 
         // Handle Invitation
         if (inviteToken) {
-            const invite = await findValidInviteByToken(inviteToken)
+            let invite = await findValidInviteByToken(inviteToken)
 
+            // If no valid (unused) invite found, check if it's a used invite with an active session
             if (!invite) {
+                const usedInvite = await findInviteByToken(inviteToken)
+
+                if (usedInvite && usedInvite.email === email && usedInvite.used) {
+                    return errorResponse('INVITE_USED', 400)
+                }
+
                 return errorResponse('Invalid or expired invitation token', 400)
             }
 
