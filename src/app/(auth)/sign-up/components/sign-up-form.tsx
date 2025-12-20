@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from '@/hooks/use-toast'
 import { useEffect } from 'react'
 
@@ -65,6 +66,24 @@ const detailsSchema = z
     path: ['confirmPassword'],
   })
 
+const Header = () => (
+  <div className='mb-2 flex flex-col space-y-2 text-left'>
+    <h1 className='text-lg font-semibold tracking-tight'>
+      Create an account
+    </h1>
+    <p className='text-sm text-muted-foreground'>
+      Enter your email and password to create an account. <br />
+      Already have an account?{' '}
+      <Link
+        href='/auth/sign-in'
+        className='underline underline-offset-4 hover:text-primary'
+      >
+        Sign In
+      </Link>
+    </p>
+  </div>
+)
+
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -72,6 +91,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const [step, setStep] = useState<'email' | 'otp' | 'details'>('email')
   const [email, setEmail] = useState('')
   const [otpExpiresAt, setOtpExpiresAt] = useState<string>('')
+  const [showResend, setShowResend] = useState(false)
 
   // Get prefilled data from query parameters
   const prefilledEmail = searchParams?.get('email') || ''
@@ -94,6 +114,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       password: '',
       confirmPassword: '',
     },
+    mode: 'onChange',
   })
 
   // Step 1: Send OTP
@@ -110,11 +131,20 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       const result = await response.json()
 
       if (!response.ok) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.error || 'Failed to send OTP',
-        })
+        if (result.error === 'INVITE_USED') {
+          setShowResend(true)
+          toast({
+            variant: 'destructive',
+            title: 'Invitation Expired',
+            description: 'This invitation link has already been used or expired.',
+          })
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: result.error || 'Failed to send OTP',
+          })
+        }
         return
       }
 
@@ -122,6 +152,11 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       setOtpExpiresAt(result.expiresAt)
 
       if (result.sessionCreated) {
+        detailsForm.reset({
+          name: '',
+          password: '',
+          confirmPassword: '',
+        })
         setStep('details')
         toast({
           title: 'Verified',
@@ -178,6 +213,11 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
         return
       }
 
+      detailsForm.reset({
+        name: '',
+        password: '',
+        confirmPassword: '',
+      })
       setStep('details')
 
       toast({
@@ -242,10 +282,62 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
     }
   }
 
+  // Render Resend State
+  if (showResend) {
+    return (
+      <div className={cn('grid gap-6', className)} {...props}>
+        <div className='mb-2 flex flex-col space-y-2 text-left'>
+          <h1 className='text-lg font-semibold tracking-tight'>
+            Create an account
+          </h1>
+          <p className='text-sm text-destructive'>This invitation link has already been used or is expired.</p>
+          <p className='text-sm text-muted-foreground'>
+            Would you like to request a new invitation link?
+          </p>
+        </div>
+        <Button
+          className="w-full"
+          onClick={async () => {
+            setIsLoading(true)
+            try {
+              const res = await fetch('/api/auth/invite/resend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: inviteToken }),
+              })
+              const data = await res.json()
+              if (res.ok) {
+                toast({
+                  title: 'Invitation Sent',
+                  description: 'Check your email for the new link.',
+                })
+                // Optional: Change UI to show success state permanently or just toast
+              } else {
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: data.error,
+                })
+              }
+            } catch (e) {
+              toast({ variant: 'destructive', title: 'Error', description: 'Failed to resend' })
+            } finally {
+              setIsLoading(false)
+            }
+          }}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Sending...' : 'Resend Invitation'}
+        </Button>
+      </div>
+    )
+  }
+
   // Render Step 1: Email Input
   if (step === 'email') {
     return (
       <div className={cn('grid gap-6', className)} {...props}>
+        <Header />
         <Form {...emailForm}>
           <form onSubmit={emailForm.handleSubmit(onEmailSubmit)}>
             <div className='grid gap-2'>
@@ -276,6 +368,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   if (step === 'otp') {
     return (
       <div className={cn('grid gap-6', className)} {...props}>
+        <Header />
         <div className='mb-4'>
           <p className='text-sm text-muted-foreground'>
             We sent a 7-digit code to <strong>{email}</strong>
@@ -322,6 +415,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   // Render Step 3: Account Details
   return (
     <div className={cn('grid gap-6', className)} {...props}>
+      <Header />
       <Form {...detailsForm}>
         <form onSubmit={detailsForm.handleSubmit(onDetailsSubmit)}>
           <div className='grid gap-2'>
@@ -332,7 +426,13 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                 <FormItem className='space-y-1'>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder='John Doe' {...field} />
+                    <Input
+                      placeholder='John Doe'
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
