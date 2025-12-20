@@ -7,10 +7,10 @@
  */
 
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import {
     validateEmail,
     sanitizeEmail,
-    validateRequiredFields,
 } from '@/lib/auth/validation'
 import {
     adminExists,
@@ -20,13 +20,19 @@ import {
     createInvite,
 } from '@/lib/auth/repositories/invite.repository'
 import {
-    getClientIp,
     parseRequestBody,
     errorResponse,
     successResponse,
 } from '@/lib/auth/request-utils'
 import { getSession } from '@/lib/auth/session'
 import { sendInvitationEmail } from '@/lib/auth/email'
+
+// Added inviteSchema for validation
+const inviteSchema = z.object({
+    email: z.string().email(),
+    role: z.string().min(1, 'Role is required'),
+    desc: z.string().optional(),
+})
 
 export async function POST(request: NextRequest) {
     try {
@@ -36,14 +42,12 @@ export async function POST(request: NextRequest) {
             return errorResponse('Unauthorized', 401)
         }
 
-        // 2. Parse Validations
-        const body = await parseRequestBody(request)
-        const validationError = validateRequiredFields(body, ['email'])
-        if (validationError) {
-            return errorResponse(validationError, 400)
-        }
+        // Ensure only admins can invite
+        // TODO: Verify if user has permission to invite
 
-        const { email: rawEmail } = body
+        // 2. Parse and Validate Request Body using Zod
+        const body = await parseRequestBody(request)
+        const { email: rawEmail, role, desc } = inviteSchema.parse(body)
         const email = sanitizeEmail(rawEmail)
 
         if (!validateEmail(email)) {
@@ -65,31 +69,31 @@ export async function POST(request: NextRequest) {
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + 7) // 7 days expiry
 
-        const invite = await createInvite({
+        const newInvite = await createInvite({
             email,
-            invitedBy: session.adminId, // Assuming session has adminId
+            invitedBy: session.email,
+            role,
+            desc,
             expiresAt,
         })
 
         // 6. Send Email
         try {
-            await sendInvitationEmail(email, invite.token)
+            await sendInvitationEmail(newInvite.email, newInvite.token, role, desc)
         } catch (emailError) {
             console.error('Failed to send invitation email:', emailError)
-            // We might want to rollback invite or just warn. 
-            // For now, returning success but logging error, or erroring?
-            // Spec says "Return success response". 
-            // But if email fails, user can't register.
-            // Let's error so admin can retry.
             return errorResponse('Failed to send invitation email', 500)
         }
 
         return successResponse({
             success: true,
-            inviteId: invite.id,
+            inviteId: newInvite.id,
         })
     } catch (error) {
         console.error('Create invitation error:', error)
+        if (error instanceof z.ZodError) {
+            return errorResponse(error.message, 400)
+        }
         return errorResponse('An error occurred', 500)
     }
 }

@@ -26,29 +26,40 @@ export async function activeInviteExists(email: string) {
 /**
  * Create a new invite
  */
-export async function createInvite(data: {
+export async function createInvite({
+    email,
+    invitedBy,
+    role,
+    desc,
+    expiresAt,
+}: {
     email: string
     invitedBy: string
+    role: string
+    desc?: string
     expiresAt: Date
 }) {
-    // Generate secure token
     const token = generateToken()
 
     return prisma.invite.upsert({
-        where: { email: data.email },
+        where: { email },
         update: {
             token,
-            invitedBy: data.invitedBy,
-            expiresAt: data.expiresAt,
+            invitedBy,
+            role,
+            desc,
+            expiresAt,
             used: false,
             usedAt: null,
-            createdAt: new Date(),
+            createdAt: new Date(), // Reset created at to show it's "new"
         },
         create: {
-            email: data.email,
+            email,
             token,
-            invitedBy: data.invitedBy,
-            expiresAt: data.expiresAt,
+            invitedBy,
+            role,
+            desc,
+            expiresAt,
         },
     })
 }

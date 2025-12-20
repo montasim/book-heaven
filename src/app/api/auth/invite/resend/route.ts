@@ -50,11 +50,13 @@ export async function POST(request: NextRequest) {
         const newInvite = await createInvite({
             email: invite.email,
             invitedBy: invite.invitedBy,
+            role: invite.role,
+            desc: invite.desc || undefined,
             expiresAt,
         })
 
         // 4. Send email
-        await sendInvitationEmail(newInvite.email, newInvite.token)
+        await sendInvitationEmail(newInvite.email, newInvite.token, newInvite.role, newInvite.desc || undefined)
 
         return successResponse({
             success: true,

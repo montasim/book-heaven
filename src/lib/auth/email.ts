@@ -224,11 +224,14 @@ export async function sendPasswordResetOtp(
 /**
  * Generate invitation email HTML
  */
-function getInvitationEmailTemplate(inviteLink: string): {
+function getInvitationEmailTemplate(inviteLink: string, role?: string, desc?: string): {
   subject: string
   html: string
   text: string
 } {
+  const roleText = role ? ` as a <strong>${role}</strong>` : ''
+  const descText = desc ? `<p style="font-size: 14px; color: #666; font-style: italic; background: #f9f9f9; padding: 10px; border-left: 3px solid #11998e; margin: 20px 0;">"${desc}"</p>` : ''
+
   return {
     subject: `${APP_NAME} - You've been invited!`,
     html: `
@@ -245,7 +248,11 @@ function getInvitationEmailTemplate(inviteLink: string): {
           </div>
           <div style="background: #ffffff; padding: 40px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
             <h2 style="color: #333; margin-top: 0;">You've Been Invited!</h2>
-            <p style="font-size: 16px; color: #666;">You've been invited to join ${APP_NAME} as an admin. Click the button below to create your account:</p>
+            <p style="font-size: 16px; color: #666;">You've been invited to join ${APP_NAME}${roleText}.</p>
+            
+            ${descText}
+
+            <p style="font-size: 16px; color: #666;">Click the button below to create your account:</p>
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${inviteLink}" style="background-color: #11998e; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">Create Account</a>
@@ -264,8 +271,9 @@ function getInvitationEmailTemplate(inviteLink: string): {
     text: `
 ${APP_NAME} - You've been invited!
 
-You've been invited to join ${APP_NAME} as an admin.
+You've been invited to join ${APP_NAME}${role ? ` as a ${role}` : ''}.
 
+${desc ? `Note: ${desc}\n` : ''}
 Click here to create your account: ${inviteLink}
 
 Your invite expires in 7 days.
@@ -280,10 +288,12 @@ Your invite expires in 7 days.
  */
 export async function sendInvitationEmail(
   email: string,
-  token: string
+  token: string,
+  role?: string,
+  desc?: string
 ): Promise<boolean> {
   const inviteLink = `${BASE_URL}/sign-up?token=${token}&email=${encodeURIComponent(email)}`
-  const { subject, html, text } = getInvitationEmailTemplate(inviteLink)
+  const { subject, html, text } = getInvitationEmailTemplate(inviteLink, role, desc)
 
   try {
     const { error } = await resend.emails.send({
