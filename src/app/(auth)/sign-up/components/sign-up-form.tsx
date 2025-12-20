@@ -301,7 +301,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
               The invitation link will be valid for 24 hours.
             </p>
           </div>
-          <div className='text-center'>
+          <div className=''>
             <p className='text-xs text-muted-foreground mb-4'>
               Didn't receive the email? Check your spam folder or try again later.
             </p>
