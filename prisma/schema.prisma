@@ -46,6 +46,8 @@ model Invite {
   email     String    @unique
   token     String    @unique
   invitedBy String
+  role      String    @default("admin") // Defaulting for migration safety, though should be required
+  desc      String?
   expiresAt DateTime
   used      Boolean   @default(false)
   createdAt DateTime  @default(now())
