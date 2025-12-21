@@ -14,13 +14,13 @@ export const publicationSchema = z.object({
 export const createPublicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 export const updatePublicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 // Types

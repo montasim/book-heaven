@@ -33,11 +33,11 @@ export const bookSchema = z.object({
 
 export const createBookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.string().optional().nullable(),
-  fileUrl: z.string().optional().nullable(),
+  fileUrl: z.union([z.string(), z.any()]).optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -73,7 +73,7 @@ export const createBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for eBooks',
+        message: 'File is required for eBooks',
         path: ['fileUrl'],
       });
     }
@@ -81,7 +81,7 @@ export const createBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for audio books',
+        message: 'File is required for audio books',
         path: ['fileUrl'],
       });
     }
@@ -90,11 +90,11 @@ export const createBookSchema = z.object({
 
 export const updateBookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.string().optional().nullable(),
-  fileUrl: z.string().optional().nullable(),
+  fileUrl: z.union([z.string(), z.any()]).optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -130,7 +130,7 @@ export const updateBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for eBooks',
+        message: 'File is required for eBooks',
         path: ['fileUrl'],
       });
     }
@@ -138,7 +138,7 @@ export const updateBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for audio books',
+        message: 'File is required for audio books',
         path: ['fileUrl'],
       });
     }
