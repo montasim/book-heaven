@@ -5,6 +5,9 @@ export const bookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   image: z.string().optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
+  bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
+  pageNumber: z.number().optional().nullable(),
+  fileUrl: z.string().optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.number().nullable(),
   sellingPrice: z.number().nullable(),
@@ -32,6 +35,9 @@ export const createBookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   image: z.string().optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
+  bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
+  pageNumber: z.string().optional().nullable(),
+  fileUrl: z.string().optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -40,12 +46,55 @@ export const createBookSchema = z.object({
   authorIds: z.array(z.string()).min(1, 'At least one author is required'),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
   categoryIds: z.array(z.string()).optional(),
-})
+}).superRefine((data, ctx) => {
+  if (data.type === 'HARD_COPY') {
+    if (!data.bindingType) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Binding type is required for hard copy books',
+        path: ['bindingType'],
+      });
+    }
+    if (!data.pageNumber || isNaN(Number(data.pageNumber)) || Number(data.pageNumber) <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Page number is required and must be a positive number',
+        path: ['pageNumber'],
+      });
+    }
+  } else if (data.type === 'EBOOK') {
+    if (!data.pageNumber || isNaN(Number(data.pageNumber)) || Number(data.pageNumber) <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Page number is required and must be a positive number',
+        path: ['pageNumber'],
+      });
+    }
+    if (!data.fileUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'File URL is required for eBooks',
+        path: ['fileUrl'],
+      });
+    }
+  } else if (data.type === 'AUDIO') {
+    if (!data.fileUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'File URL is required for audio books',
+        path: ['fileUrl'],
+      });
+    }
+  }
+});
 
 export const updateBookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   image: z.string().optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
+  bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
+  pageNumber: z.string().optional().nullable(),
+  fileUrl: z.string().optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -54,7 +103,47 @@ export const updateBookSchema = z.object({
   authorIds: z.array(z.string()).min(1, 'At least one author is required'),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
   categoryIds: z.array(z.string()).optional(),
-})
+}).superRefine((data, ctx) => {
+  if (data.type === 'HARD_COPY') {
+    if (!data.bindingType) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Binding type is required for hard copy books',
+        path: ['bindingType'],
+      });
+    }
+    if (!data.pageNumber || isNaN(Number(data.pageNumber)) || Number(data.pageNumber) <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Page number is required and must be a positive number',
+        path: ['pageNumber'],
+      });
+    }
+  } else if (data.type === 'EBOOK') {
+    if (!data.pageNumber || isNaN(Number(data.pageNumber)) || Number(data.pageNumber) <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Page number is required and must be a positive number',
+        path: ['pageNumber'],
+      });
+    }
+    if (!data.fileUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'File URL is required for eBooks',
+        path: ['fileUrl'],
+      });
+    }
+  } else if (data.type === 'AUDIO') {
+    if (!data.fileUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'File URL is required for audio books',
+        path: ['fileUrl'],
+      });
+    }
+  }
+});
 
 // Types
 export type Book = z.infer<typeof bookSchema>
