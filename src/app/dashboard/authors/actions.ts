@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
+import { uploadFile, deleteFile } from '@/lib/google-drive'
 
 // Repository imports
 import {
@@ -32,13 +33,13 @@ const authorSchema = z.object({
 const createAuthorSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 const updateAuthorSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 // Types
@@ -122,7 +123,7 @@ export async function createAuthor(formData: FormData) {
     const rawData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
     }
 
     const validatedData = createAuthorSchema.parse(rawData)
@@ -133,11 +134,19 @@ export async function createAuthor(formData: FormData) {
       throw new Error('An author with this name already exists')
     }
 
+    // Handle file upload
+    let imageUrl = null
+    if (validatedData.image instanceof File) {
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+    } else if (typeof validatedData.image === 'string') {
+      imageUrl = validatedData.image
+    }
+
     // Create author
     await createAuthorInDb({
       name: validatedData.name,
       description: validatedData.description,
-      image: validatedData.image,
+      image: imageUrl || undefined,
       entryById: session.adminId,
     })
 
@@ -157,11 +166,17 @@ export async function updateAuthor(id: string, formData: FormData) {
     // Get authenticated admin
     const session = await requireAuth()
 
+    // Get existing author to handle file deletions
+    const existingAuthor = await getAuthorByIdFromDb(id)
+    if (!existingAuthor) {
+      throw new Error('Author not found')
+    }
+
     // Extract and validate form data
     const rawData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
     }
 
     const validatedData = updateAuthorSchema.parse(rawData)
@@ -172,11 +187,31 @@ export async function updateAuthor(id: string, formData: FormData) {
       throw new Error('An author with this name already exists')
     }
 
+    // Handle file upload and deletion
+    let imageUrl = existingAuthor.image
+    if (validatedData.image instanceof File) {
+      // Upload new file
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      // Delete old file if it exists
+      if (existingAuthor.image) {
+        await deleteFile(existingAuthor.image)
+      }
+    } else if (validatedData.image === '' || validatedData.image === null) {
+      // If image is explicitly removed
+      if (existingAuthor.image) {
+        await deleteFile(existingAuthor.image)
+      }
+      imageUrl = null
+    } else if (typeof validatedData.image === 'string') {
+      // Keep existing URL
+      imageUrl = validatedData.image
+    }
+
     // Update author
     await updateAuthorInDb(id, {
       name: validatedData.name,
       description: validatedData.description,
-      image: validatedData.image,
+      image: imageUrl || undefined,
     })
 
     revalidatePath('/dashboard/authors')
@@ -192,6 +227,12 @@ export async function updateAuthor(id: string, formData: FormData) {
  */
 export async function deleteAuthor(id: string) {
   try {
+    // Get existing author to handle file deletions
+    const existingAuthor = await getAuthorByIdFromDb(id)
+    if (existingAuthor && existingAuthor.image) {
+      await deleteFile(existingAuthor.image)
+    }
+
     await deleteAuthorFromDb(id)
     revalidatePath('/dashboard/authors')
     return { message: 'Author deleted successfully' }

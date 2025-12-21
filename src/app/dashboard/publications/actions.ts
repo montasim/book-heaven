@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
+import { uploadFile, deleteFile } from '@/lib/google-drive'
 
 // Repository imports
 import {
@@ -32,13 +33,13 @@ const publicationSchema = z.object({
 const createPublicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 const updatePublicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 // Types
@@ -122,7 +123,7 @@ export async function createPublication(formData: FormData) {
     const rawData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
     }
 
     const validatedData = createPublicationSchema.parse(rawData)
@@ -133,11 +134,19 @@ export async function createPublication(formData: FormData) {
       throw new Error('A publication with this name already exists')
     }
 
+    // Handle file upload
+    let imageUrl = null
+    if (validatedData.image instanceof File) {
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+    } else if (typeof validatedData.image === 'string') {
+      imageUrl = validatedData.image
+    }
+
     // Create publication
     await createPublicationInDb({
       name: validatedData.name,
       description: validatedData.description,
-      image: validatedData.image,
+      image: imageUrl || undefined,
       entryById: session.adminId,
     })
 
@@ -157,11 +166,17 @@ export async function updatePublication(id: string, formData: FormData) {
     // Get authenticated admin
     const session = await requireAuth()
 
+    // Get existing publication to handle file deletions
+    const existingPublication = await getPublicationByIdFromDb(id)
+    if (!existingPublication) {
+      throw new Error('Publication not found')
+    }
+
     // Extract and validate form data
     const rawData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
     }
 
     const validatedData = updatePublicationSchema.parse(rawData)
@@ -172,11 +187,31 @@ export async function updatePublication(id: string, formData: FormData) {
       throw new Error('A publication with this name already exists')
     }
 
+    // Handle file upload and deletion
+    let imageUrl = existingPublication.image
+    if (validatedData.image instanceof File) {
+      // Upload new file
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      // Delete old file if it exists
+      if (existingPublication.image) {
+        await deleteFile(existingPublication.image)
+      }
+    } else if (validatedData.image === '' || validatedData.image === null) {
+      // If image is explicitly removed
+      if (existingPublication.image) {
+        await deleteFile(existingPublication.image)
+      }
+      imageUrl = null
+    } else if (typeof validatedData.image === 'string') {
+      // Keep existing URL
+      imageUrl = validatedData.image
+    }
+
     // Update publication
     await updatePublicationInDb(id, {
       name: validatedData.name,
       description: validatedData.description,
-      image: validatedData.image,
+      image: imageUrl || undefined,
     })
 
     revalidatePath('/dashboard/publications')
@@ -192,6 +227,12 @@ export async function updatePublication(id: string, formData: FormData) {
  */
 export async function deletePublication(id: string) {
   try {
+    // Get existing publication to handle file deletions
+    const existingPublication = await getPublicationByIdFromDb(id)
+    if (existingPublication && existingPublication.image) {
+      await deleteFile(existingPublication.image)
+    }
+
     await deletePublicationFromDb(id)
     revalidatePath('/dashboard/publications')
     return { message: 'Publication deleted successfully' }

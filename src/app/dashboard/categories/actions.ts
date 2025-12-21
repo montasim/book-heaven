@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
+import { uploadFile, deleteFile } from '@/lib/google-drive'
 
 // Repository imports
 import {
@@ -33,13 +34,13 @@ const categorySchema = z.object({
 const createCategorySchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 const updateCategorySchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 // Types
@@ -135,7 +136,7 @@ export async function createCategory(formData: FormData) {
     const rawData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
     }
 
     const validatedData = createCategorySchema.parse(rawData)
@@ -146,11 +147,19 @@ export async function createCategory(formData: FormData) {
       throw new Error('A category with this name already exists')
     }
 
+    // Handle file upload
+    let imageUrl = null
+    if (validatedData.image instanceof File) {
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+    } else if (typeof validatedData.image === 'string') {
+      imageUrl = validatedData.image
+    }
+
     // Create category
     await createCategoryInDb({
       name: validatedData.name,
       description: validatedData.description,
-      image: validatedData.image,
+      image: imageUrl || undefined,
       entryById: session.adminId,
     })
 
@@ -170,11 +179,17 @@ export async function updateCategory(id: string, formData: FormData) {
     // Get authenticated admin
     const session = await requireAuth()
 
+    // Get existing category to handle file deletions
+    const existingCategory = await getCategoryByIdFromDb(id)
+    if (!existingCategory) {
+      throw new Error('Category not found')
+    }
+
     // Extract and validate form data
     const rawData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
     }
 
     const validatedData = updateCategorySchema.parse(rawData)
@@ -185,11 +200,31 @@ export async function updateCategory(id: string, formData: FormData) {
       throw new Error('A category with this name already exists')
     }
 
+    // Handle file upload and deletion
+    let imageUrl = existingCategory.image
+    if (validatedData.image instanceof File) {
+      // Upload new file
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      // Delete old file if it exists
+      if (existingCategory.image) {
+        await deleteFile(existingCategory.image)
+      }
+    } else if (validatedData.image === '' || validatedData.image === null) {
+      // If image is explicitly removed
+      if (existingCategory.image) {
+        await deleteFile(existingCategory.image)
+      }
+      imageUrl = null
+    } else if (typeof validatedData.image === 'string') {
+      // Keep existing URL
+      imageUrl = validatedData.image
+    }
+
     // Update category
     await updateCategoryInDb(id, {
       name: validatedData.name,
       description: validatedData.description,
-      image: validatedData.image,
+      image: imageUrl || undefined,
     })
 
     revalidatePath('/dashboard/categories')
@@ -205,6 +240,12 @@ export async function updateCategory(id: string, formData: FormData) {
  */
 export async function deleteCategory(id: string) {
   try {
+    // Get existing category to handle file deletions
+    const existingCategory = await getCategoryByIdFromDb(id)
+    if (existingCategory && existingCategory.image) {
+      await deleteFile(existingCategory.image)
+    }
+
     await deleteCategoryFromDb(id)
     revalidatePath('/dashboard/categories')
     return { message: 'Category deleted successfully' }

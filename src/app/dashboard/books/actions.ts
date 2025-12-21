@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
+import { uploadFile, deleteFile } from '@/lib/google-drive'
 
 // Repository imports
 import {
@@ -51,11 +52,11 @@ const bookSchema = z.object({
 
 const createBookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.string().optional().nullable(),
-  fileUrl: z.string().optional().nullable(),
+  fileUrl: z.union([z.string(), z.any()]).optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -91,7 +92,7 @@ const createBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for eBooks',
+        message: 'File is required for eBooks',
         path: ['fileUrl'],
       });
     }
@@ -99,7 +100,7 @@ const createBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for audio books',
+        message: 'File is required for audio books',
         path: ['fileUrl'],
       });
     }
@@ -108,11 +109,11 @@ const createBookSchema = z.object({
 
 const updateBookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.string().optional().nullable(),
-  fileUrl: z.string().optional().nullable(),
+  fileUrl: z.union([z.string(), z.any()]).optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -148,7 +149,7 @@ const updateBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for eBooks',
+        message: 'File is required for eBooks',
         path: ['fileUrl'],
       });
     }
@@ -156,7 +157,7 @@ const updateBookSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for audio books',
+        message: 'File is required for audio books',
         path: ['fileUrl'],
       });
     }
@@ -327,11 +328,11 @@ export async function createBook(formData: FormData) {
     // Extract and validate form data
     const rawData = {
       name: formData.get('name') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
       type: formData.get('type') as 'HARD_COPY' | 'EBOOK' | 'AUDIO',
       bindingType: formData.get('bindingType') as 'HARDCOVER' | 'PAPERBACK' | undefined | null,
       pageNumber: formData.get('pageNumber') as string | undefined | null,
-      fileUrl: formData.get('fileUrl') as string | undefined | null,
+      fileUrl: formData.get('fileUrl'),
       summary: formData.get('summary') as string,
       buyingPrice: formData.get('buyingPrice') as string,
       sellingPrice: formData.get('sellingPrice') as string,
@@ -349,14 +350,29 @@ export async function createBook(formData: FormData) {
 
     const validatedData = createBookSchema.parse(rawData)
 
+    // Handle file uploads
+    let imageUrl = null
+    if (validatedData.image instanceof File) {
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+    } else if (typeof validatedData.image === 'string') {
+      imageUrl = validatedData.image
+    }
+
+    let fileUrl = null
+    if (validatedData.fileUrl instanceof File) {
+      fileUrl = await uploadFile(validatedData.fileUrl, process.env.GOOGLE_DRIVE_FOLDER_ID)
+    } else if (typeof validatedData.fileUrl === 'string') {
+      fileUrl = validatedData.fileUrl
+    }
+
     // Convert string values to appropriate types
     const processedData = {
       name: validatedData.name,
-      image: validatedData.image || null,
+      image: imageUrl,
       type: validatedData.type,
       bindingType: validatedData.bindingType || null,
       pageNumber: validatedData.pageNumber ? parseInt(validatedData.pageNumber) : null,
-      fileUrl: validatedData.fileUrl || null,
+      fileUrl: fileUrl,
       summary: validatedData.summary || null,
       buyingPrice: validatedData.buyingPrice ? parseFloat(validatedData.buyingPrice) : null,
       sellingPrice: validatedData.sellingPrice ? parseFloat(validatedData.sellingPrice) : null,
@@ -387,14 +403,20 @@ export async function updateBook(id: string, formData: FormData) {
     // Get authenticated admin
     const session = await requireAuth()
 
+    // Get existing book to handle file deletions
+    const existingBook = await getBookByIdFromDb(id)
+    if (!existingBook) {
+      throw new Error('Book not found')
+    }
+
     // Extract and validate form data
     const rawData = {
       name: formData.get('name') as string,
-      image: formData.get('image') as string,
+      image: formData.get('image'),
       type: formData.get('type') as 'HARD_COPY' | 'EBOOK' | 'AUDIO',
       bindingType: formData.get('bindingType') as 'HARDCOVER' | 'PAPERBACK' | undefined | null,
       pageNumber: formData.get('pageNumber') as string | undefined | null,
-      fileUrl: formData.get('fileUrl') as string | undefined | null,
+      fileUrl: formData.get('fileUrl'),
       summary: formData.get('summary') as string,
       buyingPrice: formData.get('buyingPrice') as string,
       sellingPrice: formData.get('sellingPrice') as string,
@@ -412,14 +434,53 @@ export async function updateBook(id: string, formData: FormData) {
 
     const validatedData = updateBookSchema.parse(rawData)
 
+    // Handle file uploads and deletions
+    let imageUrl = existingBook.image
+    if (validatedData.image instanceof File) {
+      // Upload new file
+      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      // Delete old file if it exists
+      if (existingBook.image) {
+        await deleteFile(existingBook.image)
+      }
+    } else if (validatedData.image === '' || validatedData.image === null) {
+      // If image is explicitly removed
+      if (existingBook.image) {
+        await deleteFile(existingBook.image)
+      }
+      imageUrl = null
+    } else if (typeof validatedData.image === 'string') {
+      // Keep existing URL
+      imageUrl = validatedData.image
+    }
+
+    let fileUrl = existingBook.fileUrl
+    if (validatedData.fileUrl instanceof File) {
+      // Upload new file
+      fileUrl = await uploadFile(validatedData.fileUrl, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      // Delete old file if it exists
+      if (existingBook.fileUrl) {
+        await deleteFile(existingBook.fileUrl)
+      }
+    } else if (validatedData.fileUrl === '' || validatedData.fileUrl === null) {
+      // If file is explicitly removed
+      if (existingBook.fileUrl) {
+        await deleteFile(existingBook.fileUrl)
+      }
+      fileUrl = null
+    } else if (typeof validatedData.fileUrl === 'string') {
+      // Keep existing URL
+      fileUrl = validatedData.fileUrl
+    }
+
     // Convert string values to appropriate types
     const processedData = {
       name: validatedData.name,
-      image: validatedData.image || null,
+      image: imageUrl,
       type: validatedData.type,
       bindingType: validatedData.bindingType || null,
       pageNumber: validatedData.pageNumber ? parseInt(validatedData.pageNumber) : null,
-      fileUrl: validatedData.fileUrl || null,
+      fileUrl: fileUrl,
       summary: validatedData.summary || null,
       buyingPrice: validatedData.buyingPrice ? parseFloat(validatedData.buyingPrice) : null,
       sellingPrice: validatedData.sellingPrice ? parseFloat(validatedData.sellingPrice) : null,
@@ -446,6 +507,17 @@ export async function updateBook(id: string, formData: FormData) {
  */
 export async function deleteBook(id: string) {
   try {
+    // Get existing book to handle file deletions
+    const existingBook = await getBookByIdFromDb(id)
+    if (existingBook) {
+      if (existingBook.image) {
+        await deleteFile(existingBook.image)
+      }
+      if (existingBook.fileUrl) {
+        await deleteFile(existingBook.fileUrl)
+      }
+    }
+
     await deleteBookFromDb(id)
     revalidatePath('/dashboard/books')
     return { message: 'Book deleted successfully' }
