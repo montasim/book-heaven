@@ -12,12 +12,36 @@ model Admin {
   name         String   @default("") // Keep for backward compatibility
   firstName    String   @default("")
   lastName     String?
+  username     String?   @unique
+  bio          String?
+  urls         Json?     @default("[]") // [{value: string}]
   phoneNumber  String?  @unique
+
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  
+  // Account Settings
+  dob          DateTime?
+  language     String?
+  
+  // Appearance Settings
+  theme        String?   @default("light")
+  font         String?   @default("inter")
+  
+  // Display Settings
+  displayItems Json?     @default("[\"recents\", \"home\", \"applications\", \"desktop\", \"downloads\", \"documents\"]")
+  
+  // Notification Settings
+  notificationType    String?   @default("all")
+  mobileNotifications Boolean?  @default(false)
+  communicationEmails Boolean?  @default(false)
+  socialEmails        Boolean?  @default(false)
+  marketingEmails     Boolean?  @default(false)
+  securityEmails      Boolean?  @default(true)
 
   @@map("admins")
+
 }
 
 model AdminOtp {
