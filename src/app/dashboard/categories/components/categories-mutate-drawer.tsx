@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { MDXEditor } from '@/components/ui/mdx-editor'
 import {
   Sheet,
@@ -33,6 +32,7 @@ import {
 } from '../actions'
 import { cn } from '@/lib/utils'
 import { IconLoader2, IconCheck, IconX } from '@tabler/icons-react'
+import { ImageUpload } from '@/components/ui/image-upload'
 
 interface Props {
   open: boolean
@@ -44,7 +44,7 @@ interface Props {
 const formSchema = z.object({
   name: z.string().min(1, 'Category name is required.'),
   description: z.string().optional(),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
 })
 
 type CategoryForm = z.infer<typeof formSchema>
@@ -52,6 +52,7 @@ type CategoryForm = z.infer<typeof formSchema>
 export function CategoriesMutateDrawer({ open, onOpenChange, currentRow, onSuccess }: Props) {
   const isUpdate = !!currentRow
 
+  const [loading, setLoading] = useState(false)
   const [checkingFields, setCheckingFields] = useState<Set<string>>(new Set())
   const [fieldAvailability, setFieldAvailability] = useState<{
     name?: boolean
@@ -59,11 +60,7 @@ export function CategoriesMutateDrawer({ open, onOpenChange, currentRow, onSucce
 
   const form = useForm<CategoryForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: isUpdate && currentRow ? {
-      name: currentRow.name || '',
-      description: currentRow.description || '',
-      image: currentRow.image || '',
-    } : {
+    defaultValues: {
       name: '',
       description: '',
       image: '',
@@ -71,21 +68,34 @@ export function CategoriesMutateDrawer({ open, onOpenChange, currentRow, onSucce
     mode: 'onChange',
   })
 
-  // Watch fields for real-time validation
+  useEffect(() => {
+    if (open) {
+      const defaultValues = isUpdate && currentRow ? {
+        name: currentRow.name || '',
+        description: currentRow.description || '',
+        image: currentRow.image || '',
+      } : {
+        name: '',
+        description: '',
+        image: '',
+      };
+      form.reset(defaultValues);
+      if (isUpdate) {
+        setFieldAvailability({ name: true });
+      } else {
+        setFieldAvailability({});
+      }
+    }
+  }, [open, currentRow, isUpdate, form]);
+
   const nameValue = form.watch('name')
 
-  // Check name availability
   useEffect(() => {
     const checkName = async () => {
-      if (!nameValue) return
-
-      // For updates, only check if name has changed
-      if (isUpdate && nameValue === currentRow?.name) {
-        setFieldAvailability(prev => ({ ...prev, name: true }))
+      if (!nameValue || (isUpdate && nameValue === currentRow?.name)) {
+        if (isUpdate) setFieldAvailability(prev => ({ ...prev, name: true }));
         return
       }
-
-      // Only check if field is dirty for new users
       if (!isUpdate && !form.formState.dirtyFields.name) return
 
       const isNameValid = await form.trigger('name')
@@ -118,90 +128,63 @@ export function CategoriesMutateDrawer({ open, onOpenChange, currentRow, onSucce
     }
 
     const timeoutId = setTimeout(() => {
-      if (nameValue) checkName()
+      if (open && nameValue) checkName()
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [nameValue, form, currentRow?.id, isUpdate, currentRow?.name])
-
-  // Initialize validation state for updates
-  useEffect(() => {
-    if (isUpdate && open && currentRow) {
-      // Pre-validate existing data
-      setFieldAvailability({
-        name: true,
-      })
-    }
-  }, [isUpdate, open, currentRow])
-
-  // Check if form should be disabled
-  const isFormDisabled = () => {
-    // If any field is being checked, disable
-    if (checkingFields.size > 0) return true
-
-    // For updates, only validate changed fields
-    if (isUpdate) {
-      // If name changed and failed validation, disable
-      if (nameValue !== currentRow?.name && fieldAvailability.name === false) return true
-    }
-
-    // For new categories, validate all fields
-    if (!isUpdate) {
-      // If name has failed validation, disable
-      if (fieldAvailability.name === false) return true
-    }
-
-    return false
-  }
+  }, [nameValue, form, currentRow?.id, isUpdate, currentRow?.name, open])
 
   const onSubmit = async (data: CategoryForm) => {
+    setLoading(true)
     try {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value)
+        if (value instanceof File) {
+          formData.append(key, value)
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value as string)
+        }
       })
 
       if (isUpdate && currentRow) {
         await updateCategory(currentRow.id, formData)
         toast({
           title: 'Category updated successfully',
-          description: (
-            <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-              <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-            </pre>
-          ),
         })
-        onSuccess?.()
       } else {
         await createCategory(formData)
         toast({
           title: 'Category created successfully',
-          description: (
-            <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-              <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-            </pre>
-          ),
         })
-        onSuccess?.()
       }
-
+      onSuccess?.()
       onOpenChange(false)
-      form.reset()
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: `Failed to ${isUpdate ? 'update' : 'create'} category`,
+        description: error.message || `Failed to ${isUpdate ? 'update' : 'create'} category`,
         variant: 'destructive',
       })
+    } finally {
+      setLoading(false)
     }
+  }
+
+  const isFormDisabled = () => {
+    if (loading || checkingFields.size > 0) return true
+    if (!form.formState.isValid) return true
+    if (fieldAvailability.name === false) return true
+    return false
   }
 
   return (
     <Sheet
       open={open}
       onOpenChange={(v) => {
+        if (!v) {
+          form.reset();
+        }
         onOpenChange(v)
-        form.reset()
       }}
     >
       <SheetContent className='flex flex-col'>
@@ -268,12 +251,13 @@ export function CategoriesMutateDrawer({ open, onOpenChange, currentRow, onSucce
               control={form.control}
               name='image'
               render={({ field }) => (
-                <FormItem className='space-y-1'>
-                  <FormLabel>Image URL</FormLabel>
+                <FormItem>
+                  <FormLabel>Category Image</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      placeholder='Enter image URL'
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      onRemove={() => field.onChange(null)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -289,9 +273,9 @@ export function CategoriesMutateDrawer({ open, onOpenChange, currentRow, onSucce
           <Button
             form='categories-form'
             type='submit'
-            disabled={isFormDisabled() || !form.formState.isValid}
+            disabled={isFormDisabled()}
           >
-            Save changes
+            {loading ? 'Saving...' : 'Save changes'}
           </Button>
         </SheetFooter>
       </SheetContent>

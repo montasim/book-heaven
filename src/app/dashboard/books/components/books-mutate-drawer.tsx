@@ -41,6 +41,8 @@ import { Book } from '../data/schema'
 import { createBook, updateBook, getAuthorsForSelect, getPublicationsForSelect, getCategoriesForSelect, getBookTypesForSelect } from '../actions'
 import { BookType } from '@prisma/client'
 import { MDXEditor } from '@/components/ui/mdx-editor'
+import { ImageUpload } from '@/components/ui/image-upload'
+import { FileUpload } from '@/components/ui/file-upload'
 
 interface Props {
   open: boolean
@@ -51,11 +53,11 @@ interface Props {
 
 const formSchema = z.object({
   name: z.string().min(1, 'Book name is required.'),
-  image: z.string().optional(),
+  image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO'] as const),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional(),
   pageNumber: z.string().optional(),
-  fileUrl: z.string().optional(),
+  fileUrl: z.union([z.string(), z.any()]).optional(),
   summary: z.string().optional(),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
@@ -91,7 +93,7 @@ const formSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for eBooks',
+        message: 'File is required for eBooks',
         path: ['fileUrl'],
       });
     }
@@ -99,7 +101,7 @@ const formSchema = z.object({
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'File URL is required for audio books',
+        message: 'File is required for audio books',
         path: ['fileUrl'],
       });
     }
@@ -143,22 +145,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
 
   const form = useForm<BookForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: isUpdate && currentRow ? {
-      name: currentRow.name || '',
-      image: currentRow.image || '',
-      type: currentRow.type,
-      bindingType: currentRow.bindingType || undefined,
-      pageNumber: currentRow.pageNumber?.toString() || '',
-      fileUrl: currentRow.fileUrl || '',
-      summary: currentRow.summary || '',
-      buyingPrice: currentRow.buyingPrice?.toString() || '',
-      sellingPrice: currentRow.sellingPrice?.toString() || '',
-      numberOfCopies: currentRow.numberOfCopies?.toString() || '',
-      purchaseDate: currentRow.purchaseDate || '',
-      authorIds: currentRow.authors.map(author => author.id) || [],
-      publicationIds: currentRow.publications.map(pub => pub.id) || [],
-      categoryIds: currentRow.categories.map(cat => cat.id) || [],
-    } : {
+    defaultValues: {
       name: '',
       image: '',
       type: 'HARD_COPY',
@@ -176,6 +163,44 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
     },
     mode: 'onChange',
   })
+
+  useEffect(() => {
+    if (open) {
+      const defaultValues = isUpdate && currentRow ? {
+        name: currentRow.name || '',
+        image: currentRow.image || '',
+        type: currentRow.type,
+        bindingType: currentRow.bindingType || undefined,
+        pageNumber: currentRow.pageNumber?.toString() || '',
+        fileUrl: currentRow.fileUrl || '',
+        summary: currentRow.summary || '',
+        buyingPrice: currentRow.buyingPrice?.toString() || '',
+        sellingPrice: currentRow.sellingPrice?.toString() || '',
+        numberOfCopies: currentRow.numberOfCopies?.toString() || '',
+        purchaseDate: currentRow.purchaseDate || '',
+        authorIds: currentRow.authors.map(author => author.id) || [],
+        publicationIds: currentRow.publications.map(pub => pub.id) || [],
+        categoryIds: currentRow.categories.map(cat => cat.id) || [],
+      } : {
+        name: '',
+        image: '',
+        type: 'HARD_COPY',
+        bindingType: undefined,
+        pageNumber: '',
+        fileUrl: '',
+        summary: '',
+        buyingPrice: '',
+        sellingPrice: '',
+        numberOfCopies: '',
+        purchaseDate: '',
+        authorIds: [],
+        publicationIds: [],
+        categoryIds: [],
+      };
+      form.reset(defaultValues);
+      setPurchaseDate(currentRow?.purchaseDate ? new Date(currentRow.purchaseDate) : undefined);
+    }
+  }, [open, currentRow, isUpdate, form]);
 
   const watchType = form.watch('type')
 
@@ -213,24 +238,13 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
     try {
       const formData = new FormData()
 
-      // Convert form data to proper format
       Object.entries(data).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach(item => formData.append(key, item))
-        } else {
-          // Handle conditional fields
-          if (key === 'bindingType' && data.type !== 'HARD_COPY') {
-            return;
-          }
-          if (key === 'pageNumber' && data.type !== 'HARD_COPY' && data.type !== 'EBOOK') {
-            return;
-          }
-          if (key === 'fileUrl' && data.type !== 'EBOOK' && data.type !== 'AUDIO') {
-            return;
-          }
-          if (value !== undefined && value !== null) {
-            formData.append(key, value)
-          }
+        } else if (value instanceof File) {
+          formData.append(key, value)
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value as string)
         }
       })
 
@@ -238,33 +252,21 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         await updateBook(currentRow.id, formData)
         toast({
           title: 'Book updated successfully',
-          description: (
-            <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-              <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-            </pre>
-          ),
         })
-        onSuccess?.()
       } else {
         await createBook(formData)
         toast({
           title: 'Book created successfully',
-          description: (
-            <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-              <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-            </pre>
-          ),
         })
-        onSuccess?.()
       }
 
+      onSuccess?.()
       onOpenChange(false)
-      form.reset()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error)
       toast({
         title: 'Error',
-        description: `Failed to ${isUpdate ? 'update' : 'create'} book`,
+        description: error.message || `Failed to ${isUpdate ? 'update' : 'create'} book`,
         variant: 'destructive',
       })
     } finally {
@@ -272,27 +274,14 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
     }
   }
 
-  const isFormDisabled = () => {
-    if (loading) return true
-
-    const type = watchType
-    const numberOfCopies = form.getValues('numberOfCopies')
-
-    // For HARD_COPY, numberOfCopies is required
-    if (type === 'HARD_COPY' && (!numberOfCopies || parseInt(numberOfCopies) <= 0)) {
-      return true
-    }
-
-    return !form.formState.isValid
-  }
-
   return (
     <Sheet
       open={open}
       onOpenChange={(v) => {
+        if (!v) {
+          form.reset();
+        }
         onOpenChange(v)
-        form.reset()
-        setPurchaseDate(undefined)
       }}
     >
       <SheetContent className='flex flex-col max-w-2xl overflow-y-auto'>
@@ -331,7 +320,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Book Type <span className="text-destructive">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder='Select book type' />
@@ -350,7 +339,6 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
               )}
             />
 
-            {/* Conditional fields */}
             {watchType === 'HARD_COPY' && (
                 <FormField
                   control={form.control}
@@ -358,7 +346,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Binding Type <span className="text-destructive">*</span></FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder='Select binding type' />
@@ -402,9 +390,14 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                   name='fileUrl'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>File URL <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>File Upload <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter file URL' {...field} />
+                        <FileUpload
+                          value={field.value}
+                          onChange={field.onChange}
+                          onRemove={() => field.onChange(null)}
+                          accept={watchType === 'EBOOK' ? '.pdf,.epub' : '.mp3,.wav'}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -417,9 +410,13 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
               name='image'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
+                  <FormLabel>Book Cover Image</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder='Enter image URL' />
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      onRemove={() => field.onChange(null)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -629,7 +626,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
           <Button
             form='books-form'
             type='submit'
-            disabled={isFormDisabled()}
+            disabled={loading || !form.formState.isValid}
           >
             {loading ? 'Saving...' : isUpdate ? 'Update Book' : 'Create Book'}
           </Button>
