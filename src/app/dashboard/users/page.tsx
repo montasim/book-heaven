@@ -56,6 +56,9 @@ export default function Page() {
           </pre>
         ),
       })
+      // Close the delete modal and clear the current row
+      setOpen(null)
+      setCurrentRow(null)
     } catch (error) {
       toast({
         title: 'Error',
@@ -66,7 +69,7 @@ export default function Page() {
   }
 
   return (
-    <UsersContextProvider value={{ open, setOpen, currentRow, setCurrentRow }}>
+    <UsersContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshUsers }}>
       <HeaderContainer>
         <UsersHeader />
       </HeaderContainer>
