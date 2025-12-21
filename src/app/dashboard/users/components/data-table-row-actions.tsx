@@ -20,6 +20,8 @@ import {
 import { useUsersContext } from '../context/users-context'
 import { userTypes } from '../data/data'
 import { userSchema } from '../data/schema'
+import { updateUserRole } from '../actions'
+import { toast } from '@/hooks/use-toast'
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>
@@ -30,7 +32,27 @@ export function DataTableRowActions<TData>({
 }: DataTableRowActionsProps<TData>) {
   const user = userSchema.parse(row.original)
 
-  const { setOpen, setCurrentRow } = useUsersContext()
+  const { setOpen, setCurrentRow, refreshUsers } = useUsersContext()
+
+  const handleRoleChange = async (newRole: string) => {
+    try {
+      await updateUserRole(user.id, newRole)
+      toast({
+        title: 'Role updated successfully',
+        description: `User role has been changed to ${newRole}`,
+      })
+      // Refresh the users list to show the updated role
+      if (refreshUsers) {
+        await refreshUsers()
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update user role',
+        variant: 'destructive',
+      })
+    }
+  }
 
   return (
     <DropdownMenu modal={false}>
@@ -57,7 +79,7 @@ export function DataTableRowActions<TData>({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Role</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={user.role}>
+            <DropdownMenuRadioGroup value={user.role} onValueChange={handleRoleChange}>
               {userTypes.map((role) => (
                 <DropdownMenuRadioItem key={role.value} value={role.value}>
                   {role.label}
