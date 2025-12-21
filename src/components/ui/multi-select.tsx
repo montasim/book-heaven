@@ -59,19 +59,19 @@ export function MultiSelect({
           role='combobox'
           aria-expanded={open}
           className={cn(
-            'w-full justify-between text-left font-normal min-h-[42px]',
+            'w-full justify-between text-left font-normal min-h-[60px] h-auto',
             !selected.length && 'text-muted-foreground',
             className
           )}
         >
-          <div className='flex flex-wrap gap-1 overflow-hidden'>
+          <div className='flex flex-wrap gap-1 p-2 min-h-[36px] items-start flex-1'>
             {selected.length > 0 ? (
               <>
                 {selectedLabels.slice(0, maxVisible).map((label, index) => (
                   <Badge
                     key={selected[index]}
                     variant='secondary'
-                    className='mr-1 mb-1'
+                    className='text-xs'
                   >
                     {label}
                     <button
@@ -92,17 +92,17 @@ export function MultiSelect({
                   </Badge>
                 ))}
                 {selectedLabels.length > maxVisible && (
-                  <Badge variant='secondary' className='mr-1 mb-1'>
+                  <Badge variant='secondary' className='text-xs'>
                     +{selectedLabels.length - maxVisible} more
                   </Badge>
                 )}
               </>
             ) : (
-              <span>{placeholder}</span>
+              <span className='text-sm'>{placeholder}</span>
             )}
           </div>
-          <div className='flex items-center'>
-            <Check className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+          <div className='flex items-center pr-2 pl-2 shrink-0'>
+            <Check className='h-4 w-4 shrink-0 opacity-50' />
           </div>
         </Button>
       </PopoverTrigger>
