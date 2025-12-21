@@ -44,9 +44,28 @@ export function AccountFormClient({ defaultValues }: AccountFormClientProps) {
     defaultValues,
   })
 
+  // Watch form values to detect changes
+  const firstName = form.watch('firstName')
+  const lastName = form.watch('lastName')
+  const dob = form.watch('dob')
+  const language = form.watch('language')
+
+  // Check if any field has changed from default values
+  const firstNameChanged = firstName !== (defaultValues.firstName || '')
+  const lastNameChanged = lastName !== (defaultValues.lastName || '')
+  const dobChanged = dob?.toISOString() !== (defaultValues.dob?.toISOString() || '')
+  const languageChanged = language !== (defaultValues.language || 'en')
+
+  const hasChanges = firstNameChanged || lastNameChanged || dobChanged || languageChanged
+  const isFormValid = form.formState.isValid
+  const hasValidationErrors = Object.keys(form.formState.errors).length > 0
+  const isSubmitting = form.formState.isSubmitting
+
+  const shouldDisableSubmit = !hasChanges || !isFormValid || hasValidationErrors || isSubmitting
+
   async function onSubmit(data: AccountFormValues) {
     const result = await updateAccount(data)
-    
+
     if (result.status === 'error') {
       toast({
         title: 'Error',
@@ -55,7 +74,7 @@ export function AccountFormClient({ defaultValues }: AccountFormClientProps) {
       })
       return
     }
-    
+
     toast({
       title: 'Success',
       description: result.message,
@@ -65,23 +84,40 @@ export function AccountFormClient({ defaultValues }: AccountFormClientProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
-          control={form.control}
-          name='name'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder='Your name' {...field} />
-              </FormControl>
-              <FormDescription>
-                This is the name that will be displayed on your profile and in
-                emails.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className='grid grid-cols-2 gap-4'>
+          <FormField
+            control={form.control}
+            name='firstName'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder='First name' {...field} />
+                </FormControl>
+                <FormDescription>
+                  Your given name.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='lastName'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder='Last name (optional)' {...field} />
+                </FormControl>
+                <FormDescription>
+                  Your family name (optional).
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name='dob'
@@ -112,9 +148,12 @@ export function AccountFormClient({ defaultValues }: AccountFormClientProps) {
                     mode='single'
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date: Date) =>
-                      date > new Date() || date < new Date('1900-01-01')
-                    }
+                    disabled={(date: Date) => {
+                      const today = new Date()
+                      const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate())
+                      const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate())
+                      return date > maxDate || date < minDate
+                    }}
                   />
                 </PopoverContent>
               </Popover>
@@ -188,7 +227,9 @@ export function AccountFormClient({ defaultValues }: AccountFormClientProps) {
             </FormItem>
           )}
         />
-        <Button type='submit'>Update account</Button>
+        <Button type='submit' disabled={shouldDisableSubmit}>
+          {isSubmitting ? 'Updating...' : hasChanges ? 'Update account' : 'No changes made'}
+        </Button>
       </form>
     </Form>
   )

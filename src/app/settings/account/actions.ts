@@ -1,24 +1,31 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth/session'
+import { findAdminById, updateAdmin } from '@/lib/auth/repositories/admin.repository'
 import { accountFormSchema, type AccountFormValues } from './schema'
 
-type GetAccountResult = 
+type GetAccountResult =
   | { status: 'success', data: AccountFormValues }
   | { status: 'error', message: string }
 
 export async function getAccount(): Promise<GetAccountResult> {
   try {
-    // TODO: 実際のデータベースからの取得処理をここに実装
-    // この例では、ダミーデータを返します
+    const session = await requireAuth()
+    const admin = await findAdminById(session.adminId)
+
+    if (!admin) {
+      return { status: 'error', message: 'Admin not found' }
+    }
+
     return {
       status: 'success',
       data: {
-        name: 'Demo User',
-        dob: new Date('1990-01-01'),
-        language: 'en',
-      } as AccountFormValues
+        firstName: admin.firstName || '',
+        lastName: admin.lastName || '',
+        dob: admin.dob ? new Date(admin.dob) : new Date('2000-01-01'),
+        language: admin.language || 'en',
+      }
     }
   } catch (error) {
     return {
@@ -28,26 +35,38 @@ export async function getAccount(): Promise<GetAccountResult> {
   }
 }
 
-type UpdateAccountResult = 
+type UpdateAccountResult =
   | { status: 'success', message: string }
   | { status: 'error', message: string }
 
 export async function updateAccount(data: AccountFormValues): Promise<UpdateAccountResult> {
-  // バリデーション
   const validatedData = accountFormSchema.parse(data)
 
   try {
-    // TODO: 実際のデータベース更新処理をここに実装
-    // この例では、成功したと仮定します
-    
-    // キャッシュの再検証
+    const session = await requireAuth()
+    const currentAdmin = await findAdminById(session.adminId)
+
+    if (!currentAdmin) {
+      return { status: 'error', message: 'Admin not found' }
+    }
+
+    // Update admin with account data
+    await updateAdmin(session.adminId, {
+      firstName: validatedData.firstName,
+      lastName: validatedData.lastName,
+      dob: validatedData.dob,
+      language: validatedData.language,
+    })
+
+    // Revalidate cache
     revalidatePath('/settings/account')
-    
+
     return { status: 'success', message: 'Account updated successfully' }
   } catch (error) {
-    return { 
-      status: 'error', 
-      message: error instanceof Error ? error.message : 'Failed to update account' 
+    console.error('Error updating account:', error)
+    return {
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to update account'
     }
   }
 }
