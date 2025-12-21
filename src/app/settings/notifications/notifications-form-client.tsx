@@ -30,9 +30,33 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
     defaultValues,
   })
 
+  // Watch form values to detect changes
+  const notificationType = form.watch('notificationType')
+  const communicationEmails = form.watch('communicationEmails')
+  const marketingEmails = form.watch('marketingEmails')
+  const socialEmails = form.watch('socialEmails')
+  const mobileNotifications = form.watch('mobileNotifications')
+  const securityEmails = form.watch('securityEmails')
+
+  // Check if any field has changed from default values
+  const notificationTypeChanged = notificationType !== (defaultValues.notificationType || 'all')
+  const communicationEmailsChanged = communicationEmails !== (defaultValues.communicationEmails || false)
+  const marketingEmailsChanged = marketingEmails !== (defaultValues.marketingEmails || false)
+  const socialEmailsChanged = socialEmails !== (defaultValues.socialEmails || false)
+  const mobileNotificationsChanged = mobileNotifications !== (defaultValues.mobileNotifications || false)
+  const securityEmailsChanged = securityEmails !== (defaultValues.securityEmails || true)
+
+  const hasChanges = notificationTypeChanged || communicationEmailsChanged || marketingEmailsChanged ||
+                    socialEmailsChanged || mobileNotificationsChanged || securityEmailsChanged
+  const isFormValid = form.formState.isValid
+  const hasValidationErrors = Object.keys(form.formState.errors).length > 0
+  const isSubmitting = form.formState.isSubmitting
+
+  const shouldDisableSubmit = !hasChanges || !isFormValid || hasValidationErrors || isSubmitting
+
   async function onSubmit(data: NotificationsFormValues) {
     const result = await updateNotifications(data)
-    
+
     if (result.status === 'error') {
       toast({
         title: 'Error',
@@ -41,7 +65,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
       })
       return
     }
-    
+
     toast({
       title: 'Success',
       description: result.message,
@@ -53,7 +77,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
         <FormField
           control={form.control}
-          name='type'
+          name='notificationType'
           render={({ field }) => (
             <FormItem className='space-y-3 relative'>
               <FormLabel>Notify me about...</FormLabel>
@@ -96,7 +120,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
           <div className='space-y-4'>
             <FormField
               control={form.control}
-              name='communication_emails'
+              name='communicationEmails'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
@@ -118,7 +142,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
             />
             <FormField
               control={form.control}
-              name='marketing_emails'
+              name='marketingEmails'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
@@ -140,7 +164,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
             />
             <FormField
               control={form.control}
-              name='social_emails'
+              name='socialEmails'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
@@ -160,7 +184,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
             />
             <FormField
               control={form.control}
-              name='security_emails'
+              name='securityEmails'
               render={({ field }) => (
                 <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
                   <div className='space-y-0.5'>
@@ -184,7 +208,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
         </div>
         <FormField
           control={form.control}
-          name='mobile'
+          name='mobileNotifications'
           render={({ field }) => (
             <FormItem className='flex flex-row items-start space-x-3 space-y-0 relative'>
               <FormControl>
@@ -211,7 +235,9 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
             </FormItem>
           )}
         />
-        <Button type='submit'>Update notifications</Button>
+        <Button type='submit' disabled={shouldDisableSubmit}>
+          {isSubmitting ? 'Updating...' : hasChanges ? 'Update notifications' : 'No changes made'}
+        </Button>
       </form>
     </Form>
   )

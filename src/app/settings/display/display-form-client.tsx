@@ -27,9 +27,23 @@ export function DisplayFormClient({ defaultValues }: DisplayFormClientProps) {
     defaultValues,
   })
 
+  // Watch form values to detect changes
+  const currentItems = form.watch('items')
+
+  // Check if items have changed from default values
+  const defaultItems = defaultValues.items || ["recents", "home", "applications", "desktop", "downloads", "documents"]
+  const itemsChanged = JSON.stringify(currentItems?.sort()) !== JSON.stringify(defaultItems.sort())
+
+  const hasChanges = itemsChanged
+  const isFormValid = form.formState.isValid
+  const hasValidationErrors = Object.keys(form.formState.errors).length > 0
+  const isSubmitting = form.formState.isSubmitting
+
+  const shouldDisableSubmit = !hasChanges || !isFormValid || hasValidationErrors || isSubmitting
+
   async function onSubmit(data: DisplayFormValues) {
     const result = await updateDisplay(data)
-    
+
     if (result.status === 'error') {
       toast({
         title: 'Error',
@@ -38,7 +52,7 @@ export function DisplayFormClient({ defaultValues }: DisplayFormClientProps) {
       })
       return
     }
-    
+
     toast({
       title: 'Success',
       description: result.message,
@@ -96,7 +110,9 @@ export function DisplayFormClient({ defaultValues }: DisplayFormClientProps) {
             </FormItem>
           )}
         />
-        <Button type='submit'>Update display</Button>
+        <Button type='submit' disabled={shouldDisableSubmit}>
+          {isSubmitting ? 'Updating...' : hasChanges ? 'Update display' : 'No changes made'}
+        </Button>
       </form>
     </Form>
   )

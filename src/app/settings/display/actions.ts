@@ -1,22 +1,28 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth/session'
+import { findAdminById, updateAdmin } from '@/lib/auth/repositories/admin.repository'
 import { displayFormSchema, type DisplayFormValues } from './schema'
 
-type GetDisplayResult = 
+type GetDisplayResult =
   | { status: 'success', data: DisplayFormValues }
   | { status: 'error', message: string }
 
 export async function getDisplay(): Promise<GetDisplayResult> {
   try {
-    // TODO: 実際のデータベースからの取得処理をここに実装
-    // この例では、ダミーデータを返します
+    const session = await requireAuth()
+    const admin = await findAdminById(session.adminId)
+
+    if (!admin) {
+      return { status: 'error', message: 'Admin not found' }
+    }
+
     return {
       status: 'success',
       data: {
-        items: ['recents', 'home'],
-      } as DisplayFormValues
+        items: (admin.displayItems as any) || ["recents", "home", "applications", "desktop", "downloads", "documents"],
+      }
     }
   } catch (error) {
     return {
@@ -26,26 +32,35 @@ export async function getDisplay(): Promise<GetDisplayResult> {
   }
 }
 
-type UpdateDisplayResult = 
+type UpdateDisplayResult =
   | { status: 'success', message: string }
   | { status: 'error', message: string }
 
 export async function updateDisplay(data: DisplayFormValues): Promise<UpdateDisplayResult> {
-  // バリデーション
   const validatedData = displayFormSchema.parse(data)
 
   try {
-    // TODO: 実際のデータベース更新処理をここに実装
-    // この例では、成功したと仮定します
-    
-    // キャッシュの再検証
+    const session = await requireAuth()
+    const currentAdmin = await findAdminById(session.adminId)
+
+    if (!currentAdmin) {
+      return { status: 'error', message: 'Admin not found' }
+    }
+
+    // Update admin with display data
+    await updateAdmin(session.adminId, {
+      displayItems: validatedData.items,
+    })
+
+    // Revalidate cache
     revalidatePath('/settings/display')
-    
+
     return { status: 'success', message: 'Display settings updated successfully' }
   } catch (error) {
-    return { 
-      status: 'error', 
-      message: error instanceof Error ? error.message : 'Failed to update display settings' 
+    console.error('Error updating display settings:', error)
+    return {
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to update display settings'
     }
   }
 }

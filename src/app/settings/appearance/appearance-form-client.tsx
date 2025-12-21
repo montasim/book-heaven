@@ -29,9 +29,24 @@ export function AppearanceFormClient({ defaultValues }: AppearanceFormClientProp
     defaultValues,
   })
 
+  // Watch form values to detect changes
+  const font = form.watch('font')
+  const theme = form.watch('theme')
+
+  // Check if any field has changed from default values
+  const fontChanged = font !== (defaultValues.font || 'inter')
+  const themeChanged = theme !== (defaultValues.theme || 'light')
+
+  const hasChanges = fontChanged || themeChanged
+  const isFormValid = form.formState.isValid
+  const hasValidationErrors = Object.keys(form.formState.errors).length > 0
+  const isSubmitting = form.formState.isSubmitting
+
+  const shouldDisableSubmit = !hasChanges || !isFormValid || hasValidationErrors || isSubmitting
+
   async function onSubmit(data: AppearanceFormValues) {
     const result = await updateAppearance(data)
-    
+
     if (result.status === 'error') {
       toast({
         title: 'Error',
@@ -40,7 +55,7 @@ export function AppearanceFormClient({ defaultValues }: AppearanceFormClientProp
       })
       return
     }
-    
+
     toast({
       title: 'Success',
       description: result.message,
@@ -151,7 +166,9 @@ export function AppearanceFormClient({ defaultValues }: AppearanceFormClientProp
           )}
         />
 
-        <Button type='submit'>Update preferences</Button>
+        <Button type='submit' disabled={shouldDisableSubmit}>
+          {isSubmitting ? 'Updating...' : hasChanges ? 'Update preferences' : 'No changes made'}
+        </Button>
       </form>
     </Form>
   )

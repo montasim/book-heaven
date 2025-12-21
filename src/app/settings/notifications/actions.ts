@@ -1,27 +1,33 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth/session'
+import { findAdminById, updateAdmin } from '@/lib/auth/repositories/admin.repository'
 import { notificationsFormSchema, type NotificationsFormValues } from './schema'
 
-type GetNotificationsResult = 
+type GetNotificationsResult =
   | { status: 'success', data: NotificationsFormValues }
   | { status: 'error', message: string }
 
 export async function getNotifications(): Promise<GetNotificationsResult> {
   try {
-    // TODO: 実際のデータベースからの取得処理をここに実装
-    // この例では、ダミーデータを返します
+    const session = await requireAuth()
+    const admin = await findAdminById(session.adminId)
+
+    if (!admin) {
+      return { status: 'error', message: 'Admin not found' }
+    }
+
     return {
       status: 'success',
       data: {
-        type: 'all',
-        communication_emails: false,
-        marketing_emails: false,
-        social_emails: true,
-        security_emails: true,
-        mobile: false,
-      } as NotificationsFormValues
+        notificationType: (admin.notificationType as any) || 'all',
+        mobileNotifications: admin.mobileNotifications || false,
+        communicationEmails: admin.communicationEmails || false,
+        socialEmails: admin.socialEmails || false,
+        marketingEmails: admin.marketingEmails || false,
+        securityEmails: admin.securityEmails !== false, // Default to true
+      }
     }
   } catch (error) {
     return {
@@ -31,26 +37,40 @@ export async function getNotifications(): Promise<GetNotificationsResult> {
   }
 }
 
-type UpdateNotificationsResult = 
+type UpdateNotificationsResult =
   | { status: 'success', message: string }
   | { status: 'error', message: string }
 
 export async function updateNotifications(data: NotificationsFormValues): Promise<UpdateNotificationsResult> {
-  // バリデーション
   const validatedData = notificationsFormSchema.parse(data)
 
   try {
-    // TODO: 実際のデータベース更新処理をここに実装
-    // この例では、成功したと仮定します
-    
-    // キャッシュの再検証
+    const session = await requireAuth()
+    const currentAdmin = await findAdminById(session.adminId)
+
+    if (!currentAdmin) {
+      return { status: 'error', message: 'Admin not found' }
+    }
+
+    // Update admin with notification data
+    await updateAdmin(session.adminId, {
+      notificationType: validatedData.notificationType,
+      mobileNotifications: validatedData.mobileNotifications,
+      communicationEmails: validatedData.communicationEmails,
+      socialEmails: validatedData.socialEmails,
+      marketingEmails: validatedData.marketingEmails,
+      securityEmails: validatedData.securityEmails,
+    })
+
+    // Revalidate cache
     revalidatePath('/settings/notifications')
-    
+
     return { status: 'success', message: 'Notification settings updated successfully' }
   } catch (error) {
-    return { 
-      status: 'error', 
-      message: error instanceof Error ? error.message : 'Failed to update notification settings' 
+    console.error('Error updating notification settings:', error)
+    return {
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to update notification settings'
     }
   }
 }
