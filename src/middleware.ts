@@ -15,25 +15,48 @@ export function middleware(request: NextRequest) {
         pathname.startsWith('/forgot-password') ||
         pathname.startsWith('/otp')
 
+    // Function to validate session cookie format
+    const isValidSessionFormat = (sessionValue: string): boolean => {
+        try {
+            const sessionData = JSON.parse(sessionValue)
+            return sessionData &&
+                   sessionData.adminId &&
+                   sessionData.email &&
+                   sessionData.name
+        } catch {
+            return false
+        }
+    }
+
     // Logic for protected routes
     if (isDashboardRoute) {
-        if (!session) {
-            // Not logged in, redirect to sign-in
-            return NextResponse.redirect(new URL('/auth/sign-in', request.url))
+        if (!session || !isValidSessionFormat(session)) {
+            // Invalid or missing session, delete cookie and redirect to sign-in
+            const response = NextResponse.redirect(new URL('/auth/sign-in', request.url))
+            response.cookies.delete('admin_session')
+            return response
         }
     }
 
     // Logic for authentication routes
     if (isAuthRoute) {
-        if (session) {
-            // Already logged in, redirect to dashboard
+        if (session && isValidSessionFormat(session)) {
+            // Already have valid session, redirect to dashboard
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
     }
 
     // Handle root route
     if (pathname === '/') {
-        return NextResponse.redirect(new URL(session ? '/dashboard' : '/auth/sign-in', request.url))
+        const hasValidSession = session && isValidSessionFormat(session)
+        const response = NextResponse.redirect(new URL(hasValidSession ? '/dashboard' : '/auth/sign-in', request.url))
+
+        // If session is invalid, delete it
+        if (session && !isValidSessionFormat(session)) {
+            response.cookies.delete('admin_session')
+        }
+
+        return response
     }
 
     return NextResponse.next()
