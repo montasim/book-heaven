@@ -13,6 +13,7 @@ export enum AuthIntent {
   REGISTER = 'REGISTER',
   RESET_PASSWORD = 'RESET_PASSWORD',
   INVITED = 'INVITED',
+  EMAIL_CHANGE = 'EMAIL_CHANGE',
 }
 
 // ============================================================================

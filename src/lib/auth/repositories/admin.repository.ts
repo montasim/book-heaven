@@ -101,6 +101,20 @@ export async function createAdmin(data: {
  * @param {string} [data.email] - Admin email
  * @param {string} [data.phoneNumber] - Admin phone number
  * @param {string} [data.passwordHash] - Admin password hash
+ * @param {string} [data.username] - Admin username
+ * @param {string} [data.bio] - Admin bio
+ * @param {Date} [data.dob] - Admin date of birth
+ * @param {string} [data.language] - Admin language
+ * @param {string} [data.theme] - Admin theme
+ * @param {string} [data.font] - Admin font
+ * @param {any} [data.urls] - Admin URLs
+ * @param {any} [data.displayItems] - Admin display items
+ * @param {string} [data.notificationType] - Admin notification type
+ * @param {boolean} [data.mobileNotifications] - Admin mobile notifications
+ * @param {boolean} [data.communicationEmails] - Admin communication emails
+ * @param {boolean} [data.socialEmails] - Admin social emails
+ * @param {boolean} [data.marketingEmails] - Admin marketing emails
+ * @param {boolean} [data.securityEmails] - Admin security emails
  * @returns {Promise<Admin>} Updated admin
  */
 export async function updateAdmin(
@@ -111,6 +125,20 @@ export async function updateAdmin(
         email?: string
         phoneNumber?: string | null
         passwordHash?: string
+        username?: string | null
+        bio?: string | null
+        dob?: Date | null
+        language?: string | null
+        theme?: string | null
+        font?: string | null
+        urls?: any
+        displayItems?: any
+        notificationType?: string | null
+        mobileNotifications?: boolean | null
+        communicationEmails?: boolean | null
+        socialEmails?: boolean | null
+        marketingEmails?: boolean | null
+        securityEmails?: boolean | null
     }
 ) {
     return prisma.admin.update({
