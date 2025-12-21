@@ -11,7 +11,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { getSession } from '@/lib/auth/session'
+import { getSession, deleteSession } from '@/lib/auth/session'
 import { findAdminById } from '@/lib/auth/repositories/admin.repository'
 import { successResponse, errorResponse } from '@/lib/auth/request-utils'
 import { getUserDisplayName } from '@/lib/utils/user'
@@ -22,14 +22,21 @@ export async function GET(request: NextRequest) {
         const session = await getSession()
 
         if (!session) {
-            return errorResponse('Not authenticated', 401)
+            // Delete any invalid/empty cookies and return error
+            const response = errorResponse('Not authenticated', 401)
+            response.cookies.delete('admin_session')
+            return response
         }
 
         // Fetch admin from database to ensure it still exists
         const admin = await findAdminById(session.adminId)
 
         if (!admin) {
-            return errorResponse('Admin account not found', 404)
+            // Admin doesn't exist anymore, delete session and return error
+            await deleteSession()
+            const response = errorResponse('Admin account not found', 404)
+            response.cookies.delete('admin_session')
+            return response
         }
 
         // Construct display name with fallbacks
@@ -56,6 +63,9 @@ export async function GET(request: NextRequest) {
         })
     } catch (error) {
         console.error('Get current user error:', error)
-        return errorResponse('An error occurred.', 500)
+        // Delete invalid session cookie on error
+        const response = errorResponse('An error occurred.', 500)
+        response.cookies.delete('admin_session')
+        return response
     }
 }
