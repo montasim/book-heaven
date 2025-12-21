@@ -1,10 +1,9 @@
 import { google } from 'googleapis'
 import { Readable } from 'stream'
 
-const SCOPES = ['https://www.googleapis.com/auth/drive.file']
+const SCOPES = ['https://www.googleapis.com/auth/drive']
 
 // Initialize Google Drive API
-// Ensure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY are set in .env
 const auth = new google.auth.GoogleAuth({
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -16,12 +15,16 @@ const auth = new google.auth.GoogleAuth({
 const drive = google.drive({ version: 'v3', auth })
 
 /**
- * Upload a file to Google Drive
+ * Upload a file to a shared Google Drive folder.
  * @param file The file object to upload
- * @param folderId Optional folder ID to upload to
+ * @param folderId The ID of the folder shared with the service account
  * @returns The webViewLink (URL) of the uploaded file
  */
-export async function uploadFile(file: File, folderId?: string): Promise<string> {
+export async function uploadFile(file: File, folderId: string | undefined): Promise<string> {
+  if (!folderId) {
+    throw new Error('Google Drive Folder ID is not configured. Please set GOOGLE_DRIVE_FOLDER_ID in your environment variables.')
+  }
+
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
     const stream = Readable.from(buffer)
@@ -30,56 +33,57 @@ export async function uploadFile(file: File, folderId?: string): Promise<string>
       requestBody: {
         name: file.name,
         mimeType: file.type,
-        parents: folderId ? [folderId] : undefined,
+        parents: [folderId], // The ID of the folder shared with the service account
       },
       media: {
         mimeType: file.type,
         body: stream,
       },
-      fields: 'id, webViewLink, webContentLink',
+      fields: 'id, webViewLink',
     })
 
-    // Make the file publicly readable (optional, depending on requirements)
-    // await drive.permissions.create({
-    //   fileId: response.data.id!,
-    //   requestBody: {
-    //     role: 'reader',
-    //     type: 'anyone',
-    //   },
-    // })
+    if (!response.data.id) {
+      throw new Error('File uploaded but no ID was returned from Google Drive.')
+    }
 
-    // We return the webViewLink which is a viewable URL. 
-    // For direct download, webContentLink could be used.
-    // We also append the ID to the URL or return an object if we need to store the ID for deletion.
-    // To simplify storage, we can store the ID in the URL or just store the ID.
-    // However, the current schema expects a URL string.
-    // A common strategy is to store the ID, but the UI expects a URL.
-    // Let's store the webViewLink. To delete, we'll need to extract the ID from the URL or store the ID separately.
-    // Since we can't easily change the schema to add a separate ID field without migration, 
-    // we will try to extract the ID from the URL when deleting.
-    
+    // Make the file publicly readable so the link works
+    await drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    })
+
     return response.data.webViewLink || ''
-  } catch (error) {
-    console.error('Error uploading file to Google Drive:', error)
-    throw new Error('Failed to upload file to Google Drive')
+  } catch (error: any) {
+    // Log the detailed error for better debugging
+    console.error('Full error object from Google Drive API:', JSON.stringify(error, null, 2));
+    
+    if (error.code === 403) {
+      throw new Error('Permission denied. Please double-check these two things: 1) The Google Drive API is enabled in your Google Cloud project. 2) The service account has "Editor" access to the specified Google Drive folder.')
+    }
+    if (error.code === 404) {
+       throw new Error(`Google Drive folder with ID "${folderId}" not found. Please check your GOOGLE_DRIVE_FOLDER_ID.`)
+    }
+    throw new Error('Failed to upload file to Google Drive.')
   }
 }
 
 /**
- * Delete a file from Google Drive
+ * Delete a file from a Google Drive folder
  * @param fileUrl The URL of the file to delete
  */
 export async function deleteFile(fileUrl: string): Promise<boolean> {
   if (!fileUrl) return false
 
   try {
-    // Extract ID from URL
-    // Google Drive URLs are typically: https://drive.google.com/file/d/FILE_ID/view?usp=drivesdk
+    // Extract ID from a Google Drive URL
     const match = fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/)
     const fileId = match ? match[1] : null
 
     if (!fileId) {
-      console.warn('Could not extract file ID from URL:', fileUrl)
+      console.warn('Could not extract file ID from URL for deletion:', fileUrl)
       return false
     }
 
@@ -87,8 +91,8 @@ export async function deleteFile(fileUrl: string): Promise<boolean> {
       fileId,
     })
     return true
-  } catch (error) {
-    console.error('Error deleting file from Google Drive:', error)
+  } catch (error: any) {
+    console.error('Failed to delete file from Google Drive. It may have been already deleted:', error.message)
     return false
   }
 }
