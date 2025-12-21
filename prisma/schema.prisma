@@ -141,9 +141,13 @@ model Book {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   summary        String?
+  isPublic       Boolean           @default(false)
+  requiresPremium Boolean          @default(false)
   authors        BookAuthor[]
   categories     BookCategory[]
   publications   BookPublication[]
+  readingProgress ReadingProgress[]
+  bookshelves    BookshelfItem[]
   entryBy        Admin             @relation("AdminBooks", fields: [entryById], references: [id])
 
   @@map("books")
@@ -185,6 +189,108 @@ model BookCategory {
   @@map("book_categories")
 }
 
+model User {
+  id                String            @id @default(uuid())
+  email             String            @unique
+  name              String
+  passwordHash      String
+  avatar            String?
+  isActive          Boolean           @default(true)
+  isPremium         Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  subscription      Subscription?
+  readingProgress   ReadingProgress[]
+  bookshelves       Bookshelf[]
+  sessions          UserSession[]
+
+  @@map("users")
+}
+
+model UserOtp {
+  id        String   @id @default(uuid())
+  email     String
+  codeHash  String
+  intent    String
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, intent])
+  @@map("user_otps")
+}
+
+model UserSession {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("user_sessions")
+}
+
+model Subscription {
+  id            String            @id @default(uuid())
+  userId        String            @unique
+  plan          SubscriptionPlan  @default(FREE)
+  startDate     DateTime          @default(now())
+  endDate       DateTime?
+  isActive      Boolean           @default(true)
+  paymentId     String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model ReadingProgress {
+  id            String   @id @default(uuid())
+  userId        String
+  bookId        String
+  currentPage   Int?
+  currentEpocha Float?   // For audio books (position in seconds)
+  progress      Float    @default(0) // Percentage 0-100
+  isCompleted   Boolean  @default(false)
+  lastReadAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book          Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@map("reading_progress")
+}
+
+model Bookshelf {
+  id          String            @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  books       BookshelfItem[]
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bookshelves")
+}
+
+model BookshelfItem {
+  id          String    @id @default(uuid())
+  bookshelfId String
+  bookId      String
+  addedAt     DateTime  @default(now())
+  bookshelf   Bookshelf @relation(fields: [bookshelfId], references: [id], onDelete: Cascade)
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookshelfId, bookId])
+  @@map("bookshelf_items")
+}
+
 enum BookType {
   HARD_COPY
   EBOOK
@@ -194,4 +300,10 @@ enum BookType {
 enum BindingType {
   HARDCOVER
   PAPERBACK
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+  PREMIUM_PLUS
 }

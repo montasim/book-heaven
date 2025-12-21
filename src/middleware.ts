@@ -2,21 +2,24 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-    const session = request.cookies.get('admin_session')?.value
+    const adminSession = request.cookies.get('admin_session')?.value
+    const userSession = request.cookies.get('user_session')?.value
     const { pathname } = request.nextUrl
 
-    // Define protected routes
-    const isDashboardRoute = pathname.startsWith('/dashboard')
-
-    // Define authentication routes
+    // Define route types
+    const isAdminRoute = pathname.startsWith('/dashboard')
+    const isUserRoute = pathname.startsWith('/(user)') || pathname.startsWith('/books') || pathname.startsWith('/profile') || pathname.startsWith('/bookshelves')
+    const isPublicRoute = pathname.startsWith('/(public)')
     const isAuthRoute =
         pathname.startsWith('/auth/sign-in') ||
         pathname.startsWith('/sign-up') ||
         pathname.startsWith('/forgot-password') ||
-        pathname.startsWith('/otp')
+        pathname.startsWith('/otp') ||
+        pathname.startsWith('/login') ||
+        pathname.startsWith('/register')
 
-    // Function to validate session cookie format
-    const isValidSessionFormat = (sessionValue: string): boolean => {
+    // Function to validate admin session cookie format
+    const isValidAdminSession = (sessionValue: string): boolean => {
         try {
             const sessionData = JSON.parse(sessionValue)
             return sessionData &&
@@ -28,34 +31,73 @@ export function middleware(request: NextRequest) {
         }
     }
 
-    // Logic for protected routes
-    if (isDashboardRoute) {
-        if (!session || !isValidSessionFormat(session)) {
-            // Invalid or missing session, delete cookie and redirect to sign-in
+    // Function to validate user session cookie format
+    const isValidUserSession = (sessionValue: string): boolean => {
+        try {
+            const sessionData = sessionValue // User sessions are stored as tokens, not JSON
+            return sessionData && sessionData.length > 10 // Basic validation for session token
+        } catch {
+            return false
+        }
+    }
+
+    // Handle admin routes
+    if (isAdminRoute) {
+        if (!adminSession || !isValidAdminSession(adminSession)) {
+            // Invalid or missing admin session, delete cookie and redirect
             const response = NextResponse.redirect(new URL('/auth/sign-in', request.url))
             response.cookies.delete('admin_session')
             return response
         }
     }
 
-    // Logic for authentication routes
-    if (isAuthRoute) {
-        if (session && isValidSessionFormat(session)) {
-            // Already have valid session, redirect to dashboard
-            return NextResponse.redirect(new URL('/dashboard', request.url))
+    // Handle user routes (require user authentication)
+    if (isUserRoute && !pathname.startsWith('/books')) { // Books page can be accessed publicly
+        if (!userSession || !isValidUserSession(userSession)) {
+            // Invalid or missing user session, delete cookie and redirect
+            const response = NextResponse.redirect(new URL('/login', request.url))
+            response.cookies.delete('user_session')
+            return response
         }
     }
 
-    // Handle root route
-    if (pathname === '/') {
-        const hasValidSession = session && isValidSessionFormat(session)
-        const response = NextResponse.redirect(new URL(hasValidSession ? '/dashboard' : '/auth/sign-in', request.url))
-
-        // If session is invalid, delete it
-        if (session && !isValidSessionFormat(session)) {
-            response.cookies.delete('admin_session')
+    // Handle authentication routes
+    if (isAuthRoute) {
+        // Admin auth routes
+        if (pathname.startsWith('/auth/sign-in') || pathname.startsWith('/auth/')) {
+            if (adminSession && isValidAdminSession(adminSession)) {
+                return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
         }
+        // User auth routes
+        else if (pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/forgot-password')) {
+            if (userSession && isValidUserSession(userSession)) {
+                return NextResponse.redirect(new URL('/books', request.url))
+            }
+        }
+    }
 
+    // Handle root route - redirect based on existing sessions
+    if (pathname === '/') {
+        if (adminSession && isValidAdminSession(adminSession)) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+        } else if (userSession && isValidUserSession(userSession)) {
+            return NextResponse.redirect(new URL('/books', request.url))
+        } else {
+            return NextResponse.redirect(new URL('/books', request.url)) // Default to public books page
+        }
+    }
+
+    // Clean up invalid sessions
+    if (adminSession && !isValidAdminSession(adminSession)) {
+        const response = NextResponse.next()
+        response.cookies.delete('admin_session')
+        return response
+    }
+
+    if (userSession && !isValidUserSession(userSession)) {
+        const response = NextResponse.next()
+        response.cookies.delete('user_session')
         return response
     }
 
