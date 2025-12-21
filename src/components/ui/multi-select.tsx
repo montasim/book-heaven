@@ -59,49 +59,43 @@ export function MultiSelect({
           role='combobox'
           aria-expanded={open}
           className={cn(
-            'w-full justify-between text-left font-normal min-h-[60px] h-auto',
+            'w-full justify-between text-left font-normal h-auto',
             !selected.length && 'text-muted-foreground',
             className
           )}
         >
-          <div className='flex flex-wrap gap-1 p-2 min-h-[36px] items-start flex-1'>
+          <div className='flex flex-wrap gap-1 py-1 min-h-[25px] items-start flex-1'>
             {selected.length > 0 ? (
               <>
                 {selectedLabels.slice(0, maxVisible).map((label, index) => (
-                  <Badge
+                  <div
                     key={selected[index]}
-                    variant='secondary'
-                    className='text-xs'
-                  >
+                    className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-xs cursor-pointer hover:bg-secondary/80 transition-colors'
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleUnselect(selected[index])
+                      }
+                    }}
+                    onClick={() => handleUnselect(selected[index])}
+                    tabIndex={0}
+                    role='button'
+                    aria-label={`Remove ${label}`}
+                >
                     {label}
-                    <button
-                      className='ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleUnselect(selected[index])
-                        }
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                      }}
-                      onClick={() => handleUnselect(selected[index])}
-                    >
-                      <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
-                    </button>
-                  </Badge>
+                    <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
+                </div>
                 ))}
                 {selectedLabels.length > maxVisible && (
-                  <Badge variant='secondary' className='text-xs'>
+                  <div className='inline-flex items-center px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-xs'>
                     +{selectedLabels.length - maxVisible} more
-                  </Badge>
+                  </div>
                 )}
               </>
             ) : (
               <span className='text-sm'>{placeholder}</span>
             )}
           </div>
-          <div className='flex items-center pr-2 pl-2 shrink-0'>
+          <div className='flex items-center pr-3 shrink-0'>
             <Check className='h-4 w-4 shrink-0 opacity-50' />
           </div>
         </Button>
