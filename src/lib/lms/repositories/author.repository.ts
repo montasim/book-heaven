@@ -124,7 +124,7 @@ export async function authorNameExists(name: string, excludeId?: string): Promis
 }
 
 /**
- * Check if author is linked to books
+ * Check if author is linked to books-old
  */
 export async function isAuthorLinkedToBooks(id: string): Promise<boolean> {
   const count = await prisma.bookAuthor.count({
@@ -192,10 +192,10 @@ export async function updateAuthor(
  * Delete an author
  */
 export async function deleteAuthor(id: string) {
-  // First check if author is linked to any books
+  // First check if author is linked to any books-old
   const isLinked = await isAuthorLinkedToBooks(id)
   if (isLinked) {
-    throw new Error('Cannot delete author: linked to one or more books')
+    throw new Error('Cannot delete author: linked to one or more books-old')
   }
 
   return prisma.author.delete({
@@ -208,7 +208,7 @@ export async function deleteAuthor(id: string) {
 // ============================================================================
 
 /**
- * Get all books for an author
+ * Get all books-old for an author
  */
 export async function getAuthorBooks(authorId: string) {
   return prisma.bookAuthor.findMany({

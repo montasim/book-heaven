@@ -5,7 +5,7 @@ interface ReadingProgress {
   id?: string
   bookId: string
   currentPage?: number
-  currentEpocha?: number // For audio books (position in seconds)
+  currentEpocha?: number // For audio books-old (position in seconds)
   progress: number // Percentage 0-100
   isCompleted: boolean
   lastReadAt?: string

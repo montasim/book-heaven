@@ -13,7 +13,7 @@ import { BookType, BindingType } from '@prisma/client'
 // ============================================================================
 
 /**
- * Get all books with pagination and search
+ * Get all books-old with pagination and search
  */
 export async function getBooks(options: {
   page?: number
@@ -189,13 +189,13 @@ export async function createBook(data: {
     // Validate hard copy requirements
     if (data.type === 'HARD_COPY') {
       if (!data.numberOfCopies || data.numberOfCopies <= 0) {
-        throw new Error('Number of copies is required for hard copy books')
+        throw new Error('Number of copies is required for hard copy books-old')
       }
       if (!data.bindingType) {
-        throw new Error('Binding type is required for hard copy books')
+        throw new Error('Binding type is required for hard copy books-old')
       }
       if (!data.pageNumber || data.pageNumber <= 0) {
-        throw new Error('Page number is required for hard copy books')
+        throw new Error('Page number is required for hard copy books-old')
       }
     } else if (data.type === 'EBOOK') {
       if (!data.pageNumber || data.pageNumber <= 0) {
@@ -206,7 +206,7 @@ export async function createBook(data: {
       }
     } else if (data.type === 'AUDIO') {
       if (!data.fileUrl) {
-        throw new Error('File URL is required for audio books')
+        throw new Error('File URL is required for audio books-old')
       }
     }
 
@@ -305,17 +305,17 @@ export async function updateBook(
     if (updateType === 'HARD_COPY') {
       const numberOfCopies = data.numberOfCopies ?? existingBook.numberOfCopies
       if (!numberOfCopies || numberOfCopies <= 0) {
-        throw new Error('Number of copies is required for hard copy books')
+        throw new Error('Number of copies is required for hard copy books-old')
       }
       
       const bindingType = data.bindingType ?? existingBook.bindingType
       if (!bindingType) {
-        throw new Error('Binding type is required for hard copy books')
+        throw new Error('Binding type is required for hard copy books-old')
       }
 
       const pageNumber = data.pageNumber ?? existingBook.pageNumber
       if (!pageNumber || pageNumber <= 0) {
-        throw new Error('Page number is required for hard copy books')
+        throw new Error('Page number is required for hard copy books-old')
       }
     } else if (updateType === 'EBOOK') {
       const pageNumber = data.pageNumber ?? existingBook.pageNumber
@@ -329,7 +329,7 @@ export async function updateBook(
     } else if (updateType === 'AUDIO') {
       const fileUrl = data.fileUrl ?? existingBook.fileUrl
       if (!fileUrl) {
-        throw new Error('File URL is required for audio books')
+        throw new Error('File URL is required for audio books-old')
       }
     }
 

@@ -176,11 +176,11 @@ export async function getUserReadingStats(userId: string) {
 }
 
 /**
- * Get books currently being read by user
+ * Get books-old currently being read by user
  *
  * @param {string} userId - User ID
- * @param {number} [limit] - Maximum number of books (default: 10)
- * @returns {Promise<ReadingProgress[]>} Currently reading books
+ * @param {number} [limit] - Maximum number of books-old (default: 10)
+ * @returns {Promise<ReadingProgress[]>} Currently reading books-old
  */
 export async function getCurrentlyReading(userId: string, limit = 10) {
     return prisma.readingProgress.findMany({
@@ -188,7 +188,7 @@ export async function getCurrentlyReading(userId: string, limit = 10) {
             userId,
             isCompleted: false,
             progress: {
-                gt: 0 // Only include books with actual progress
+                gt: 0 // Only include books-old with actual progress
             }
         },
         include: {
@@ -213,11 +213,11 @@ export async function getCurrentlyReading(userId: string, limit = 10) {
 }
 
 /**
- * Get completed books for a user
+ * Get completed books-old for a user
  *
  * @param {string} userId - User ID
- * @param {number} [limit] - Maximum number of books (default: 20)
- * @returns {Promise<ReadingProgress[]>} Completed books
+ * @param {number} [limit] - Maximum number of books-old (default: 20)
+ * @returns {Promise<ReadingProgress[]>} Completed books-old
  */
 export async function getCompletedBooks(userId: string, limit = 20) {
     return prisma.readingProgress.findMany({
@@ -247,7 +247,7 @@ export async function getCompletedBooks(userId: string, limit = 20) {
 }
 
 /**
- * Get reading progress for multiple books at once
+ * Get reading progress for multiple books-old at once
  *
  * @param {string} userId - User ID
  * @param {string[]} bookIds - Array of book IDs
@@ -446,17 +446,17 @@ export async function deleteUserReadingProgress(userId: string) {
 }
 
 /**
- * Get popular books (most read across all users)
+ * Get popular books-old (most read across all users)
  *
- * @param {number} [limit] - Maximum number of books (default: 20)
- * @returns {Promise<Object[]>} Popular books with read counts
+ * @param {number} [limit] - Maximum number of books-old (default: 20)
+ * @returns {Promise<Object[]>} Popular books-old with read counts
  */
 export async function getPopularBooks(limit = 20) {
     const popularBooks = await prisma.readingProgress.groupBy({
         by: ['bookId'],
         where: {
             progress: {
-                gt: 10 // Only include books with actual engagement
+                gt: 10 // Only include books-old with actual engagement
             }
         },
         _count: {
@@ -508,7 +508,7 @@ export async function getPopularBooks(limit = 20) {
         }
     })
 
-    // Sort books by their reading progress count
+    // Sort books-old by their reading progress count
     const sortedBooks = books.sort((a, b) => {
         const aProgress = popularBooks.find(pb => pb.bookId === a.id)?._count.bookId || 0
         const bProgress = popularBooks.find(pb => pb.bookId === b.id)?._count.bookId || 0

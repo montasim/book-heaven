@@ -17,7 +17,7 @@ import { prisma } from '../../prisma'
 // ============================================================================
 
 /**
- * Find bookshelf by ID with books
+ * Find bookshelf by ID with books-old
  *
  * @param {string} id - Bookshelf ID
  * @param {string} [userId] - Optional user ID for authorization check
@@ -359,7 +359,7 @@ export async function addBookToBookshelf(
     // Verify ownership
     const isOwner = await isBookshelfOwner(bookshelfId, userId)
     if (!isOwner) {
-        throw new Error('Unauthorized: You can only add books to your own bookshelves')
+        throw new Error('Unauthorized: You can only add books-old to your own bookshelves')
     }
 
     // Check if book is already in bookshelf
@@ -408,7 +408,7 @@ export async function removeBookFromBookshelf(
     // Verify ownership
     const isOwner = await isBookshelfOwner(bookshelfId, userId)
     if (!isOwner) {
-        throw new Error('Unauthorized: You can only remove books from your own bookshelves')
+        throw new Error('Unauthorized: You can only remove books-old from your own bookshelves')
     }
 
     return prisma.bookshelfItem.delete({
@@ -422,7 +422,7 @@ export async function removeBookFromBookshelf(
 }
 
 /**
- * Add multiple books to bookshelf
+ * Add multiple books-old to bookshelf
  *
  * @param {string} bookshelfId - Bookshelf ID
  * @param {string} userId - User ID (for authorization)
@@ -437,10 +437,10 @@ export async function addMultipleBooksToBookshelf(
     // Verify ownership
     const isOwner = await isBookshelfOwner(bookshelfId, userId)
     if (!isOwner) {
-        throw new Error('Unauthorized: You can only add books to your own bookshelves')
+        throw new Error('Unauthorized: You can only add books-old to your own bookshelves')
     }
 
-    // Filter out books that are already in the bookshelf
+    // Filter out books-old that are already in the bookshelf
     const existingItems = await prisma.bookshelfItem.findMany({
         where: {
             bookshelfId,
@@ -488,7 +488,7 @@ export async function moveBookBetweenShelves(
     ])
 
     if (!isFromOwner || !isToOwner) {
-        throw new Error('Unauthorized: You can only move books between your own bookshelves')
+        throw new Error('Unauthorized: You can only move books-old between your own bookshelves')
     }
 
     // Remove from source bookshelf

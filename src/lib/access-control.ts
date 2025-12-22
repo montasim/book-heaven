@@ -1,7 +1,7 @@
 /**
  * Access Control Utilities
  *
- * Centralized access control logic for books and premium content
+ * Centralized access control logic for books-old and premium content
  * Handles authorization checks for different user types and book types
  */
 

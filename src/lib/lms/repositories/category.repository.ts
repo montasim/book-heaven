@@ -124,7 +124,7 @@ export async function categoryNameExists(name: string, excludeId?: string): Prom
 }
 
 /**
- * Check if category is linked to books
+ * Check if category is linked to books-old
  */
 export async function isCategoryLinkedToBooks(id: string): Promise<boolean> {
   const count = await prisma.bookCategory.count({
@@ -205,10 +205,10 @@ export async function updateCategory(
  * Delete a category
  */
 export async function deleteCategory(id: string) {
-  // First check if category is linked to any books
+  // First check if category is linked to any books-old
   const isLinked = await isCategoryLinkedToBooks(id)
   if (isLinked) {
-    throw new Error('Cannot delete category: linked to one or more books')
+    throw new Error('Cannot delete category: linked to one or more books-old')
   }
 
   return prisma.category.delete({
@@ -221,7 +221,7 @@ export async function deleteCategory(id: string) {
 // ============================================================================
 
 /**
- * Get all books for a category
+ * Get all books-old for a category
  */
 export async function getCategoryBooks(categoryId: string) {
   return prisma.bookCategory.findMany({

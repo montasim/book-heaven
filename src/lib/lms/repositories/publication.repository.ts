@@ -124,7 +124,7 @@ export async function publicationNameExists(name: string, excludeId?: string): P
 }
 
 /**
- * Check if publication is linked to books
+ * Check if publication is linked to books-old
  */
 export async function isPublicationLinkedToBooks(id: string): Promise<boolean> {
   const count = await prisma.bookPublication.count({
@@ -192,10 +192,10 @@ export async function updatePublication(
  * Delete a publication
  */
 export async function deletePublication(id: string) {
-  // First check if publication is linked to any books
+  // First check if publication is linked to any books-old
   const isLinked = await isPublicationLinkedToBooks(id)
   if (isLinked) {
-    throw new Error('Cannot delete publication: linked to one or more books')
+    throw new Error('Cannot delete publication: linked to one or more books-old')
   }
 
   return prisma.publication.delete({
@@ -208,7 +208,7 @@ export async function deletePublication(id: string) {
 // ============================================================================
 
 /**
- * Get all books for a publication
+ * Get all books-old for a publication
  */
 export async function getPublicationBooks(publicationId: string) {
   return prisma.bookPublication.findMany({
