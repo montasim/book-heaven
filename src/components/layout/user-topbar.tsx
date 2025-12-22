@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { BookOpen, User, Settings, LogOut, Menu } from 'lucide-react'
+import { BookOpen, User, Settings, LogOut, Menu, CreditCard } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { getUserInitials } from '@/lib/utils/user'
 
@@ -97,8 +97,17 @@ export function UserTopbar({
                     {user.email}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      {user.role}
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        user.role === 'SUPER_ADMIN'
+                          ? 'bg-purple-100 text-purple-800'
+                          : user.role === 'ADMIN'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-primary/10 text-primary'
+                      }`}
+                      title={`Raw role: ${user.role}`}
+                    >
+                      {user.role === 'SUPER_ADMIN' ? 'Super Admin' : user.role === 'ADMIN' ? 'Admin' : user.role}
                     </span>
                     {user.isPremium && (
                       <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
@@ -110,20 +119,24 @@ export function UserTopbar({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => handleNavigation('/profile')}>
+                <DropdownMenuItem onClick={() => handleNavigation('/settings/profile')}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation('/bookshelves')}>
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  My Bookshelves
+                  {
+                      !isAdmin && <DropdownMenuItem onClick={() => handleNavigation('/bookshelves')}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          My Bookshelves
+                      </DropdownMenuItem>
+                  }
+                <DropdownMenuItem onClick={() => handleNavigation('/settings/account')}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Billing
                 </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem onClick={() => handleNavigation('/dashboard')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Admin Dashboard
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={() => handleNavigation('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
@@ -138,7 +151,7 @@ export function UserTopbar({
             <Link href="/auth/sign-in">
               <Button variant="outline">Sign In</Button>
             </Link>
-            <Link href="/auth/sign-up">
+            <Link href="/sign-up">
               <Button>Sign Up</Button>
             </Link>
           </>
@@ -162,7 +175,7 @@ export function UserTopbar({
   return (
     <header
       className={cn(
-        'flex items-center gap-3 sm:gap-4 bg-background p-4 h-16 border-b',
+        'flex items-center gap-3 sm:gap-4 bg-background p-4 h-16',
         className
       )}
       {...props}
