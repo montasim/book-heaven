@@ -18,7 +18,7 @@ import {
     sanitizeEmail,
     validateRequiredFields,
 } from '@/lib/auth/validation'
-import { findAdminByEmail } from '@/lib/auth/repositories/admin.repository'
+import { findUserByEmail } from '@/lib/user/repositories/user.repository'
 import {
     verifyPassword,
     generateDummyHash,
@@ -60,16 +60,16 @@ export async function POST(request: NextRequest) {
             return errorResponse(error.message, 429)
         }
 
-        // Fetch admin by email
-        const admin = await findAdminByEmail(email)
+        // Fetch user by email (works for both admin and regular users)
+        const user = await findUserByEmail(email)
 
         // ALWAYS perform bcrypt comparison to prevent timing attacks
         let isValidPassword = false
-        if (admin) {
-            // Admin exists - verify against actual password hash
-            isValidPassword = await verifyPassword(password, admin.passwordHash)
+        if (user) {
+            // User exists - verify against actual password hash
+            isValidPassword = await verifyPassword(password, user.passwordHash)
         } else {
-            // Admin doesn't exist - verify against dummy hash
+            // User doesn't exist - verify against dummy hash
             // This ensures constant response time regardless of email existence
             const dummyHash = await generateDummyHash()
             await verifyPassword(password, dummyHash)
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Check authentication result
-        if (!admin || !isValidPassword) {
+        if (!user || !isValidPassword || !user.isActive) {
             // Generic error message - no hint about which field is wrong
             return errorResponse('Invalid email or password', 401)
         }
@@ -86,16 +86,18 @@ export async function POST(request: NextRequest) {
         await resetRateLimit(email, clientIp, RateLimitAction.LOGIN)
 
         // Create authenticated session with HttpOnly cookie
-        const displayName = admin.name || `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.email
-        await createLoginSession(admin.id, admin.email, displayName)
+        const displayName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email
+        await createLoginSession(user.id, user.email, displayName, user.role)
 
-        // Return success response with admin data
+        // Return success response with user data including role
         const response: LoginResponse = {
             success: true,
-            admin: {
-                id: admin.id,
-                email: admin.email,
-                name: admin.name,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                isPremium: user.isPremium,
             },
         }
 

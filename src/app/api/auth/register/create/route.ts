@@ -3,10 +3,10 @@
  * 
  * POST /api/auth/register/create
  * 
- * Step 3 of registration: Create admin account
+ * Step 3 of registration: Create user account
  * 
  * Security:
- * - Requires valid REGISTER AuthSession
+ * - Requires valid REGISTER/INVITED AuthSession
  * - Session must not be expired
  * - Password strength enforcement
  * - Race-safe via unique email constraint
@@ -25,9 +25,9 @@ import {
     validateRequiredFields,
 } from '@/lib/auth/validation'
 import {
-    adminExists,
-    createAdmin,
-} from '@/lib/auth/repositories/admin.repository'
+    userExists,
+    createUser,
+} from '@/lib/user/repositories/user.repository'
 import { findActiveAuthSession } from '@/lib/auth/repositories/auth-session.repository'
 import { hashPassword } from '@/lib/auth/crypto'
 import { createLoginSession } from '@/lib/auth/session'
@@ -57,15 +57,6 @@ export async function POST(request: NextRequest) {
 
         const { email: rawEmail, name: rawName, password } = body
 
-        // Extract firstName and lastName from the name field (for compatibility)
-        // The sign-up form sends 'name' but we'll store it as firstName and lastName
-        const nameParts = rawName.trim().split(/\s+/)
-        const firstName = nameParts[0] || ''
-        const lastName = nameParts.slice(1).join(' ') || ''
-
-        // For UI compatibility, we'll store firstName and lastName but create a combined name
-        const fullName = lastName ? `${firstName} ${lastName}` : firstName
-
         // Sanitize and validate email
         const email = sanitizeEmail(rawEmail)
         if (!validateEmail(email)) {
@@ -73,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Sanitize and validate name
-        const name = sanitizeName(fullName)
+        const name = sanitizeName(rawName)
         if (!validateName(name)) {
             return errorResponse('Invalid name. Name must be between 1 and 100 characters.', 400)
         }
@@ -89,9 +80,23 @@ export async function POST(request: NextRequest) {
 
         // Check for valid REGISTER or INVITED AuthSession
         let authSession = await findActiveAuthSession(email, AuthIntent.REGISTER)
+        let inviteRole = 'USER' // Default role
 
         if (!authSession) {
             authSession = await findActiveAuthSession(email, AuthIntent.INVITED)
+            // If this is an invited session, get the role from the invite
+            if (authSession) {
+                const invite = await prisma.invite.findFirst({
+                    where: {
+                        email: email,
+                        used: false,
+                        expiresAt: { gt: new Date() }
+                    }
+                })
+                if (invite) {
+                    inviteRole = invite.role
+                }
+            }
         }
 
         if (!authSession) {
@@ -109,8 +114,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Double-check that admin doesn't exist (race condition protection)
-        const exists = await adminExists(email)
+        // Double-check that user doesn't exist (race condition protection)
+        const exists = await userExists(email)
         if (exists) {
             return errorResponse(
                 'An account with this email already exists.',
@@ -121,37 +126,51 @@ export async function POST(request: NextRequest) {
         // Hash password
         const passwordHash = await hashPassword(password)
 
-        // Create admin and delete AuthSession in a transaction (atomic operation)
-        const admin = await prisma.$transaction(async (tx) => {
-            // Create admin record
-            const newAdmin = await tx.admin.create({
-                data: {
-                    email,
-                    firstName,
-                    lastName,
-                    passwordHash,
-                },
-            })
+        // Create user and delete AuthSession in a transaction
+        const user = await prisma.$transaction(async (tx) => {
+            const newUser = await createUser(
+              {
+                email,
+                name,
+                passwordHash,
+                role: inviteRole, // Use role from invite or default to USER
+              },
+              tx
+            )
 
-            // Delete REGISTER AuthSession
+            // Delete AuthSession
             await tx.authSession.delete({
-                where: { id: authSession.id },
+                where: { id: authSession!.id },
             })
 
-            return newAdmin
+            // Mark invite as used if this was an invited registration
+            if (authSession!.intent === AuthIntent.INVITED) {
+                await tx.invite.updateMany({
+                    where: {
+                        email: email,
+                        used: false
+                    },
+                    data: {
+                        used: true,
+                        usedAt: new Date()
+                    }
+                })
+            }
+
+            return newUser
         })
 
         // Create authenticated login session (auto-login)
-        const loginName = admin.lastName ? `${admin.firstName} ${admin.lastName}` : admin.firstName
-        await createLoginSession(admin.id, admin.email, loginName)
+        await createLoginSession(user.id, user.email, user.name, user.role)
 
         // Return success response
         const response: CreateAccountResponse = {
             success: true,
-            admin: {
-                id: admin.id,
-                email: admin.email,
-                name: admin.name,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
             },
         }
 

@@ -12,9 +12,7 @@ import {
     validateEmail,
     sanitizeEmail,
 } from '@/lib/auth/validation'
-import {
-    adminExists,
-} from '@/lib/auth/repositories/admin.repository'
+import { userExists } from '@/lib/user/repositories/user.repository'
 import {
     activeInviteExists,
     createInvite,
@@ -43,7 +41,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Ensure only admins can invite
-        // TODO: Verify if user has permission to invite
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(session.role)) {
+            return errorResponse('Forbidden: Admin access required', 403)
+        }
 
         // 2. Parse and Validate Request Body using Zod
         const body = await parseRequestBody(request)
@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
             return errorResponse('Invalid email address', 400)
         }
 
-        // 3. Check if Admin already exists
-        const exists = await adminExists(email)
+        // 3. Check if User already exists
+        const exists = await userExists(email)
         if (exists) {
             return errorResponse('User with this email already exists', 409)
         }

@@ -18,7 +18,7 @@ import {
     sanitizeEmail,
     validateRequiredFields,
 } from '@/lib/auth/validation'
-import { adminExists } from '@/lib/auth/repositories/admin.repository'
+import { userExists } from '@/lib/user/repositories/user.repository'
 import {
     hasActiveAuthSession,
     findActiveAuthSession,
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
             return errorResponse(error.message, 429)
         }
 
-        // Check if admin exists
-        const adminExistsFlag = await adminExists(email)
+        // Check if user exists (unified check for all roles)
+        const userExistsFlag = await userExists(email)
 
         // Check for active sessions (for resumability)
         const hasActiveRegisterSession = await hasActiveAuthSession(
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
         // Build response based on state
         const response: CheckEmailResponse = {}
 
-        if (adminExistsFlag) {
-            // Admin exists - can login or reset password
+        if (userExistsFlag) {
+            // User exists - can login or reset password
             response.exists = true
             response.canLogin = true
             response.canResetPassword = true
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
                 response.resumeReset = true
             }
         } else {
-            // Admin doesn't exist - can register
+            // User doesn't exist - can register
             response.exists = false
             response.canRegister = true
 

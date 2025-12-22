@@ -1,10 +1,11 @@
 /**
  * Get Current User Endpoint
- * 
+ *
  * GET /api/auth/me
- * 
- * Returns the currently authenticated admin's information
- * 
+ *
+ * Returns the currently authenticated user's information
+ * Works for all user types (USER, ADMIN, SUPER_ADMIN)
+ *
  * Security:
  * - Requires valid session cookie
  * - Returns 401 if not authenticated
@@ -12,7 +13,7 @@
 
 import { NextRequest } from 'next/server'
 import { getSession, deleteSession } from '@/lib/auth/session'
-import { findAdminById } from '@/lib/auth/repositories/admin.repository'
+import { findUserById } from '@/lib/user/repositories/user.repository'
 import { successResponse, errorResponse } from '@/lib/auth/request-utils'
 import { getUserDisplayName } from '@/lib/utils/user'
 
@@ -24,48 +25,50 @@ export async function GET(request: NextRequest) {
         if (!session) {
             // Delete any invalid/empty cookies and return error
             const response = errorResponse('Not authenticated', 401)
-            response.cookies.delete('admin_session')
+            response.cookies.delete('user_session')
             return response
         }
 
-        // Fetch admin from database to ensure it still exists
-        const admin = await findAdminById(session.adminId)
+        // Fetch user from database to ensure it still exists
+        const user = await findUserById(session.userId)
 
-        if (!admin) {
-            // Admin doesn't exist anymore, delete session and return error
+        if (!user || !user.isActive) {
+            // User doesn't exist anymore or is inactive, delete session and return error
             await deleteSession()
-            const response = errorResponse('Admin account not found', 404)
-            response.cookies.delete('admin_session')
+            const response = errorResponse('User account not found or inactive', 404)
+            response.cookies.delete('user_session')
             return response
         }
 
         // Construct display name with fallbacks
         const displayName = getUserDisplayName({
-            firstName: admin.firstName,
-            lastName: admin.lastName,
-            username: admin.username,
-            name: admin.name,
-            email: admin.email
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            name: user.name,
+            email: user.email
         })
 
-        // Return admin data
+        // Return user data with role information
         return successResponse({
-            admin: {
-                id: admin.id,
-                email: admin.email,
+            user: {
+                id: user.id,
+                email: user.email,
                 name: displayName,
-                firstName: admin.firstName,
-                lastName: admin.lastName,
-                username: admin.username,
-                createdAt: admin.createdAt,
-                updatedAt: admin.updatedAt,
+                role: user.role,
+                isPremium: user.isPremium,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
             },
         })
     } catch (error) {
         console.error('Get current user error:', error)
         // Delete invalid session cookie on error
         const response = errorResponse('An error occurred.', 500)
-        response.cookies.delete('admin_session')
+        response.cookies.delete('user_session')
         return response
     }
 }
