@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { getUserSession, hasPremiumAccess } from '@/lib/user/auth/session'
+import { getSession } from '@/lib/auth/session'
 import { BookType } from '@prisma/client'
 
 // ============================================================================
@@ -37,8 +37,8 @@ export async function GET(
         }
 
         // Check user authentication and premium status
-        const userSession = await getUserSession()
-        const userHasPremium = userSession ? await hasPremiumAccess() : false
+        const userSession = await getSession()
+        const userHasPremium = userSession ? (userSession.role === 'USER' ? false : userSession.role === 'ADMIN' ? true : false) : false
         const isAuthenticated = !!userSession
 
         // Find the book
@@ -305,7 +305,7 @@ export async function POST(
         const bookId = params.id
 
         // Require authentication
-        const userSession = await getUserSession()
+        const userSession = await getSession()
         if (!userSession) {
             return NextResponse.json({
                 success: false,
@@ -337,7 +337,7 @@ export async function POST(
             }, { status: 404 })
         }
 
-        const userHasPremium = await hasPremiumAccess()
+        const userHasPremium = userSession ? (userSession.role === 'USER' ? false : userSession.role === 'ADMIN' ? true : false) : false
         const canAccess = !book.requiresPremium || userHasPremium
 
         if (!canAccess) {

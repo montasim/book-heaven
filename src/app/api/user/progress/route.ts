@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireUserAuth } from '@/lib/user/auth/session'
+import { getSession } from '@/lib/auth/session'
 import {
     getUserReadingProgress,
     getUserReadingStats,
@@ -46,7 +46,10 @@ const UpdateProgressSchema = z.object({
 export async function GET(request: NextRequest) {
     try {
         // Require authentication
-        const userSession = await requireUserAuth()
+        const userSession = await getSession()
+        if (!userSession) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
         const { searchParams } = new URL(request.url)
         const queryParams = Object.fromEntries(searchParams.entries())
@@ -122,7 +125,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         // Require authentication
-        const userSession = await requireUserAuth()
+        const userSession = await getSession()
+        if (!userSession) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
         const body = await request.json()
 

@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { getUserSession, hasPremiumAccess } from '@/lib/user/auth/session'
+import { getSession } from '@/lib/auth/session'
 import { BookType, BindingType } from '@prisma/client'
 
 // ============================================================================
@@ -223,8 +223,8 @@ export async function GET(request: NextRequest) {
         const validatedQuery = BooksQuerySchema.parse(queryParams)
 
         // Check user authentication and premium status
-        const userSession = await getUserSession()
-        const userHasPremium = userSession ? await hasPremiumAccess() : false
+        const userSession = await getSession()
+        const userHasPremium = userSession ? (userSession.role === 'USER' ? false : userSession.role === 'ADMIN' ? true : false) : false
 
         const {
             page,

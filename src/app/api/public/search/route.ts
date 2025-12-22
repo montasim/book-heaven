@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { getUserSession, hasPremiumAccess } from '@/lib/user/auth/session'
+import { getSession } from '@/lib/auth/session'
 
 // ============================================================================
 // REQUEST VALIDATION & CONFIGURATION
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
         const skip = (page - 1) * limit
 
         // Check user authentication and premium status
-        const userSession = await getUserSession()
-        const userHasPremium = userSession ? await hasPremiumAccess() : false
+        const userSession = await getSession()
+        const userHasPremium = userSession ? (userSession.role === 'USER' ? false : userSession.role === 'ADMIN' ? true : false) : false
 
         // Build search conditions
         const searchConditions = {
@@ -328,8 +328,8 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
         }
 
-        const userSession = await getUserSession()
-        const userHasPremium = userSession ? await hasPremiumAccess() : false
+        const userSession = await getSession()
+        const userHasPremium = userSession ? (userSession.role === 'USER' ? false : userSession.role === 'ADMIN' ? true : false) : false
 
         const searchConditions = {
             contains: query,
