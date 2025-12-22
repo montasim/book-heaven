@@ -13,11 +13,6 @@ import { PublicHeader } from '@/components/layout/public-header'
 
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const { data: featuredBooks, isLoading, error } = useBooks({
-    limit: 6,
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
-  })
 
   return (
     <div className="flex min-h-screen">

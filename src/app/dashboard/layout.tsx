@@ -7,10 +7,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { AuthGuard } from '@/components/auth-guard'
 import { cn } from '@/lib/utils'
-import {Header} from "@/components/layout/header";
-import {Search} from "@/components/search";
-import {ThemeSwitch} from "@/components/theme-switch";
-import {ProfileDropdown} from "@/components/profile-dropdown";
+import { UserTopbar } from "@/components/layout/user-topbar";
 import {Main} from "@/components/ui/main";
 import { MDXViewerProvider } from 'mdx-craft';
 
@@ -46,13 +43,10 @@ export default function DashboardLayout({
                     'group-data-[scroll-locked=1]/body:has-[main.fixed-main]:h-svh'
                   )}
                 >
-                    <Header fixed>
-                        <Search />
-                        <div className='ml-auto flex items-center space-x-4'>
-                            <ThemeSwitch />
-                            <ProfileDropdown />
-                        </div>
-                    </Header>
+                    <UserTopbar
+                      showSidebarToggle={true}
+                      className="border-b shadow"
+                    />
                     <Main fixed>
                       <MDXViewerProvider>
                         {children}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/use-auth'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +14,7 @@ import { BookCard } from '@/components/books/book-card'
 import { SearchBar } from '@/components/books/search-bar'
 import { PublicHeader } from '@/components/layout/public-header'
 import { useBooks } from '@/hooks/use-books'
+import Link from 'next/link'
 import {
   Search,
   Filter,
@@ -23,12 +25,17 @@ import {
   ChevronDown,
   BookOpen,
   Headphones,
-  FileText
+  FileText,
+  Plus,
+  Settings
 } from 'lucide-react'
 import { type BookType } from '@prisma/client'
 
 export default function BooksPage() {
   const searchParams = useSearchParams()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+
   const [filters, setFilters] = useState({
     search: searchParams?.get('search') || '',
     type: searchParams?.get('type') || '',
@@ -96,14 +103,36 @@ export default function BooksPage() {
       <PublicHeader />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Header */}
+          {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">Discover Books</h1>
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <p className="text-muted-foreground">
-              {booksData?.data?.pagination?.totalBooks || 0} books available
-            </p>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-3xl font-bold">Discover Books</h1>
+              <p className="text-muted-foreground">
+                {booksData?.data?.pagination?.totalBooks || 0} books available
+              </p>
+            </div>
 
+            {/* Admin Actions */}
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <Link href="/dashboard/books">
+                  <Button variant="outline" size="sm">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Manage Books
+                  </Button>
+                </Link>
+                <Link href="/dashboard/books/new">
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Book
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             {/* Search Bar */}
             <div className="w-full lg:w-96">
               <SearchBar

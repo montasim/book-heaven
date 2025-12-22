@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,7 +14,7 @@ import { ThemeSwitch } from "@/components/theme-switch"
 import { Main } from '@/components/ui/main'
 import { HeaderContainer } from "@/components/ui/header-container"
 
-const topNav = [
+const adminTopNav = [
   {
     title: 'Overview',
     href: 'dashboard/overview',
@@ -40,11 +41,38 @@ const topNav = [
   },
 ]
 
-export default function DashboardPage() {
+const userTopNav = [
+  {
+    title: 'My Books',
+    href: 'dashboard/books',
+    isActive: true,
+    disabled: false,
+  },
+  {
+    title: 'Reading Progress',
+    href: 'dashboard/reading',
+    isActive: false,
+    disabled: false,
+  },
+  {
+    title: 'Bookshelves',
+    href: 'dashboard/bookshelves',
+    isActive: false,
+    disabled: false,
+  },
+  {
+    title: 'Profile',
+    href: 'dashboard/profile',
+    isActive: false,
+    disabled: false,
+  },
+]
+
+function AdminDashboard() {
   return (
     <>
       <Header fixed>
-        <TopNav links={topNav} />
+        <TopNav links={adminTopNav} />
         <div className='ml-auto flex items-center space-x-4'>
           <Search />
           <ThemeSwitch />
@@ -55,7 +83,7 @@ export default function DashboardPage() {
       <Main fixed>
         <HeaderContainer>
           <>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
             <div className="flex items-center space-x-2">
               <Button>Download</Button>
             </div>
@@ -185,4 +213,185 @@ export default function DashboardPage() {
       </Main>
     </>
   )
+}
+
+function UserDashboard() {
+  return (
+    <>
+      <Header fixed>
+        <TopNav links={userTopNav} />
+        <div className='ml-auto flex items-center space-x-4'>
+          <Search />
+          <ThemeSwitch />
+          <ProfileDropdown />
+        </div>
+      </Header>
+
+      <Main fixed>
+        <HeaderContainer>
+          <>
+            <h1 className="text-2xl font-bold tracking-tight">My Library</h1>
+            <div className="flex items-center space-x-2">
+              <Button>Browse Books</Button>
+            </div>
+          </>
+        </HeaderContainer>
+
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Books Read</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">12</div>
+                <p className="text-xs text-muted-foreground">+2 this month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Reading Streak</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">7 days</div>
+                <p className="text-xs text-muted-foreground">Keep it up!</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Books</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">24</div>
+                <p className="text-xs text-muted-foreground">In your library</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Bookshelves</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="9" y1="9" x2="15" y2="9" />
+                  <line x1="9" y1="15" x2="15" y2="15" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">3</div>
+                <p className="text-xs text-muted-foreground">Personal collections</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Currently Reading</CardTitle>
+                <CardDescription>Books you're in the middle of</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center text-muted-foreground py-8">
+                  <p>No books currently being read</p>
+                  <Button variant="outline" className="mt-4">Browse Books</Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Your latest reading progress</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center text-muted-foreground py-8">
+                  <p>No recent activity</p>
+                  <Button variant="outline" className="mt-4">Start Reading</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Main>
+    </>
+  )
+}
+
+export default function DashboardPage() {
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Fetch user data to determine role
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.user) {
+          setUserRole(data.user.role)
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user data:', error)
+      })
+  }, [])
+
+  if (userRole === null) {
+    return (
+      <Main fixed>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-lg">Loading...</div>
+        </div>
+      </Main>
+    )
+  }
+
+  if (userRole === 'USER') {
+    return <UserDashboard />
+  }
+
+  return <AdminDashboard />
 }
