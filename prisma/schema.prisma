@@ -6,50 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Admin {
-  id                  String        @id @default(uuid())
-  email               String        @unique
-  name                String        @default("")
-  passwordHash        String
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  bio                 String?
-  communicationEmails Boolean?      @default(false)
-  displayItems        Json?         @default("[\"recents\", \"home\", \"applications\", \"desktop\", \"downloads\", \"documents\"]")
-  dob                 DateTime?
-  firstName           String        @default("")
-  font                String?       @default("inter")
-  language            String?
-  lastName            String?
-  marketingEmails     Boolean?      @default(false)
-  mobileNotifications Boolean?      @default(false)
-  notificationType    String?       @default("all")
-  phoneNumber         String?       @unique
-  securityEmails      Boolean?      @default(true)
-  socialEmails        Boolean?      @default(false)
-  theme               String?       @default("light")
-  urls                Json?         @default("[]")
-  username            String?       @unique
-  authoredBooks       Author[]      @relation("AdminAuthors")
-  books               Book[]        @relation("AdminBooks")
-  categorizedBooks    Category[]    @relation("AdminCategories")
-  publishedBooks      Publication[] @relation("AdminPublications")
-
-  @@map("admins")
-}
-
-model AdminOtp {
-  id        String   @id @default(uuid())
-  email     String
-  codeHash  String
-  intent    String
-  used      Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([email, intent])
-  @@map("admin_otps")
-}
 
 model AuthSession {
   id        String   @id
@@ -67,7 +23,7 @@ model Invite {
   email     String    @unique
   token     String    @unique
   invitedBy String
-  role      String    @default("admin")
+  role      UserRole  @default(ADMIN)
   desc      String?
   expiresAt DateTime
   used      Boolean   @default(false)
@@ -88,7 +44,7 @@ model Author {
   entryById   String
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  entryBy     Admin        @relation("AdminAuthors", fields: [entryById], references: [id])
+  entryBy     User         @relation("UserAuthors", fields: [entryById], references: [id])
   books       BookAuthor[]
 
   @@map("authors")
@@ -104,7 +60,7 @@ model Publication {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   books       BookPublication[]
-  entryBy     Admin             @relation("AdminPublications", fields: [entryById], references: [id])
+  entryBy     User              @relation("UserPublications", fields: [entryById], references: [id])
 
   @@map("publications")
 }
@@ -119,7 +75,7 @@ model Category {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   books       BookCategory[]
-  entryBy     Admin          @relation("AdminCategories", fields: [entryById], references: [id])
+  entryBy     User           @relation("UserCategories", fields: [entryById], references: [id])
 
   @@map("categories")
 }
@@ -148,7 +104,7 @@ model Book {
   publications   BookPublication[]
   readingProgress ReadingProgress[]
   bookshelves    BookshelfItem[]
-  entryBy        Admin             @relation("AdminBooks", fields: [entryById], references: [id])
+  entryBy        User              @relation("UserBooks", fields: [entryById], references: [id])
 
   @@map("books")
 }
@@ -190,19 +146,45 @@ model BookCategory {
 }
 
 model User {
-  id                String            @id @default(uuid())
-  email             String            @unique
-  name              String
-  passwordHash      String
-  avatar            String?
-  isActive          Boolean           @default(true)
-  isPremium         Boolean           @default(false)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  subscription      Subscription?
-  readingProgress   ReadingProgress[]
-  bookshelves       Bookshelf[]
-  sessions          UserSession[]
+  id                  String            @id @default(uuid())
+  email               String            @unique
+  name                String            @default("")
+  firstName           String            @default("")
+  lastName            String?
+  passwordHash        String
+  avatar              String?
+  role                UserRole          @default(USER)
+  isActive            Boolean           @default(true)
+  isPremium           Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Admin fields (nullable for regular users)
+  bio                 String?
+  communicationEmails Boolean?          @default(false)
+  displayItems        Json?             @default("[\"recents\", \"home\", \"applications\", \"desktop\", \"downloads\", \"documents\"]")
+  dob                 DateTime?
+  font                String?           @default("inter")
+  language            String?
+  marketingEmails     Boolean?          @default(false)
+  mobileNotifications Boolean?          @default(false)
+  notificationType    String?           @default("all")
+  phoneNumber         String?           @unique
+  securityEmails      Boolean?          @default(true)
+  socialEmails        Boolean?          @default(false)
+  theme               String?           @default("light")
+  urls                Json?             @default("[]")
+  username            String?           @unique
+
+  // Relationships
+  subscription        Subscription?
+  readingProgress     ReadingProgress[]
+  bookshelves          Bookshelf[]
+  sessions            UserSession[]
+  authoredBooks       Author[]          @relation("UserAuthors", fields: [id], references: [id])
+  books               Book[]            @relation("UserBooks", fields: [id], references: [id])
+  categorizedBooks    Category[]        @relation("UserCategories", fields: [id], references: [id])
+  publishedBooks      Publication[]     @relation("UserPublications", fields: [id], references: [id])
 
   @@map("users")
 }
@@ -306,4 +288,10 @@ enum SubscriptionPlan {
   FREE
   PREMIUM
   PREMIUM_PLUS
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }
