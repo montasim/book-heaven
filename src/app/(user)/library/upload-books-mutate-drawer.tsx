@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +13,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
@@ -35,7 +34,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { FileUpload } from '@/components/ui/file-upload'
 import { ImageUpload } from '@/components/ui/image-upload'
-import { createBook } from './actions'
+import { createBook, updateBook } from './actions'
 import { Info } from 'lucide-react'
 import {
   Tooltip,
@@ -48,6 +47,7 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  book?: any // Book object for editing
 }
 
 const formSchema = z.object({
@@ -58,14 +58,15 @@ const formSchema = z.object({
   image: z.union([z.string(), z.any()]).optional(),
   isPublic: z.boolean().default(false),
 }).superRefine((data, ctx) => {
-  if (!data.fileUrl) {
+  // Only require file/image for new books (not editing)
+  if (!data.fileUrl && typeof data.fileUrl === 'string' && data.fileUrl === '') {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'File is required',
       path: ['fileUrl'],
     });
   }
-  if (!data.image) {
+  if (!data.image && typeof data.image === 'string' && data.image === '') {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Cover image is required',
@@ -76,8 +77,9 @@ const formSchema = z.object({
 
 type BookForm = z.infer<typeof formSchema>
 
-export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props) {
+export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }: Props) {
   const [loading, setLoading] = useState(false)
+  const isEditing = !!book
 
   const form = useForm<BookForm>({
     resolver: zodResolver(formSchema),
@@ -91,24 +93,58 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
     },
   })
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (book) {
+      form.reset({
+        name: book.name || '',
+        author: book.authors?.[0]?.name || '',
+        type: book.type || 'EBOOK',
+        fileUrl: book.fileUrl || '',
+        image: book.image || '',
+        isPublic: book.isPublic || false,
+      })
+    } else {
+      form.reset({
+        name: '',
+        author: '',
+        type: 'EBOOK',
+        fileUrl: '',
+        image: '',
+        isPublic: false,
+      })
+    }
+  }, [book, form, open])
+
   const onSubmit = async (data: BookForm) => {
     setLoading(true)
     try {
       const formData = new FormData()
+
+      if (isEditing) {
+        formData.append('id', book.id)
+      }
+
       formData.append('name', data.name)
       formData.append('author', data.author)
       formData.append('type', data.type)
       formData.append('isPublic', data.isPublic ? 'on' : 'off')
-      
+
       if (data.fileUrl instanceof File) {
         formData.append('file', data.fileUrl)
-      }
-      
-      if (data.image instanceof File) {
-        formData.append('image', data.image)
+      } else if (typeof data.fileUrl === 'string' && data.fileUrl) {
+        formData.append('existingFileUrl', data.fileUrl)
       }
 
-      const result = await createBook(formData)
+      if (data.image instanceof File) {
+        formData.append('image', data.image)
+      } else if (typeof data.image === 'string' && data.image) {
+        formData.append('existingImageUrl', data.image)
+      }
+
+      const result = isEditing
+        ? await updateBook(book.id, formData)
+        : await createBook(formData)
 
       if (result.success) {
         toast({ title: result.message })
@@ -120,7 +156,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
       }
     } catch (error: any) {
       console.error('Error submitting form:', error)
-      toast({ title: 'Failed to create book', variant: 'destructive' })
+      toast({ title: `Failed to ${isEditing ? 'update' : 'create'} book`, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -138,9 +174,11 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
     >
       <SheetContent className='flex flex-col max-w-2xl overflow-y-auto'>
         <SheetHeader className='text-left'>
-          <SheetTitle>Upload Book</SheetTitle>
+          <SheetTitle>{isEditing ? 'Edit Book' : 'Upload Book'}</SheetTitle>
           <SheetDescription>
-            Add a new book to your collection. You can choose to make it public.
+            {isEditing
+              ? 'Update the book details. Change the file or image if needed.'
+              : 'Add a new book to your collection. You can choose to make it public.'}
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -183,7 +221,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Book Type <span className="text-destructive">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isEditing}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder='Select book type' />
@@ -205,7 +243,8 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    File Upload <span className="text-destructive">*</span>
+                    File Upload {isEditing && <span className="text-muted-foreground">(optional)</span>}
+                    {!isEditing && <span className="text-destructive">*</span>}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -236,7 +275,8 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    Cover Image <span className="text-destructive">*</span>
+                    Cover Image {isEditing && <span className="text-muted-foreground">(optional)</span>}
+                    {!isEditing && <span className="text-destructive">*</span>}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -300,7 +340,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess }: Props
             type='submit'
             disabled={loading || !form.formState.isValid}
           >
-            {loading ? 'Uploading...' : 'Upload Book'}
+            {loading ? (isEditing ? 'Updating...' : 'Uploading...') : (isEditing ? 'Update Book' : 'Upload Book')}
           </Button>
         </SheetFooter>
       </SheetContent>

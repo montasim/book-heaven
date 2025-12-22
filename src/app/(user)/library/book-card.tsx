@@ -3,32 +3,82 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { BookOpen, Clock, CheckCircle } from 'lucide-react'
+import { BookOpen, Clock, CheckCircle, Edit, Trash2 } from 'lucide-react'
+import { useLibraryContext } from './context/library-context'
 
-export function BookCard({ book }: { book: any }) {
+interface BookCardProps {
+  book: any
+  onEdit?: (book: any) => void
+  onDelete?: (book: any) => void
+}
+
+export function BookCard({ book, onEdit, onDelete }: BookCardProps) {
+  const { setOpen, setCurrentRow } = useLibraryContext()
   const progress = book.readingProgress?.[0]?.progress || 0
   const currentPage = book.readingProgress?.[0]?.currentPage || 0
   const readingTime = book.readingProgress?.[0]?.readingTime || 0
 
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(book)
+    } else {
+      setCurrentRow(book)
+      setOpen('edit')
+    }
+  }
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(book)
+    } else {
+      setCurrentRow(book)
+      setOpen('delete')
+    }
+  }
+
   return (
-    <Card className="group cursor-pointer transition-all hover:shadow-lg">
+    <Card className="group transition-all hover:shadow-lg">
       <CardContent className="p-4">
-        {/* Book Cover */}
-        <div className="w-full h-48 bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-          {book.image ? (
-            <img src={book.image} alt={book.name} className="h-full w-full object-cover" />
-          ) : (
-            <BookOpen className="h-12 w-12 text-muted-foreground" />
-          )}
+        <div className="relative">
+          {/* Book Cover */}
+          <div className="w-full h-48 bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            {book.image ? (
+              <img src={book.image} alt={book.name} className="h-full w-full object-cover" />
+            ) : (
+              <BookOpen className="h-12 w-12 text-muted-foreground" />
+            )}
+          </div>
+
+          {/* Action Icons */}
+          <div className="absolute top-2 right-2 flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 bg-background/50 hover:bg-background/80"
+              onClick={handleEdit}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 bg-background/50 hover:bg-background/80 text-destructive hover:text-destructive"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Book Info */}
         <div className="space-y-2">
-          <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-            {book.name}
-          </h3>
+          <Link href={`/user-reader/${book.id}`} className="cursor-pointer">
+            <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+              {book.name}
+            </h3>
+          </Link>
           <p className="text-sm text-muted-foreground">
-            by {book.authors.map((a: any) => a.author.name).join(', ')}
+            by {book.authors.map((a: any) => a.name).join(', ')}
           </p>
 
           {/* Progress */}
