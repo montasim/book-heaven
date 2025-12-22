@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { User, userSchema } from './data/schema'
-import { getAllAdmins, deleteAdmin as deleteAdminFromDb, findAdminById, updateAdmin } from '@/lib/auth/repositories/admin.repository'
+import { getAllAdmins, deleteUser as deleteUserFromDb, findUserById, updateUser } from '@/lib/auth/repositories/user.repository'
 
 
 // Get all users (admins from database)
@@ -25,8 +25,8 @@ export async function createUser(formData: FormData) {
 // Update user
 export async function updateUser(id: string, formData: FormData) {
   try {
-    // Get current admin data
-    const currentAdmin = await findAdminById(id)
+    // Get current user data with admin role
+    const currentAdmin = await findUserById(id, ['ADMIN', 'SUPER_ADMIN'])
     if (!currentAdmin) {
       throw new Error('User not found')
     }
@@ -47,7 +47,7 @@ export async function updateUser(id: string, formData: FormData) {
     // Check username availability if changed
     if (username && username !== currentAdmin.username) {
       try {
-        const existingWithUsername = await prisma.admin.findFirst({
+        const existingWithUsername = await prisma.user.findFirst({
           where: {
             username,
             NOT: { id }
@@ -63,8 +63,8 @@ export async function updateUser(id: string, formData: FormData) {
 
     // Check email uniqueness (exclude current user)
     if (email !== currentAdmin.email) {
-      const { adminExists } = await import('@/lib/auth/repositories/admin.repository')
-      const emailExists = await adminExists(email)
+      const { userExists } = await import('@/lib/auth/repositories/user.repository')
+      const emailExists = await userExists(email)
       if (emailExists) {
         throw new Error('Email is already in use by another user')
       }
@@ -87,8 +87,8 @@ export async function updateUser(id: string, formData: FormData) {
       }
     }
 
-    // Update admin in database
-    await updateAdmin(id, updateData)
+    // Update user in database
+    await updateUser(id, updateData)
 
     // Update role in memory (temporary solution)
     if (role) {
@@ -148,7 +148,7 @@ function mapAdminToUser(admin: any): User {
 // Delete user
 export async function deleteUser(id: string) {
   try {
-    await deleteAdminFromDb(id)
+    await deleteUserFromDb(id)
     revalidatePath('/users')
     return { message: 'User deleted successfully' }
   } catch (error) {
@@ -182,7 +182,7 @@ export async function inviteUser(formData: FormData) {
 // Check email availability
 export async function checkEmailAvailability(email: string, excludeUserId?: string) {
   try {
-    const { getAllAdmins } = await import('@/lib/auth/repositories/admin.repository')
+    const { getAllAdmins } = await import('@/lib/auth/repositories/user.repository')
     const { activeInviteExists } = await import('@/lib/auth/repositories/invite.repository')
 
     const admins = await getAllAdmins()
@@ -210,7 +210,7 @@ export async function checkEmailAvailability(email: string, excludeUserId?: stri
 // Check username availability
 export async function checkUsernameAvailability(username: string, excludeUserId?: string) {
   try {
-    const { getAllAdmins } = await import('@/lib/auth/repositories/admin.repository')
+    const { getAllAdmins } = await import('@/lib/auth/repositories/user.repository')
     const admins = await getAllAdmins()
 
     // Check actual username fields from database, fallback to email prefix
@@ -234,7 +234,7 @@ export async function checkUsernameAvailability(username: string, excludeUserId?
 // Check phone number availability
 export async function checkPhoneNumberAvailability(phoneNumber: string, excludeUserId?: string) {
   try {
-    const { getAllAdmins } = await import('@/lib/auth/repositories/admin.repository')
+    const { getAllAdmins } = await import('@/lib/auth/repositories/user.repository')
     const admins = await getAllAdmins()
 
     const existingPhone = admins.find(admin =>
