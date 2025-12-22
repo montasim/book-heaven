@@ -68,6 +68,7 @@ export function PDFViewer({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [rotation, setRotation] = useState(0)
   const [loadingProgress, setLoadingProgress] = useState(0)
+  const loadedPdfUrl = useRef<string | null>(null) // Track which PDF has been loaded
 
   // Load PDF.js dynamically
   const loadPDFJS = useCallback(async () => {
@@ -108,11 +109,7 @@ export function PDFViewer({
       setPdfDocument(pdf)
       setTotalPages(pdf.numPages)
 
-      // Load first page
-      if (initialPage <= pdf.numPages) {
-        await renderPage(pdf, initialPage, scale, rotation)
-      }
-
+      // Note: Page rendering is handled by useEffect below when canvas is mounted
       onPageChange?.(initialPage, pdf.numPages)
       onProgressChange?.((initialPage / pdf.numPages) * 100)
     } catch (err) {
@@ -121,7 +118,7 @@ export function PDFViewer({
     } finally {
       setIsLoading(false)
     }
-  }, [fileUrl, initialPage, scale, rotation, loadPDFJS, onPageChange, onProgressChange])
+  }, [fileUrl, initialPage, loadPDFJS, onPageChange, onProgressChange]) // eslint-disable-line react-hooks/exhaustive-deps -- scale & rotation read via closure, not as deps
 
   // Render specific page
   const renderPage = useCallback(async (pdf: PDFDocument, pageNumber: number, currentScale: number, currentRotation: number) => {
@@ -271,10 +268,29 @@ export function PDFViewer({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentPage, totalPages, pdfDocument, scale, goToPage, handleZoomChange])
 
-  // Load PDF on mount
+  // Load PDF on mount or when fileUrl changes
   useEffect(() => {
+    // Prevent reloading the same PDF URL
+    if (fileUrl === loadedPdfUrl.current) return
+    loadedPdfUrl.current = fileUrl
+
     loadPDF()
-  }, [loadPDF])
+  }, [fileUrl, loadPDF])
+
+  // Render initial page when PDF document loads and canvas is available
+  useEffect(() => {
+    if (!pdfDocument || !canvasRef.current) return
+
+    const renderInitialPage = async () => {
+      try {
+        await renderPage(pdfDocument, currentPage, scale, rotation)
+      } catch (err) {
+        console.error('Error rendering initial page:', err)
+      }
+    }
+
+    renderInitialPage()
+  }, [pdfDocument]) // Only run when pdfDocument is first set
 
   // Fullscreen change listener
   useEffect(() => {
