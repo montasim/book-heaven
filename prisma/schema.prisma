@@ -181,10 +181,10 @@ model User {
   readingProgress     ReadingProgress[]
   bookshelves          Bookshelf[]
   sessions            UserSession[]
-  authoredBooks       Author[]          @relation("UserAuthors", fields: [id], references: [id])
-  books               Book[]            @relation("UserBooks", fields: [id], references: [id])
-  categorizedBooks    Category[]        @relation("UserCategories", fields: [id], references: [id])
-  publishedBooks      Publication[]     @relation("UserPublications", fields: [id], references: [id])
+  authoredBooks       Author[]          @relation("UserAuthors")
+  books               Book[]            @relation("UserBooks")
+  categorizedBooks    Category[]        @relation("UserCategories")
+  publishedBooks      Publication[]     @relation("UserPublications")
 
   @@map("users")
 }
