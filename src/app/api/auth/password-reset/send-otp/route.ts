@@ -1,13 +1,13 @@
 /**
  * Password Reset - Send OTP Endpoint
- * 
+ *
  * POST /api/auth/password-reset/send-otp
- * 
+ *
  * Step 1 of password reset: Send OTP to email
- * 
+ *
  * Security:
  * - ALWAYS returns generic success message (prevents email enumeration)
- * - OTP only sent if admin exists
+ * - OTP only sent if user exists (any role)
  * - Rate limiting (3 attempts per 10 minutes)
  * - OTP hashed before storage
  * - Invalidates previous RESET_PASSWORD OTPs
@@ -21,9 +21,8 @@ import {
     validateRequiredFields,
 } from '@/lib/auth/validation'
 import {
-    adminExists,
-    findAdminByEmail,
-} from '@/lib/auth/repositories/admin.repository'
+    findUserByEmail,
+} from '@/lib/auth/repositories/user.repository'
 import { createOtpAndInvalidateOld } from '@/lib/auth/repositories/otp.repository'
 import { generateOtp, hashOtp } from '@/lib/auth/crypto'
 import { sendPasswordResetOtp } from '@/lib/auth/email'
@@ -65,13 +64,17 @@ export async function POST(request: NextRequest) {
             return errorResponse(error.message, 429)
         }
 
-        // Check if admin exists
-        const admin = await findAdminByEmail(email)
+        // Check if user exists (any role)
+        console.log(`Checking for user with email: ${email}`)
+        const user = await findUserByEmail(email)
 
-        if (admin) {
-            // Admin exists - generate and send OTP
+        if (user) {
+            console.log(`User found: ${user.id}, role: ${user.role}`)
+            // User exists - generate and send OTP
             const otp = generateOtp()
             const codeHash = await hashOtp(otp)
+
+            console.log(`Generated OTP for password reset: ${otp} (for debugging - remove in production)`)
 
             // Calculate expiry
             const expiresAt = new Date()
@@ -85,13 +88,18 @@ export async function POST(request: NextRequest) {
                 expiresAt,
             })
 
+            console.log('OTP record created, attempting to send email...')
+
             // Send OTP email
             try {
                 await sendPasswordResetOtp(email, otp)
+                console.log(`Password reset OTP email sent successfully to: ${email}`)
             } catch (emailError) {
                 console.error('Failed to send password reset OTP email:', emailError)
                 // Don't reveal email sending failure - still return generic success
             }
+        } else {
+            console.log(`No user found with email: ${email}`)
         }
 
         // ALWAYS return generic success message (prevent email enumeration)

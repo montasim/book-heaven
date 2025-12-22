@@ -252,7 +252,7 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
                   <div className='flex items-center justify-between'>
                     <FormLabel>Password</FormLabel>
                     <Link
-                      href='/forgot-password'
+                      href={`/forgot-password?email=${encodeURIComponent(email)}`}
                       className='text-sm font-medium text-muted-foreground hover:opacity-75'
                     >
                       Forgot password?

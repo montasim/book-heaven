@@ -1,10 +1,10 @@
 'use client'
 
-import { HTMLAttributes, useState } from 'react'
+import { HTMLAttributes, useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -60,14 +60,37 @@ const passwordSchema = z
 
 export function ForgotForm({ className, ...props }: ForgotFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email')
   const [email, setEmail] = useState('')
+  const [resendCountdown, setResendCountdown] = useState(0)
 
   const emailForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
     defaultValues: { email: '' },
   })
+
+  // Check for email in URL parameters and prefill it
+  useEffect(() => {
+    const emailFromUrl = searchParams?.get('email')
+    if (emailFromUrl) {
+      setEmail(emailFromUrl)
+      emailForm.setValue('email', emailFromUrl)
+    }
+  }, [searchParams, emailForm])
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (resendCountdown > 0) {
+      interval = setInterval(() => {
+        setResendCountdown(prev => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [resendCountdown])
 
   const otpForm = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
@@ -106,6 +129,8 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
 
       setEmail(data.email)
       setStep('otp')
+      // Start 60-second countdown for resend
+      setResendCountdown(60)
 
       toast({
         title: 'Reset Code Sent',
@@ -120,6 +145,47 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Resend OTP functionality
+  async function onResendOtp() {
+    setIsResending(true)
+
+    try {
+      const response = await fetch('/api/auth/password-reset/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error || 'Failed to resend reset code',
+        })
+        return
+      }
+
+      // Start 60-second countdown for resend
+      setResendCountdown(60)
+
+      toast({
+        title: 'Reset Code Resent',
+        description: result.message || 'Check your email for the new reset code',
+      })
+    } catch (error) {
+      console.error('Resend OTP error:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'An error occurred. Please try again.',
+      })
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -240,10 +306,30 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
   if (step === 'otp') {
     return (
       <div className={cn('grid gap-6', className)} {...props}>
-        <div className='mb-4'>
+        <div>
           <p className='text-sm text-muted-foreground'>
             We sent a 7-digit code to <strong>{email}</strong>
           </p>
+          <div className='mt-3 flex items-center justify-between'>
+            <span className='text-xs text-muted-foreground'>
+              Didn't receive the code?
+            </span>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              onClick={onResendOtp}
+              disabled={resendCountdown > 0 || isResending}
+              className='text-xs h-auto p-0 font-normal'
+            >
+              {isResending
+                ? 'Sending...'
+                : resendCountdown > 0
+                  ? `Resend in ${resendCountdown}s`
+                  : 'Resend'
+              }
+            </Button>
+          </div>
         </div>
         <Form {...otpForm}>
           <form onSubmit={otpForm.handleSubmit(onOtpSubmit)}>

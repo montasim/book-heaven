@@ -18,7 +18,7 @@ import {
     successResponse,
 } from '@/lib/auth/request-utils'
 import { findInviteByToken, createInvite } from '@/lib/auth/repositories/invite.repository'
-import { adminExists } from '@/lib/auth/repositories/admin.repository'
+import { adminExists } from '@/lib/auth/repositories/user.repository'
 import { sendInvitationEmail } from '@/lib/auth/email'
 
 export async function POST(request: NextRequest) {

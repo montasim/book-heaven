@@ -22,9 +22,9 @@ import {
     validateRequiredFields,
 } from '@/lib/auth/validation'
 import {
-    findAdminByEmail,
-    updateAdminPassword,
-} from '@/lib/auth/repositories/admin.repository'
+    findUserByEmail,
+    updateUserPassword,
+} from '@/lib/auth/repositories/user.repository'
 import { findActiveAuthSession } from '@/lib/auth/repositories/auth-session.repository'
 import { invalidateAllOtps } from '@/lib/auth/repositories/otp.repository'
 import { hashPassword } from '@/lib/auth/crypto'
@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
             return errorResponse('Session expired. Please verify your email again.', 401)
         }
 
-        // Verify admin exists
-        const admin = await findAdminByEmail(email)
-        if (!admin) {
+        // Verify user exists
+        const user = await findUserByEmail(email)
+        if (!user) {
             return errorResponse('Account not found.', 404)
         }
 
@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
 
         // Update password, delete AuthSession, and invalidate OTPs in a transaction
         await prisma.$transaction(async (tx) => {
-            // Update admin password
-            await tx.admin.update({
+            // Update user password
+            await tx.user.update({
                 where: { email },
                 data: { passwordHash },
             })
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
             })
 
             // Invalidate all RESET_PASSWORD OTPs for this email
-            await tx.adminOtp.updateMany({
+            await tx.userOtp.updateMany({
                 where: {
                     email,
                     intent: AuthIntent.RESET_PASSWORD,

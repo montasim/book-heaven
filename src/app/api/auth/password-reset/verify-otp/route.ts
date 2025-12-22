@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         // Mark OTP as used and create AuthSession in a transaction
         await prisma.$transaction(async (tx) => {
             // Mark OTP as used (single-use enforcement)
-            await tx.adminOtp.update({
+            await tx.userOtp.update({
                 where: { id: otpRecord.id },
                 data: { used: true },
             })

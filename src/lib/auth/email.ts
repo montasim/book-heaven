@@ -197,27 +197,33 @@ export async function sendPasswordResetOtp(
 ): Promise<boolean> {
   const { subject, html, text } = getPasswordResetOtpEmailTemplate(otp)
 
+  console.log(`Attempting to send password reset OTP to ${email} from ${FROM_EMAIL}`)
+
   try {
-    const { error } = await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
-      to: email,
+      to: [email], // Ensure it's an array
       subject,
       html,
       text,
     })
 
-    if (error) {
+    console.log('Resend API response:', result)
+
+    if (result.error) {
       console.error('Failed to send password reset OTP email:', {
         email,
-        error: error.message,
+        error: result.error.message,
+        errorCode: result.error.name,
       })
-      throw new Error('Failed to send password reset email')
+      throw new Error(`Failed to send password reset email: ${result.error.message}`)
     }
 
+    console.log(`Password reset OTP email sent successfully to ${email}, messageId: ${result.data?.id}`)
     return true
   } catch (error) {
     console.error('Email sending error:', error)
-    throw new Error('Failed to send password reset email')
+    throw new Error(`Failed to send password reset email: ${error}`)
   }
 }
 

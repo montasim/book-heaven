@@ -19,7 +19,7 @@ import {
     sanitizeEmail,
     validateRequiredFields,
 } from '@/lib/auth/validation'
-import { adminExists } from '@/lib/auth/repositories/admin.repository'
+import { adminExists } from '@/lib/auth/repositories/user.repository'
 import { createOtpAndInvalidateOld } from '@/lib/auth/repositories/otp.repository'
 import { generateOtp, hashOtp } from '@/lib/auth/crypto'
 import { sendRegistrationOtp } from '@/lib/auth/email'
