@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import { useAuthCheck } from '@/hooks/use-auth-check'
 
 interface AuthGuardProps {
@@ -10,20 +8,11 @@ interface AuthGuardProps {
 }
 
 /**
- * Component to protect routes that require authentication
- * Automatically checks authentication status and redirects on failure
+ * Component to protect routes that require authentication.
+ * It uses the useAuthCheck hook which handles the redirect logic.
  */
 export function AuthGuard({ children, redirectTo = '/auth/sign-in' }: AuthGuardProps) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const { checkAuthAndRedirect } = useAuthCheck({ redirectTo })
-
-  useEffect(() => {
-    // Only check auth on dashboard routes
-    if (pathname.startsWith('/dashboard')) {
-      checkAuthAndRedirect()
-    }
-  }, [pathname, checkAuthAndRedirect])
+  useAuthCheck({ redirectTo })
 
   return <>{children}</>
 }

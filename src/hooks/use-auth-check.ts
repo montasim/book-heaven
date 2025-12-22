@@ -1,49 +1,32 @@
 'use client'
 
-import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { useAuth } from '@/context/auth-context'
 
 interface UseAuthCheckOptions {
   redirectTo?: string
-  enabled?: boolean
 }
 
 /**
- * Hook to handle authentication failures and redirect to sign-in
- * Automatically checks authentication and redirects on failure
+ * Hook to handle authentication failures and redirect to sign-in.
+ * It uses the central AuthContext to check the user's status.
  */
 export function useAuthCheck(options: UseAuthCheckOptions = {}) {
-  const { redirectTo = '/auth/sign-in', enabled = true } = options
+  const { redirectTo = '/auth/sign-in' } = options
+  const { user, isLoading } = useAuth()
   const router = useRouter()
-  const pathname = usePathname()
 
-  const checkAuthAndRedirect = useCallback(async () => {
-    if (!enabled) return
+  useEffect(() => {
+    // Wait for the initial auth check to complete
+    if (isLoading) {
+      return
+    }
 
-    try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include', // Important for cookies
-      })
-
-      if (!response.ok) {
-        // Authentication failed, redirect to sign-in
-        console.log('Authentication failed, redirecting to sign-in...')
-        router.push(redirectTo)
-        return
-      }
-
-      const data = await response.json()
-      if (!data.success) {
-        // API returned success: false, redirect to sign-in
-        console.log('API returned authentication failure, redirecting to sign-in...')
-        router.push(redirectTo)
-      }
-    } catch (error) {
-      // Network or other error, redirect to sign-in
-      console.log('Auth check failed, redirecting to sign-in:', error)
+    // If there is no user, redirect to the sign-in page
+    if (!user) {
+      console.log('AuthGuard: User not found, redirecting to sign-in...')
       router.push(redirectTo)
     }
-  }, [router, redirectTo, enabled])
-
-  return { checkAuthAndRedirect }
+  }, [user, isLoading, router, redirectTo])
 }

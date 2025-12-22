@@ -148,7 +148,7 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
 
       // Redirect based on user role
       if (result.user?.role === 'USER') {
-        router.push('/') // Regular users go to home/books page
+        router.push('/') // Regular users go to home/books-old page
       } else if (result.user?.role === 'ADMIN' || result.user?.role === 'SUPER_ADMIN') {
         router.push('/dashboard') // Admins go to dashboard
       } else {
