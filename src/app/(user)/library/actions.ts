@@ -313,8 +313,18 @@ export async function getBookshelves() {
                 userId: session.userId
             },
             include: {
-                _count: {
-                    select: { books: true }
+                books: {
+                    include: {
+                        book: {
+                            include: {
+                                readingProgress: {
+                                    where: {
+                                        userId: session.userId
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             },
             orderBy: {
@@ -322,10 +332,28 @@ export async function getBookshelves() {
             }
         })
 
-        return bookshelves.map(shelf => ({
-            ...shelf,
-            bookCount: shelf._count.books
-        }))
+        return bookshelves.map(shelf => {
+            const books = shelf.books || []
+            const totalBooks = books.length
+            const completedBooks = books.filter(b =>
+                b.book.readingProgress && b.book.readingProgress.length > 0 &&
+                b.book.readingProgress[0].progress >= 95
+            ).length
+            const progressPercent = totalBooks > 0
+                ? Math.round((completedBooks / totalBooks) * 100)
+                : 0
+            const totalPages = books.reduce((sum, b) =>
+                sum + (b.book.pageNumber || 0), 0
+            )
+
+            return {
+                ...shelf,
+                bookCount: totalBooks,
+                completedBooks,
+                progressPercent,
+                totalPages
+            }
+        })
     } catch (error) {
         console.error('Error fetching bookshelves:', error)
         return []
@@ -476,6 +504,11 @@ export async function getBookshelfById(id: string) {
                 authors: {
                   include: {
                     author: true
+                  }
+                },
+                readingProgress: {
+                  where: {
+                    userId: session.userId
                   }
                 }
               }

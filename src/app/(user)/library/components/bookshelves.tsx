@@ -5,10 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FolderOpen, Edit, Trash2, Bookmark } from 'lucide-react'
+import { FolderOpen, Edit, Trash2, Bookmark, Clock } from 'lucide-react'
 import { getBookshelves } from '../actions'
 import { Badge } from '@/components/ui/badge'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
+import { Progress } from '@/components/ui/progress'
 
 interface Bookshelf {
   id: string
@@ -17,6 +18,9 @@ interface Bookshelf {
   isPublic: boolean
   bookCount: number
   image?: string | null
+  completedBooks?: number
+  progressPercent?: number
+  totalPages?: number
 }
 
 interface BookshelvesProps {
@@ -145,6 +149,32 @@ export function Bookshelves({ onEdit, onDelete }: BookshelvesProps) {
               <p className="text-sm text-muted-foreground">
                 {shelf.bookCount} {shelf.bookCount === 1 ? 'book' : 'books'}
               </p>
+
+              {/* Progress Summary */}
+              {shelf.bookCount > 0 && shelf.progressPercent !== undefined && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span className='flex items-center justify-between'>
+                      {shelf.completedBooks} of {shelf.bookCount} {shelf.bookCount === 1 ? 'book' : 'books'} read
+                    </span>
+                    <span>{shelf.progressPercent}%</span>
+                  </div>
+                  <Progress value={shelf.progressPercent} className="h-1.5" />
+                </div>
+              )}
+
+              {/* Total Reading Time */}
+              {shelf.totalPages > 0 && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground pt-1">
+                  <Clock className="h-3 w-3" />
+                  <span>
+                    {shelf.totalPages * 2 < 60
+                      ? `${shelf.totalPages * 2} min read`
+                      : `${Math.round((shelf.totalPages * 2) / 60)}h read`}
+                  </span>
+                  <span>• {shelf.totalPages} pages</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
