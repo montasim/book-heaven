@@ -14,13 +14,16 @@ import {
     BookOpen,
     Clock,
     TrendingUp,
-    Target
+    Target,
+    ChevronUp,
+    ChevronDown
 } from 'lucide-react'
 import { BookList } from './book-list'
 import { Bookshelves } from './components/bookshelves'
 import { BookshelfContent } from './components/bookshelf-content'
 import { BookshelfMutateDrawer } from './bookshelf-mutate-drawer'
 import { UploadBooksMutateDrawer } from './upload-books-mutate-drawer'
+import { LibraryFilterToolbar } from './components/library-filter-toolbar'
 import { Book } from '@/app/dashboard/books/data/schema'
 import { deleteBook } from '@/app/dashboard/books/actions'
 import { getBookshelves, deleteBookshelf, getUserBooks } from './actions'
@@ -105,6 +108,12 @@ export default function LibraryPage() {
     totalPages: 0,
     totalPagesRead: 0,
   })
+  const [showSummary, setShowSummary] = useState(true)
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterReadingStatus, setFilterReadingStatus] = useState<string[]>([])
+  const [filterAuthors, setFilterAuthors] = useState<string[]>([])
 
   const refreshBooks = async () => {
     const userBooks = await getUserBooks()
@@ -173,6 +182,53 @@ export default function LibraryPage() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
+  // Get unique authors from books
+  const uniqueAuthors = useMemo(() => {
+    const authors = new Set<string>()
+    books.forEach(book => {
+      book.authors?.forEach((a: any) => authors.add(a.name))
+    })
+    return Array.from(authors).sort()
+  }, [books])
+
+  // Filter books
+  const filteredBooks = useMemo(() => {
+    return books.filter(book => {
+      // Search filter
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase()
+        const matchesName = book.name?.toLowerCase().includes(searchLower)
+        const matchesAuthor = book.authors?.some((a: any) =>
+          a.name.toLowerCase().includes(searchLower)
+        )
+        if (!matchesName && !matchesAuthor) return false
+      }
+
+      // Reading status filter
+      const progress = Math.round(book.readingProgress?.[0]?.progress || 0)
+      if (filterReadingStatus.length > 0) {
+        if (filterReadingStatus.includes('not-started') && progress > 0) return false
+        if (filterReadingStatus.includes('in-progress') && (progress === 0 || progress >= 95)) return false
+        if (filterReadingStatus.includes('completed') && progress < 95) return false
+      }
+
+      // Authors filter
+      if (filterAuthors.length > 0) {
+        const bookAuthors = book.authors?.map((a: any) => a.name) || []
+        if (!filterAuthors.some(a => bookAuthors.includes(a))) return false
+      }
+
+      return true
+    })
+  }, [books, searchQuery, filterReadingStatus, filterAuthors])
+
+  // Reset filters
+  const resetFilters = () => {
+    setSearchQuery('')
+    setFilterReadingStatus([])
+    setFilterAuthors([])
+  }
+
   if (bookshelfId) {
     return (
       <LibraryContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshBooks }}>
@@ -233,7 +289,7 @@ export default function LibraryPage() {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">My Library</h1>
+            <h1 className="text-xl font-bold mb-2">My Library</h1>
             <p className="text-muted-foreground">
               Organize your books into custom collections and manage your uploads.
             </p>
@@ -259,9 +315,22 @@ export default function LibraryPage() {
               <TabsTrigger value="bookshelves">Bookshelves</TabsTrigger>
             </Link>
           </TabsList>
-          <TabsContent value="my-uploads" className="space-y-6">
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <TabsContent value="my-uploads" className="space-y-6 md:overflow-y-visible md:max-h-none">
+            {/* Stats Overview - Fixed position on mobile */}
+            {/* Mobile toggle button */}
+            <div className="flex items-center justify-between md:hidden mb-2">
+              <h2 className="text-lg font-semibold">Summary</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSummary(!showSummary)}
+              >
+                {showSummary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {showSummary && (
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Books Read</CardTitle>
@@ -304,18 +373,38 @@ export default function LibraryPage() {
                 </CardContent>
               </Card>
             </div>
-            <BookList
-              books={books}
-              openDrawer={() => setIsBookDrawerOpen(true)}
-              onEdit={handleEditBook}
+            )}
+
+            {/* Filter Toolbar */}
+            <LibraryFilterToolbar
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              readingStatus={filterReadingStatus}
+              onReadingStatusChange={setFilterReadingStatus}
+              authors={uniqueAuthors}
+              selectedAuthors={filterAuthors}
+              onAuthorsChange={setFilterAuthors}
+              onReset={resetFilters}
+              bookCount={filteredBooks.length}
             />
+
+            {/* Scrollable book list - only this scrolls on mobile */}
+            <div className="overflow-y-auto max-h-[calc(100vh-28rem)] pb-20 md:overflow-y-visible md:max-h-none md:pb-0">
+              <BookList
+                books={filteredBooks}
+                openDrawer={() => setIsBookDrawerOpen(true)}
+                onEdit={handleEditBook}
+              />
+            </div>
           </TabsContent>
-          <TabsContent value="bookshelves" className="space-y-4">
-            <Bookshelves
-              key={bookshelfKey}
-              onEdit={handleEditBookshelf}
-              onDelete={handleDeleteBookshelf}
-            />
+          <TabsContent value="bookshelves" className="space-y-4 md:overflow-y-visible md:max-h-none">
+            <div className="overflow-y-auto max-h-[calc(100vh-24rem)] pb-20 md:overflow-y-visible md:max-h-none md:pb-0">
+              <Bookshelves
+                key={bookshelfKey}
+                onEdit={handleEditBookshelf}
+                onDelete={handleDeleteBookshelf}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
