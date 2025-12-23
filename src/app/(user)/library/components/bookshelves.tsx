@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FolderOpen, Edit, Trash2 } from 'lucide-react'
+import { FolderOpen, Edit, Trash2, Bookmark } from 'lucide-react'
 import { getBookshelves } from '../actions'
 import { Badge } from '@/components/ui/badge'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 interface Bookshelf {
   id: string
@@ -14,6 +16,7 @@ interface Bookshelf {
   description: string | null
   isPublic: boolean
   bookCount: number
+  image?: string | null
 }
 
 interface BookshelvesProps {
@@ -78,8 +81,18 @@ export function Bookshelves({ onEdit, onDelete }: BookshelvesProps) {
           <CardContent className="p-6">
             <div className="relative">
               <Link href={`/library?tab=bookshelves&bookshelfId=${shelf.id}`} className="block">
-                <div className="w-full h-32 bg-muted rounded-lg mb-4 flex items-center justify-center">
-                  <FolderOpen className="h-12 w-12 text-muted-foreground" />
+                <div className="w-full h-32 bg-muted rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
+                  {shelf.image ? (
+                    <Image
+                      src={getProxiedImageUrl(shelf.image) || shelf.image}
+                      alt={shelf.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <Bookmark className="h-12 w-12 text-muted-foreground" />
+                  )}
                 </div>
               </Link>
               {/* Action Icons */}

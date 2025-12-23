@@ -31,13 +31,15 @@ import {
   EyeOff,
   Grid3X3,
   List,
-  Search
+  Search,
+  Bookmark
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useBookshelves, useCreateBookshelf, useUpdateBookshelf, useDeleteBookshelf } from '@/hooks/use-bookshelves'
 import type { Bookshelf } from '@/hooks/use-bookshelves'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 interface BookshelfProps {
   bookshelf: Bookshelf
@@ -76,7 +78,15 @@ export function BookshelfCard({
             viewMode === 'list' ? "w-16 h-20" : "w-full h-32 mb-4"
           )}>
             <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
-              {bookshelf.books && bookshelf.books.length > 0 ? (
+              {bookshelf.image ? (
+                <Image
+                  src={getProxiedImageUrl(bookshelf.image) || bookshelf.image}
+                  alt={bookshelf.name}
+                  fill
+                  className="object-cover rounded"
+                  sizes={viewMode === 'list' ? "64px" : "128px"}
+                />
+              ) : bookshelf.books && bookshelf.books.length > 0 ? (
                 <div className="relative w-full h-full">
                   {bookshelf.books.slice(0, viewMode === 'list' ? 1 : 3).map((item, index) => (
                     <div
@@ -88,7 +98,7 @@ export function BookshelfCard({
                     >
                       {item.book.image ? (
                         <Image
-                          src={item.book.image}
+                          src={getProxiedImageUrl(item.book.image) || item.book.image}
                           alt={item.book.name}
                           fill
                           className="object-cover rounded"
@@ -96,14 +106,14 @@ export function BookshelfCard({
                         />
                       ) : (
                         <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                          <BookOpen className="h-6 w-6 text-muted-foreground" />
+                          <Bookmark className="h-6 w-6 text-muted-foreground" />
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <BookOpen className="h-8 w-8 text-muted-foreground" />
+                <Bookmark className="h-8 w-8 text-muted-foreground" />
               )}
             </div>
           </div>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { BookOpen, Clock, CheckCircle, Edit, Trash2 } from 'lucide-react'
 import { useLibraryContext } from './context/library-context'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 interface BookCardProps {
   book: any
@@ -43,7 +44,7 @@ export function BookCard({ book, onEdit, onDelete }: BookCardProps) {
           {/* Book Cover */}
           <div className="w-full h-48 bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
             {book.image ? (
-              <img src={book.image} alt={book.name} className="h-full w-full object-cover" />
+              <img src={getProxiedImageUrl(book.image) || book.image} alt={book.name} className="h-full w-full object-cover" />
             ) : (
               <BookOpen className="h-12 w-12 text-muted-foreground" />
             )}
