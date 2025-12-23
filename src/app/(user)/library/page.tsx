@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -29,11 +29,54 @@ import useDialogState from '@/hooks/use-dialog-state'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { toast } from '@/hooks/use-toast'
 
-// Mock stats data
-const stats = {
-    completedBooks: 8,
-    readingTime: 45, // hours
-    currentlyReading: 3,
+interface LibraryStats {
+  completedBooks: number
+  completedThisMonth: number
+  readingTimeHours: number
+  currentlyReading: number
+  totalPages: number
+  totalPagesRead: number
+}
+
+// Calculate library statistics from books data
+function calculateLibraryStats(books: Book[]): LibraryStats {
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const completedBooks = books.filter(book => {
+    const progress = book.readingProgress?.[0]?.progress || 0
+    return progress >= 95
+  })
+
+  const completedThisMonth = completedBooks.filter(book => {
+    const lastRead = book.readingProgress?.[0]?.lastReadAt
+    return lastRead && new Date(lastRead) >= startOfMonth
+  })
+
+  const currentlyReading = books.filter(book => {
+    const progress = book.readingProgress?.[0]?.progress || 0
+    return progress > 0 && progress < 95
+  })
+
+  const totalPages = books.reduce((sum, book) => sum + (book.pageNumber || 0), 0)
+
+  // Calculate reading time based on pages read (2 min per page)
+  const totalPagesRead = books.reduce((sum, book) => {
+    const currentPage = book.readingProgress?.[0]?.currentPage || 0
+    return sum + currentPage
+  }, 0)
+
+  const readingTimeMinutes = totalPagesRead * 2
+  const readingTimeHours = Math.round(readingTimeMinutes / 60)
+
+  return {
+    completedBooks: completedBooks.length,
+    completedThisMonth: completedThisMonth.length,
+    readingTimeHours,
+    currentlyReading: currentlyReading.length,
+    totalPages,
+    totalPagesRead
+  }
 }
 
 export default function LibraryPage() {
@@ -54,10 +97,19 @@ export default function LibraryPage() {
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [bookshelfKey, setBookshelfKey] = useState(0)
   const [editingBookshelf, setEditingBookshelf] = useState<any>(null)
+  const [stats, setStats] = useState<LibraryStats>({
+    completedBooks: 0,
+    completedThisMonth: 0,
+    readingTimeHours: 0,
+    currentlyReading: 0,
+    totalPages: 0,
+    totalPagesRead: 0,
+  })
 
   const refreshBooks = async () => {
     const userBooks = await getUserBooks()
     setBooks(userBooks)
+    setStats(calculateLibraryStats(userBooks))
   }
 
   const handleSuccess = () => {
@@ -217,7 +269,7 @@ export default function LibraryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.completedBooks}</div>
-                  <p className="text-xs text-muted-foreground">2 this month</p>
+                  <p className="text-xs text-muted-foreground">{stats.completedThisMonth > 0 ? `${stats.completedThisMonth} this month` : 'Start reading to track'}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -226,8 +278,8 @@ export default function LibraryPage() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.readingTime}h</div>
-                  <p className="text-xs text-muted-foreground">Total time invested</p>
+                  <div className="text-2xl font-bold">{stats.readingTimeHours}h</div>
+                  <p className="text-xs text-muted-foreground">{stats.totalPagesRead > 0 ? `${stats.totalPagesRead} pages read` : 'Start reading to track'}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -237,18 +289,18 @@ export default function LibraryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.currentlyReading}</div>
-                  <p className="text-xs text-muted-foreground">Active books</p>
+                  <p className="text-xs text-muted-foreground">{stats.currentlyReading > 0 ? 'Books in progress' : 'No books started'}</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reading Goal</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Progress</CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">67%</div>
-                  <p className="text-xs text-muted-foreground">8 of 12 books</p>
-                  <Progress value={67} className="mt-2 h-2" />
+                  <div className="text-2xl font-bold">{books.length > 0 ? Math.round((stats.completedBooks / books.length) * 100) : 0}%</div>
+                  <p className="text-xs text-muted-foreground">{stats.completedBooks} of {books.length} books completed</p>
+                  <Progress value={books.length > 0 ? (stats.completedBooks / books.length) * 100 : 0} className="mt-2 h-2" />
                 </CardContent>
               </Card>
             </div>

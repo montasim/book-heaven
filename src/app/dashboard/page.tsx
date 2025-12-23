@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,8 +23,62 @@ import {
   Target,
   Award,
   Library,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react'
+import { getUserBooks } from '@/app/(user)/library/actions'
+import { Book } from '@/app/dashboard/books/data/schema'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
+
+interface LibraryStats {
+  completedBooks: number
+  completedThisMonth: number
+  readingTimeHours: number
+  currentlyReading: number
+  totalPages: number
+  totalPagesRead: number
+}
+
+// Calculate library statistics from books data
+function calculateLibraryStats(books: Book[]): LibraryStats {
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const completedBooks = books.filter(book => {
+    const progress = book.readingProgress?.[0]?.progress || 0
+    return progress >= 95
+  })
+
+  const completedThisMonth = completedBooks.filter(book => {
+    const lastRead = book.readingProgress?.[0]?.lastReadAt
+    return lastRead && new Date(lastRead) >= startOfMonth
+  })
+
+  const currentlyReading = books.filter(book => {
+    const progress = book.readingProgress?.[0]?.progress || 0
+    return progress > 0 && progress < 95
+  })
+
+  const totalPages = books.reduce((sum, book) => sum + (book.pageNumber || 0), 0)
+
+  // Calculate reading time based on pages read (2 min per page)
+  const totalPagesRead = books.reduce((sum, book) => {
+    const currentPage = book.readingProgress?.[0]?.currentPage || 0
+    return sum + currentPage
+  }, 0)
+
+  const readingTimeMinutes = totalPagesRead * 2
+  const readingTimeHours = Math.round(readingTimeMinutes / 60)
+
+  return {
+    completedBooks: completedBooks.length,
+    completedThisMonth: completedThisMonth.length,
+    readingTimeHours,
+    currentlyReading: currentlyReading.length,
+    totalPages,
+    totalPagesRead
+  }
+}
 
 const adminTopNav = [
   {
@@ -200,13 +255,111 @@ function AdminDashboard() {
 }
 
 function UserDashboard() {
-  // Mock data - in a real app, this would come from your API
-  const stats = {
-    totalBooks: 12,
-    completedBooks: 8,
-    currentlyReading: 3,
-    readingTime: 45, // hours
-    averageProgress: 75
+  const [books, setBooks] = useState<Book[]>([])
+  const [stats, setStats] = useState<LibraryStats>({
+    completedBooks: 0,
+    completedThisMonth: 0,
+    readingTimeHours: 0,
+    currentlyReading: 0,
+    totalPages: 0,
+    totalPagesRead: 0,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true)
+      try {
+        const userBooks = await getUserBooks()
+        setBooks(userBooks)
+        setStats(calculateLibraryStats(userBooks))
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  // Get currently reading books, sorted by most recently read
+  const currentlyReadingBooks = books.filter(book => {
+    const progress = book.readingProgress?.[0]?.progress || 0
+    return progress > 0 && progress < 100
+  }).sort((a, b) => {
+    const aDate = new Date(a.readingProgress?.[0]?.lastReadAt || 0)
+    const bDate = new Date(b.readingProgress?.[0]?.lastReadAt || 0)
+    return bDate.getTime() - aDate.getTime()
+  })
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <HeaderContainer>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Welcome to Your Library</h1>
+              <p className="text-muted-foreground">
+                Track your reading journey and discover your next great read.
+              </p>
+            </div>
+            <Link href="/books">
+              <Button>
+                <BookOpen className="h-4 w-4 mr-2" />
+                Browse Books
+              </Button>
+            </Link>
+          </div>
+        </HeaderContainer>
+
+        {/* Stats Skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-muted rounded w-24" />
+                <div className="h-4 w-4 bg-muted rounded" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-16 mb-2" />
+                <div className="h-3 bg-muted rounded w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Continue Reading Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Continue Reading</h2>
+              <div className="h-8 w-20 bg-muted rounded animate-pulse" />
+            </div>
+            <Card className="animate-pulse">
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  <div className="w-12 h-16 bg-muted rounded" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="h-2 bg-muted rounded w-full" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-10 bg-muted rounded animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -238,7 +391,7 @@ function UserDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.completedBooks}</div>
             <p className="text-xs text-muted-foreground">
-              2 this month
+              {stats.completedThisMonth > 0 ? `${stats.completedThisMonth} this month` : 'Start reading to track'}
             </p>
           </CardContent>
         </Card>
@@ -249,9 +402,9 @@ function UserDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.readingTime}h</div>
+            <div className="text-2xl font-bold">{stats.readingTimeHours}h</div>
             <p className="text-xs text-muted-foreground">
-              Total time invested
+              {stats.totalPagesRead > 0 ? `${stats.totalPagesRead} pages read` : 'Start reading to track'}
             </p>
           </CardContent>
         </Card>
@@ -264,22 +417,22 @@ function UserDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.currentlyReading}</div>
             <p className="text-xs text-muted-foreground">
-              Active books
+              {stats.currentlyReading > 0 ? 'Books in progress' : 'No books started'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reading Goal</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Progress</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">67%</div>
+            <div className="text-2xl font-bold">{books.length > 0 ? Math.round((stats.completedBooks / books.length) * 100) : 0}%</div>
             <p className="text-xs text-muted-foreground">
-              8 of 12 books
+              {stats.completedBooks} of {books.length} books completed
             </p>
-            <Progress value={67} className="mt-2 h-2" />
+            <Progress value={books.length > 0 ? (stats.completedBooks / books.length) * 100 : 0} className="mt-2 h-2" />
           </CardContent>
         </Card>
       </div>
@@ -290,7 +443,7 @@ function UserDashboard() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Continue Reading</h2>
-            <Link href="/user-library">
+            <Link href="/library?tab=my-uploads">
               <Button variant="outline" size="sm">
                 View All
               </Button>
@@ -298,30 +451,71 @@ function UserDashboard() {
           </div>
 
           <div className="space-y-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <div className="w-12 h-16 bg-muted rounded flex items-center justify-center">
-                    <BookOpen className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold line-clamp-1">The Great Adventure</h3>
-                    <p className="text-sm text-muted-foreground mb-2">by John Doe</p>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-muted-foreground">Progress</span>
-                      <span className="text-xs">75%</span>
-                    </div>
-                    <Progress value={75} className="h-1" />
-                  </div>
-                </div>
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Page 150 of 200</span>
-                  <Link href="/user-reader/book-1">
-                    <Button size="sm">Continue Reading</Button>
+            {currentlyReadingBooks.length === 0 ? (
+              <Card>
+                <CardContent className="pt-12 pb-12 text-center">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">No books in progress</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start reading a book to see it here
+                  </p>
+                  <Link href="/library?tab=my-uploads">
+                    <Button>Browse Your Books</Button>
                   </Link>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ) : (
+              currentlyReadingBooks.slice(0, 3).map(book => {
+                const progress = Math.round(book.readingProgress?.[0]?.progress || 0)
+                const currentPage = book.readingProgress?.[0]?.currentPage || 0
+                const totalPages = book.pageNumber || '?'
+                const authors = book.authors?.map((a: any) => a.name).join(', ') || 'Unknown'
+
+                return (
+                  <Card key={book.id}>
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <div className="w-12 h-16 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {book.image ? (
+                            <img
+                              src={getProxiedImageUrl(book.image) || book.image}
+                              alt={book.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <BookOpen className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold line-clamp-1">{book.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">by {authors}</p>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-muted-foreground">Progress</span>
+                            <span className="text-xs">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-1" />
+                        </div>
+                      </div>
+                      <div className="mt-4 flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <Link href={`/user-reader/${book.id}`}>
+                          <Button size="sm">Continue Reading</Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
+            {currentlyReadingBooks.length > 3 && (
+              <Link href="/library?tab=my-uploads" className="block">
+                <Button variant="outline" className="w-full">
+                  View All Books ({currentlyReadingBooks.length})
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
