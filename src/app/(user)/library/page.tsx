@@ -24,6 +24,7 @@ import { BookshelfContent } from './components/bookshelf-content'
 import { BookshelfMutateDrawer } from './bookshelf-mutate-drawer'
 import { UploadBooksMutateDrawer } from './upload-books-mutate-drawer'
 import { LibraryFilterToolbar } from './components/library-filter-toolbar'
+import { BookshelfFilterToolbar } from './components/bookshelf-filter-toolbar'
 import { Book } from '@/app/dashboard/books/data/schema'
 import { deleteBook } from '@/app/dashboard/books/actions'
 import { getBookshelves, deleteBookshelf, getUserBooks } from './actions'
@@ -115,14 +116,27 @@ export default function LibraryPage() {
   const [filterReadingStatus, setFilterReadingStatus] = useState<string[]>([])
   const [filterAuthors, setFilterAuthors] = useState<string[]>([])
 
+  // Bookshelf filter states
+  const [bookshelfSearchQuery, setBookshelfSearchQuery] = useState('')
+  const [filterVisibility, setFilterVisibility] = useState<string[]>([])
+  const [filterProgressStatus, setFilterProgressStatus] = useState<string[]>([])
+  const [filterBookCount, setFilterBookCount] = useState<string[]>([])
+  const [allBookshelves, setAllBookshelves] = useState<any[]>([])
+
   const refreshBooks = async () => {
     const userBooks = await getUserBooks()
     setBooks(userBooks)
     setStats(calculateLibraryStats(userBooks))
   }
 
+  const refreshBookshelves = async () => {
+    const shelves = await getBookshelves()
+    setAllBookshelves(shelves)
+  }
+
   const handleSuccess = () => {
     refreshBooks()
+    refreshBookshelves()
     router.refresh()
     setEditingBook(null)
     setEditingBookshelf(null)
@@ -168,6 +182,7 @@ export default function LibraryPage() {
 
   useEffect(() => {
     refreshBooks()
+    refreshBookshelves()
   }, [])
 
   // Refresh books when page regains focus (user returns from reader)
@@ -227,6 +242,52 @@ export default function LibraryPage() {
     setSearchQuery('')
     setFilterReadingStatus([])
     setFilterAuthors([])
+  }
+
+  // Filter bookshelves
+  const filteredBookshelves = useMemo(() => {
+    return allBookshelves.filter(shelf => {
+      // Search filter
+      if (bookshelfSearchQuery) {
+        const searchLower = bookshelfSearchQuery.toLowerCase()
+        const matchesName = shelf.name?.toLowerCase().includes(searchLower)
+        const matchesDescription = shelf.description?.toLowerCase().includes(searchLower)
+        if (!matchesName && !matchesDescription) return false
+      }
+
+      // Visibility filter
+      if (filterVisibility.length > 0) {
+        if (filterVisibility.includes('public') && !shelf.isPublic) return false
+        if (filterVisibility.includes('private') && shelf.isPublic) return false
+      }
+
+      // Progress status filter
+      if (filterProgressStatus.length > 0) {
+        const progress = shelf.progressPercent || 0
+        if (filterProgressStatus.includes('not-started') && progress > 0) return false
+        if (filterProgressStatus.includes('in-progress') && (progress === 0 || progress >= 100)) return false
+        if (filterProgressStatus.includes('completed') && progress < 100) return false
+      }
+
+      // Book count filter
+      if (filterBookCount.length > 0) {
+        const count = shelf.bookCount || 0
+        if (filterBookCount.includes('empty') && count > 0) return false
+        if (filterBookCount.includes('small') && (count < 1 || count > 5)) return false
+        if (filterBookCount.includes('medium') && (count < 6 || count > 10)) return false
+        if (filterBookCount.includes('large') && count < 10) return false
+      }
+
+      return true
+    })
+  }, [allBookshelves, bookshelfSearchQuery, filterVisibility, filterProgressStatus, filterBookCount])
+
+  // Reset bookshelf filters
+  const resetBookshelfFilters = () => {
+    setBookshelfSearchQuery('')
+    setFilterVisibility([])
+    setFilterProgressStatus([])
+    setFilterBookCount([])
   }
 
   if (bookshelfId) {
@@ -398,11 +459,28 @@ export default function LibraryPage() {
             </div>
           </TabsContent>
           <TabsContent value="bookshelves" className="space-y-4 md:overflow-y-visible md:max-h-none">
+            {/* Filter Toolbar */}
+            <BookshelfFilterToolbar
+              searchValue={bookshelfSearchQuery}
+              onSearchChange={setBookshelfSearchQuery}
+              visibility={filterVisibility}
+              onVisibilityChange={setFilterVisibility}
+              progressStatus={filterProgressStatus}
+              onProgressStatusChange={setFilterProgressStatus}
+              bookCount={filterBookCount}
+              onBookCountChange={setFilterBookCount}
+              onReset={resetBookshelfFilters}
+              bookshelfCount={filteredBookshelves.length}
+            />
+
             <div className="overflow-y-auto max-h-[calc(100vh-24rem)] pb-20 md:overflow-y-visible md:max-h-none md:pb-0">
               <Bookshelves
                 key={bookshelfKey}
+                bookshelves={filteredBookshelves}
+                isLoading={false}
                 onEdit={handleEditBookshelf}
                 onDelete={handleDeleteBookshelf}
+                onRefresh={refreshBookshelves}
               />
             </div>
           </TabsContent>
