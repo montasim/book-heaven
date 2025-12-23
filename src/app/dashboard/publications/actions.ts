@@ -59,18 +59,27 @@ export async function getPublications() {
     const result = await getPublicationsFromDb()
 
     // Transform data for UI
-    return result.publications.map(publication => ({
-      id: publication.id,
-      name: publication.name,
-      description: publication.description || '',
-      image: publication.image || '',
-      entryDate: publication.entryDate.toISOString(),
-      entryBy: `${publication.entryBy.firstName} ${publication.entryBy.lastName}`.trim() || publication.entryBy.email,
-      entryById: publication.entryBy.id,
-      createdAt: publication.createdAt.toISOString(),
-      updatedAt: publication.updatedAt.toISOString(),
-      bookCount: publication._count.books,
-    }))
+    return result.publications.map(publication => {
+      // Handle entryBy - check if it exists and has required properties
+      let entryByName = 'Unknown'
+      if (publication.entryBy && typeof publication.entryBy === 'object') {
+        const name = `${publication.entryBy.firstName || ''} ${publication.entryBy.lastName || ''}`.trim()
+        entryByName = name || publication.entryBy.email || 'Unknown'
+      }
+
+      return {
+        id: publication.id,
+        name: publication.name,
+        description: publication.description || '',
+        image: publication.image || '',
+        entryDate: publication.entryDate.toISOString(),
+        entryBy: entryByName,
+        entryById: publication.entryBy?.id,
+        createdAt: publication.createdAt.toISOString(),
+        updatedAt: publication.updatedAt.toISOString(),
+        bookCount: publication._count.books,
+      }
+    })
   } catch (error) {
     console.error('Error fetching publications:', error)
     return []
@@ -88,14 +97,21 @@ export async function getPublicationById(id: string) {
       throw new Error('Publication not found')
     }
 
+    // Handle entryBy - check if it exists and has required properties
+    let entryByName = 'Unknown'
+    if (publication.entryBy && typeof publication.entryBy === 'object') {
+      const name = `${publication.entryBy.firstName || ''} ${publication.entryBy.lastName || ''}`.trim()
+      entryByName = name || publication.entryBy.email || 'Unknown'
+    }
+
     return {
       id: publication.id,
       name: publication.name,
       description: publication.description || '',
       image: publication.image || '',
       entryDate: publication.entryDate.toISOString(),
-      entryBy: `${publication.entryBy.firstName} ${publication.entryBy.lastName}`.trim() || publication.entryBy.email,
-      entryById: publication.entryBy.id,
+      entryBy: entryByName,
+      entryById: publication.entryBy?.id,
       createdAt: publication.createdAt.toISOString(),
       updatedAt: publication.updatedAt.toISOString(),
       books: publication.books.map(bookPublication => ({
@@ -118,6 +134,10 @@ export async function createPublication(formData: FormData) {
   try {
     // Get authenticated admin
     const session = await requireAuth()
+
+    if (!session.userId) {
+      throw new Error('Authentication failed: Invalid session')
+    }
 
     // Extract and validate form data
     const rawData = {
@@ -147,7 +167,7 @@ export async function createPublication(formData: FormData) {
       name: validatedData.name,
       description: validatedData.description,
       image: imageUrl || undefined,
-      entryById: session.adminId,
+      entryById: session.userId,
     })
 
     revalidatePath('/dashboard/publications')

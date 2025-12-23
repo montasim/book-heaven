@@ -60,18 +60,27 @@ export async function getCategories() {
     const result = await getCategoriesFromDb()
 
     // Transform data for UI
-    return result.categories.map(category => ({
-      id: category.id,
-      name: category.name,
-      description: category.description || '',
-      image: category.image || '',
-      entryDate: category.entryDate.toISOString(),
-      entryBy: `${category.entryBy.firstName} ${category.entryBy.lastName}`.trim() || category.entryBy.email,
-      entryById: category.entryBy.id,
-      createdAt: category.createdAt.toISOString(),
-      updatedAt: category.updatedAt.toISOString(),
-      bookCount: category._count.books,
-    }))
+    return result.categories.map(category => {
+      // Handle entryBy - check if it exists and has required properties
+      let entryByName = 'Unknown'
+      if (category.entryBy && typeof category.entryBy === 'object') {
+        const name = `${category.entryBy.firstName || ''} ${category.entryBy.lastName || ''}`.trim()
+        entryByName = name || category.entryBy.email || 'Unknown'
+      }
+
+      return {
+        id: category.id,
+        name: category.name,
+        description: category.description || '',
+        image: category.image || '',
+        entryDate: category.entryDate.toISOString(),
+        entryBy: entryByName,
+        entryById: category.entryBy?.id,
+        createdAt: category.createdAt.toISOString(),
+        updatedAt: category.updatedAt.toISOString(),
+        bookCount: category._count.books,
+      }
+    })
   } catch (error) {
     console.error('Error fetching categories:', error)
     return []
@@ -89,14 +98,21 @@ export async function getCategoryById(id: string) {
       throw new Error('Category not found')
     }
 
+    // Handle entryBy - check if it exists and has required properties
+    let entryByName = 'Unknown'
+    if (category.entryBy && typeof category.entryBy === 'object') {
+      const name = `${category.entryBy.firstName || ''} ${category.entryBy.lastName || ''}`.trim()
+      entryByName = name || category.entryBy.email || 'Unknown'
+    }
+
     return {
       id: category.id,
       name: category.name,
       description: category.description || '',
       image: category.image || '',
       entryDate: category.entryDate.toISOString(),
-      entryBy: `${category.entryBy.firstName} ${category.entryBy.lastName}`.trim() || category.entryBy.email,
-      entryById: category.entryBy.id,
+      entryBy: entryByName,
+      entryById: category.entryBy?.id,
       createdAt: category.createdAt.toISOString(),
       updatedAt: category.updatedAt.toISOString(),
       books: category.books.map(bookCategory => ({
@@ -160,7 +176,7 @@ export async function createCategory(formData: FormData) {
       name: validatedData.name,
       description: validatedData.description,
       image: imageUrl || undefined,
-      entryById: session.adminId,
+      entryById: session.userId,
     })
 
     revalidatePath('/dashboard/categories')

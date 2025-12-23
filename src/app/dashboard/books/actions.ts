@@ -181,37 +181,46 @@ export async function getBooks() {
     const result = await getBooksFromDb()
 
     // Transform data for UI
-    return result.books.map(book => ({
-      id: book.id,
-      name: book.name,
-      image: book.image || '',
-      type: book.type,
-      bindingType: book.bindingType,
-      pageNumber: book.pageNumber,
-      fileUrl: book.fileUrl || '',
-      summary: book.summary || '',
-      buyingPrice: book.buyingPrice,
-      sellingPrice: book.sellingPrice,
-      numberOfCopies: book.numberOfCopies,
-      purchaseDate: book.purchaseDate?.toISOString() || null,
-      entryDate: book.entryDate.toISOString(),
-      entryBy: `${book.entryBy.firstName} ${book.entryBy.lastName}`.trim() || book.entryBy.email,
-      entryById: book.entryBy.id,
-      createdAt: book.createdAt.toISOString(),
-      updatedAt: book.updatedAt.toISOString(),
-      authors: book.authors.map(bookAuthor => ({
-        id: bookAuthor.author.id,
-        name: bookAuthor.author.name,
-      })),
-      publications: book.publications.map(bookPublication => ({
-        id: bookPublication.publication.id,
-        name: bookPublication.publication.name,
-      })),
-      categories: book.categories.map(bookCategory => ({
-        id: bookCategory.category.id,
-        name: bookCategory.category.name,
-      })),
-    }))
+    return result.books.map(book => {
+        // Handle entryBy - check if it exists and has required properties
+        let entryByName = 'Unknown'
+        if (book.entryBy && typeof book.entryBy === 'object') {
+            const name = `${book.entryBy.firstName || ''} ${book.entryBy.lastName || ''}`.trim()
+            entryByName = name || book.entryBy.email || 'Unknown'
+        }
+
+      return {
+          id: book.id,
+          name: book.name,
+          image: book.image || '',
+          type: book.type,
+          bindingType: book.bindingType,
+          pageNumber: book.pageNumber,
+          fileUrl: book.fileUrl || '',
+          summary: book.summary || '',
+          buyingPrice: book.buyingPrice,
+          sellingPrice: book.sellingPrice,
+          numberOfCopies: book.numberOfCopies,
+          purchaseDate: book.purchaseDate?.toISOString() || null,
+          entryDate: book.entryDate.toISOString(),
+          entryBy: entryByName,
+          entryById: book.entryBy.id,
+          createdAt: book.createdAt.toISOString(),
+          updatedAt: book.updatedAt.toISOString(),
+          authors: book.authors.map(bookAuthor => ({
+              id: bookAuthor.author.id,
+              name: bookAuthor.author.name,
+          })),
+          publications: book.publications.map(bookPublication => ({
+              id: bookPublication.publication.id,
+              name: bookPublication.publication.name,
+          })),
+          categories: book.categories.map(bookCategory => ({
+              id: bookCategory.category.id,
+              name: bookCategory.category.name,
+          }))
+      };
+    })
   } catch (error) {
     console.error('Error fetching books-old:', error)
     return []
@@ -378,7 +387,7 @@ export async function createBook(formData: FormData) {
       sellingPrice: validatedData.sellingPrice ? parseFloat(validatedData.sellingPrice) : null,
       numberOfCopies: validatedData.numberOfCopies ? parseInt(validatedData.numberOfCopies) : null,
       purchaseDate: validatedData.purchaseDate ? new Date(validatedData.purchaseDate) : null,
-      entryById: session.adminId,
+      entryById: session.userId,
       authorIds: validatedData.authorIds,
       publicationIds: validatedData.publicationIds,
       categoryIds: validatedData.categoryIds || [],

@@ -59,18 +59,27 @@ export async function getAuthors() {
     const result = await getAuthorsFromDb()
 
     // Transform data for UI
-    return result.authors.map(author => ({
-      id: author.id,
-      name: author.name,
-      description: author.description || '',
-      image: author.image || '',
-      entryDate: author.entryDate.toISOString(),
-      entryBy: `${author.entryBy.firstName} ${author.entryBy.lastName}`.trim() || author.entryBy.email,
-      entryById: author.entryBy.id,
-      createdAt: author.createdAt.toISOString(),
-      updatedAt: author.updatedAt.toISOString(),
-      bookCount: author._count.books,
-    }))
+    return result.authors.map(author => {
+      // Handle entryBy - check if it exists and has required properties
+      let entryByName = 'Unknown'
+      if (author.entryBy && typeof author.entryBy === 'object') {
+        const name = `${author.entryBy.firstName || ''} ${author.entryBy.lastName || ''}`.trim()
+        entryByName = name || author.entryBy.email || 'Unknown'
+      }
+
+      return {
+        id: author.id,
+        name: author.name,
+        description: author.description || '',
+        image: author.image || '',
+        entryDate: author.entryDate.toISOString(),
+        entryBy: entryByName,
+        entryById: author.entryBy?.id,
+        createdAt: author.createdAt.toISOString(),
+        updatedAt: author.updatedAt.toISOString(),
+        bookCount: author._count.books,
+      }
+    })
   } catch (error) {
     console.error('Error fetching authors:', error)
     return []
@@ -88,14 +97,21 @@ export async function getAuthorById(id: string) {
       throw new Error('Author not found')
     }
 
+    // Handle entryBy - check if it exists and has required properties
+    let entryByName = 'Unknown'
+    if (author.entryBy && typeof author.entryBy === 'object') {
+      const name = `${author.entryBy.firstName || ''} ${author.entryBy.lastName || ''}`.trim()
+      entryByName = name || author.entryBy.email || 'Unknown'
+    }
+
     return {
       id: author.id,
       name: author.name,
       description: author.description || '',
       image: author.image || '',
       entryDate: author.entryDate.toISOString(),
-      entryBy: `${author.entryBy.firstName} ${author.entryBy.lastName}`.trim() || author.entryBy.email,
-      entryById: author.entryBy.id,
+      entryBy: entryByName,
+      entryById: author.entryBy?.id,
       createdAt: author.createdAt.toISOString(),
       updatedAt: author.updatedAt.toISOString(),
       books: author.books.map(bookAuthor => ({
@@ -147,7 +163,7 @@ export async function createAuthor(formData: FormData) {
       name: validatedData.name,
       description: validatedData.description,
       image: imageUrl || undefined,
-      entryById: session.adminId,
+      entryById: session.userId,
     })
 
     revalidatePath('/dashboard/authors')
