@@ -133,6 +133,7 @@ export default function LibraryPage() {
             </Link>
           </div>
           <BookshelfContent
+            key={bookshelfKey}
             bookshelfId={bookshelfId}
             onAddBooks={() => {
               setEditingBookshelf({ id: bookshelfId })
