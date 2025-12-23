@@ -13,10 +13,10 @@ export function BookList({
   onEdit?: (book: Book) => void
 }) {
   return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {books.map((book) => (
-              <BookCard key={book.id} book={book} onEdit={onEdit} />
-          ))}
-      </div>
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {books.map((book) => (
+        <BookCard key={book.id} book={book} onEdit={onEdit} />
+      ))}
+    </div>
   )
 }
