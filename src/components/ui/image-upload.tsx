@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Image as ImageIcon, Trash2 } from 'lucide-react'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 interface ImageUploadProps {
   disabled?: boolean
@@ -25,17 +26,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setIsMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (value instanceof File) {
-      const objectUrl = URL.createObjectURL(value)
-      setPreview(objectUrl)
-      return () => URL.revokeObjectURL(objectUrl)
-    } else if (typeof value === 'string') {
-      setPreview(value)
-    } else {
-      setPreview(null)
-    }
-  }, [value])
+    useEffect(() => {
+        if (value instanceof File) {
+            const objectUrl = URL.createObjectURL(value)
+            setPreview(objectUrl)
+            return () => URL.revokeObjectURL(objectUrl)
+        } else if (typeof value === 'string') {
+            // Use proxied URL for Google Drive images
+            setPreview(getProxiedImageUrl(value) || value)
+        } else {
+            setPreview(null)
+        }
+    }, [value])
 
   if (!isMounted) {
     return null
