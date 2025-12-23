@@ -1,0 +1,39 @@
+# Infisocal Configuration
+# See https://infisical.com/docs/cli/configuration for options
+
+projectId: f1d80438-52d5-4151-92cc-4c40b8701d50
+
+# Default environment when no --env flag is provided
+# Options: dev, staging, prod
+defaultEnv: dev
+
+# Directory to write .env file (relative to project root)
+# Infisical will inject secrets here
+envFile: .env
+
+# Environment-specific overrides
+envs:
+  dev:
+    # Development environment uses default settings
+    envFile: .env
+
+  staging:
+    # Staging environment
+    envFile: .env.staging
+
+  prod:
+    # Production environment
+    envFile: .env.production
+
+# Secrets to fetch from Infisical
+# Server-side secrets (not exposed to browser)
+secrets:
+  - DATABASE_URL
+  - GOOGLE_CLIENT_EMAIL
+  - GOOGLE_PRIVATE_KEY
+  - GOOGLE_DRIVE_FOLDER_ID
+  - RESEND_API_KEY
+  - FROM_EMAIL
+
+# Note: Client-side variables (NEXT_PUBLIC_*) should remain in your local .env
+# as they are not sensitive and need to be bundled at build time.
