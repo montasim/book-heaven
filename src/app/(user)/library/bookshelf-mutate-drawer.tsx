@@ -62,6 +62,7 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
   const [booksLoading, setBooksLoading] = useState(false)
   const [selectedBooks, setSelectedBooks] = useState<Set<string>>(new Set())
   const [nameAvailability, setNameAvailability] = useState<{ available: boolean; message: string; checking: boolean } | null>(null)
+  const [fullBookshelf, setFullBookshelf] = useState<any>(null)
   const nameCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isEditing = !!bookshelf
 
@@ -90,10 +91,10 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
     // Debounce the check
     nameCheckTimeoutRef.current = setTimeout(async () => {
       setNameAvailability({ available: false, message: 'Checking...', checking: true })
-      const result = await checkBookshelfNameAvailability(name, bookshelf?.id)
+      const result = await checkBookshelfNameAvailability(name, bookshelf?.id || fullBookshelf?.id)
       setNameAvailability({ ...result, checking: false })
     }, 500)
-  }, [bookshelf?.id])
+  }, [bookshelf?.id, fullBookshelf?.id])
 
   // Watch name changes and check availability
   const nameValue = form.watch('name')
@@ -110,29 +111,61 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
   useEffect(() => {
     const fetchData = async () => {
       if (bookshelf) {
-        form.reset({
-          name: bookshelf.name || '',
-          description: bookshelf.description || '',
-          image: bookshelf.image || '',
-          isPublic: bookshelf.isPublic || false,
-        })
-        // Fetch books in this bookshelf
-        setBooksLoading(true)
-        try {
-          const books = await getBooks()
-          const bookshelfData = await getBookshelfById(bookshelf.id)
+        // If only ID is provided (partial bookshelf object), fetch full data
+        if (bookshelf.id && !bookshelf.name) {
+          setBooksLoading(true)
+          try {
+            const bookshelfData = await getBookshelfById(bookshelf.id)
+            setFullBookshelf(bookshelfData)
 
-          // Get the IDs of books that are in this bookshelf
-          const bookshelfBookIds = bookshelfData?.books.map((b: any) => b.book.id) || []
+            // Get the IDs of books that are in this bookshelf
+            const bookshelfBookIds = bookshelfData?.books.map((b: any) => b.book.id) || []
 
-          setAllBooks(books)
-          setSelectedBooks(new Set(bookshelfBookIds))
-        } catch (error) {
-          console.error('Error fetching books:', error)
-        } finally {
-          setBooksLoading(false)
+            // Reset form with full data
+            form.reset({
+              name: bookshelfData.name || '',
+              description: bookshelfData.description || '',
+              image: bookshelfData.image || '',
+              isPublic: bookshelfData.isPublic || false,
+            })
+
+            // Fetch all books
+            const books = await getBooks()
+            setAllBooks(books)
+            setSelectedBooks(new Set(bookshelfBookIds))
+          } catch (error) {
+            console.error('Error fetching bookshelf:', error)
+          } finally {
+            setBooksLoading(false)
+          }
+        } else {
+          // Full bookshelf object provided
+          form.reset({
+            name: bookshelf.name || '',
+            description: bookshelf.description || '',
+            image: bookshelf.image || '',
+            isPublic: bookshelf.isPublic || false,
+          })
+
+          // Fetch books in this bookshelf
+          setBooksLoading(true)
+          try {
+            const books = await getBooks()
+            const bookshelfData = await getBookshelfById(bookshelf.id)
+
+            // Get the IDs of books that are in this bookshelf
+            const bookshelfBookIds = bookshelfData?.books.map((b: any) => b.book.id) || []
+
+            setAllBooks(books)
+            setSelectedBooks(new Set(bookshelfBookIds))
+          } catch (error) {
+            console.error('Error fetching books:', error)
+          } finally {
+            setBooksLoading(false)
+          }
         }
       } else {
+        setFullBookshelf(null)
         form.reset({
           name: '',
           description: '',
@@ -151,8 +184,9 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
     setLoading(true)
     try {
       const formData = new FormData()
+      const bookshelfId = bookshelf?.id || fullBookshelf?.id
 
-      if (isEditing) {
+      if (isEditing && bookshelfId) {
         formData.append('name', data.name)
         formData.append('description', data.description || '')
         formData.append('isPublic', data.isPublic ? 'on' : 'off')
@@ -163,11 +197,12 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
           formData.append('existingImageUrl', data.image)
         }
 
-        const result = await updateBookshelf(bookshelf.id, formData, Array.from(selectedBooks))
+        const result = await updateBookshelf(bookshelfId, formData, Array.from(selectedBooks))
 
         if (result.success) {
           toast({ title: result.message })
           form.reset()
+          setFullBookshelf(null)
           onSuccess?.()
           onOpenChange(false)
         } else {
