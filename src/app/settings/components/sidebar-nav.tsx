@@ -1,18 +1,12 @@
 "use client"
 
-import { useState, type JSX } from 'react'
+import { type JSX } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items: {
@@ -28,31 +22,23 @@ export default function SidebarNav({
   ...props
 }: SidebarNavProps) {
   const pathname = usePathname()
-  const [val, setVal] = useState(pathname ?? '/settings')
-
-  const handleSelect = (e: string) => {
-    setVal(e)
-    window.location.href = e
-  }
 
   return (
     <>
-      <div className='p-1 md:hidden'>
-        <Select value={val} onValueChange={handleSelect}>
-          <SelectTrigger className='h-12 sm:w-48'>
-            <SelectValue placeholder='Theme' />
-          </SelectTrigger>
-          <SelectContent>
+      {/* Mobile tabs */}
+      <div className='md:hidden'>
+        <Tabs value={pathname} className='w-full'>
+          <TabsList className='w-full justify-start overflow-x-auto'>
             {items.map((item) => (
-              <SelectItem key={item.href} value={item.href}>
-                <div className='flex gap-x-4 px-2 py-1'>
-                  <span className='scale-125'>{item.icon}</span>
-                  <span className='text-md'>{item.title}</span>
-                </div>
-              </SelectItem>
+              <Link key={item.href} href={item.href}>
+                <TabsTrigger value={item.href} className='gap-2 whitespace-nowrap'>
+                  <span className='scale-100'>{item.icon}</span>
+                  <span>{item.title}</span>
+                </TabsTrigger>
+              </Link>
             ))}
-          </SelectContent>
-        </Select>
+          </TabsList>
+        </Tabs>
       </div>
 
       <ScrollArea
