@@ -82,7 +82,28 @@ export function BookCard({ book, onEdit, onDelete }: BookCardProps) {
             {/* Book Info - on the right */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div>
-                <h3 className="font-semibold line-clamp-2 text-sm">{book.name}</h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold line-clamp-2 text-sm">{book.name}</h3>
+                  {/* Action Buttons */}
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 bg-background/50 hover:bg-background/80"
+                      onClick={handleEdit}
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 bg-background/50 hover:bg-background/80 text-destructive hover:text-destructive"
+                      onClick={handleDelete}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground truncate">by {authors}</p>
               </div>
 
