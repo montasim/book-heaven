@@ -655,10 +655,10 @@ function UserDashboard() {
                 Browse Library
               </Button>
             </Link>
-            <Link href="/user-shelves" className="block">
+            <Link href="/library" className="block">
               <Button variant="outline" className="w-full justify-start">
                 <Award className="h-4 w-4 mr-2" />
-                My Bookshelves
+                Library
               </Button>
             </Link>
             <Link href="/premium" className="block">

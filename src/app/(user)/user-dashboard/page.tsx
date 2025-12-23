@@ -106,7 +106,7 @@ export default function UserDashboard() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Continue Reading</h2>
-              <Link href="/user-library">
+              <Link href="/library">
                 <Button variant="outline" size="sm">
                   View All
                 </Button>
@@ -151,10 +151,10 @@ export default function UserDashboard() {
                   Browse Library
                 </Button>
               </Link>
-              <Link href="/user-shelves" className="block">
+              <Link href="/library" className="block">
                 <Button variant="outline" className="w-full justify-start">
                   <Award className="h-4 w-4 mr-2" />
-                  My Bookshelves
+                  Library
                 </Button>
               </Link>
               <Link href="/premium" className="block">
