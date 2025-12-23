@@ -43,6 +43,14 @@ import { BookType } from '@prisma/client'
 import { MDXEditor } from '@/components/ui/mdx-editor'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { FileUpload } from '@/components/ui/file-upload'
+import { Switch } from '@/components/ui/switch'
+import { Info } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface Props {
   open: boolean
@@ -66,6 +74,7 @@ const formSchema = z.object({
   authorIds: z.array(z.string()).min(1, 'At least one author is required.'),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required.'),
   categoryIds: z.array(z.string()).min(1, 'At least one category is required.'),
+  isPublic: z.boolean().default(false),
 }).superRefine((data, ctx) => {
   if (data.type === 'HARD_COPY') {
     if (!data.bindingType) {
@@ -160,6 +169,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       authorIds: [],
       publicationIds: [],
       categoryIds: [],
+      isPublic: false,
     },
     mode: 'onChange',
   })
@@ -181,6 +191,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         authorIds: currentRow.authors.map(author => author.id) || [],
         publicationIds: currentRow.publications.map(pub => pub.id) || [],
         categoryIds: currentRow.categories.map(cat => cat.id) || [],
+        isPublic: currentRow.isPublic || false,
       } : {
         name: '',
         image: '',
@@ -196,6 +207,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         authorIds: [],
         publicationIds: [],
         categoryIds: [],
+        isPublic: false,
       };
       form.reset(defaultValues);
       setPurchaseDate(currentRow?.purchaseDate ? new Date(currentRow.purchaseDate) : undefined);
@@ -241,6 +253,9 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       Object.entries(data).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach(item => formData.append(key, item))
+        } else if (key === 'isPublic') {
+          // Handle boolean field - convert to 'on'/'off' for server compatibility
+          formData.append(key, value ? 'on' : 'off')
         } else if (value instanceof File) {
           formData.append(key, value)
         } else if (value !== null && value !== undefined) {
@@ -614,6 +629,36 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='isPublic'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between space-y-0'>
+                  <div className='flex items-center gap-2'>
+                    <FormLabel className='flex items-center gap-2'>
+                      Make Public
+                    </FormLabel>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-4 w-4 text-muted-foreground cursor-help' />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Enabling this book will make the book publicly visible.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

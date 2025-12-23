@@ -172,6 +172,7 @@ export async function createBook(data: {
   sellingPrice?: number
   numberOfCopies?: number
   purchaseDate?: Date
+  isPublic?: boolean
   entryById: string
   authorIds: string[]
   publicationIds: string[]
@@ -225,6 +226,7 @@ export async function createBook(data: {
         sellingPrice: data.sellingPrice,
         numberOfCopies: data.type === 'HARD_COPY' ? data.numberOfCopies : null,
         purchaseDate: data.purchaseDate,
+        isPublic: data.isPublic,
         entryById: data.entryById,
       },
       // data: {
@@ -291,152 +293,163 @@ export async function updateBook(
     sellingPrice?: number | null
     numberOfCopies?: number | null
     purchaseDate?: Date | null
+    isPublic?: boolean | null
     authorIds?: string[]
     publicationIds?: string[]
     categoryIds?: string[]
   }
 ) {
-  return await prisma.$transaction(async (tx) => {
-    // Validate existing book
-    const existingBook = await tx.book.findUnique({
-      where: { id },
-    })
+  return await prisma.$transaction(
+    async (tx) => {
+      // Validate existing book
+      const existingBook = await tx.book.findUnique({
+        where: { id },
+      })
 
-    if (!existingBook) {
-      throw new Error('Book not found')
-    }
-
-    const updateType = data.type || existingBook.type
-
-    // Validate hard copy requirements
-    if (updateType === 'HARD_COPY') {
-      const numberOfCopies = data.numberOfCopies ?? existingBook.numberOfCopies
-      if (!numberOfCopies || numberOfCopies <= 0) {
-        throw new Error('Number of copies is required for hard copy books-old')
-      }
-      
-      const bindingType = data.bindingType ?? existingBook.bindingType
-      if (!bindingType) {
-        throw new Error('Binding type is required for hard copy books-old')
+      if (!existingBook) {
+        throw new Error('Book not found')
       }
 
-      const pageNumber = data.pageNumber ?? existingBook.pageNumber
-      if (!pageNumber || pageNumber <= 0) {
-        throw new Error('Page number is required for hard copy books-old')
-      }
-    } else if (updateType === 'EBOOK') {
-      const pageNumber = data.pageNumber ?? existingBook.pageNumber
-      if (!pageNumber || pageNumber <= 0) {
-        throw new Error('Page number is required for ebooks')
-      }
-      const fileUrl = data.fileUrl ?? existingBook.fileUrl
-      if (!fileUrl) {
-        throw new Error('File URL is required for ebooks')
-      }
-    } else if (updateType === 'AUDIO') {
-      const fileUrl = data.fileUrl ?? existingBook.fileUrl
-      if (!fileUrl) {
-        throw new Error('File URL is required for audio books-old')
-      }
-    }
+      const updateType = data.type || existingBook.type
 
-    // Update the book
-    const updatedBook = await tx.book.update({
-      where: { id },
-      data: {
-        name: data.name,
-        image: data.image,
-        type: updateType,
-        bindingType: updateType === 'HARD_COPY' 
-          ? (data.bindingType ?? existingBook.bindingType) 
-          : null,
-        pageNumber: (updateType === 'HARD_COPY' || updateType === 'EBOOK')
-          ? (data.pageNumber ?? existingBook.pageNumber)
-          : null,
-        fileUrl: (updateType === 'EBOOK' || updateType === 'AUDIO')
-          ? (data.fileUrl ?? existingBook.fileUrl)
-          : null,
-        summary: data.summary,
-        buyingPrice: data.buyingPrice,
-        sellingPrice: data.sellingPrice,
-        numberOfCopies: updateType === 'HARD_COPY'
-          ? (data.numberOfCopies ?? existingBook.numberOfCopies)
-          : null,
-        purchaseDate: data.purchaseDate,
-      },
-      include: {
-        entryBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+      // Validate hard copy requirements
+      if (updateType === 'HARD_COPY') {
+        const numberOfCopies = data.numberOfCopies ?? existingBook.numberOfCopies
+        if (!numberOfCopies || numberOfCopies <= 0) {
+          throw new Error('Number of copies is required for hard copy books-old')
+        }
+
+        const bindingType = data.bindingType ?? existingBook.bindingType
+        if (!bindingType) {
+          throw new Error('Binding type is required for hard copy books-old')
+        }
+
+        const pageNumber = data.pageNumber ?? existingBook.pageNumber
+        if (!pageNumber || pageNumber <= 0) {
+          throw new Error('Page number is required for hard copy books-old')
+        }
+      } else if (updateType === 'EBOOK') {
+        const pageNumber = data.pageNumber ?? existingBook.pageNumber
+        if (!pageNumber || pageNumber <= 0) {
+          throw new Error('Page number is required for ebooks')
+        }
+        const fileUrl = data.fileUrl ?? existingBook.fileUrl
+        if (!fileUrl) {
+          throw new Error('File URL is required for ebooks')
+        }
+      } else if (updateType === 'AUDIO') {
+        const fileUrl = data.fileUrl ?? existingBook.fileUrl
+        if (!fileUrl) {
+          throw new Error('File URL is required for audio books-old')
+        }
+      }
+
+      // Update the book
+      const updatedBook = await tx.book.update({
+        where: { id },
+        data: {
+          name: data.name,
+          image: data.image,
+          type: updateType,
+          bindingType: updateType === 'HARD_COPY'
+            ? (data.bindingType ?? existingBook.bindingType)
+            : null,
+          pageNumber: (updateType === 'HARD_COPY' || updateType === 'EBOOK')
+            ? (data.pageNumber ?? existingBook.pageNumber)
+            : null,
+          fileUrl: (updateType === 'EBOOK' || updateType === 'AUDIO')
+            ? (data.fileUrl ?? existingBook.fileUrl)
+            : null,
+          summary: data.summary,
+          buyingPrice: data.buyingPrice,
+          sellingPrice: data.sellingPrice,
+          numberOfCopies: updateType === 'HARD_COPY'
+            ? (data.numberOfCopies ?? existingBook.numberOfCopies)
+            : null,
+          purchaseDate: data.purchaseDate,
+          isPublic: data.isPublic,
+        },
+        include: {
+          entryBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
-    })
-
-    // Update author relationships if provided
-    if (data.authorIds) {
-      if (!data.authorIds || data.authorIds.length === 0) {
-        throw new Error('At least one author is required')
-      }
-
-      // Delete existing relationships
-      await tx.bookAuthor.deleteMany({
-        where: { bookId: id },
       })
 
-      // Create new relationships
-      await tx.bookAuthor.createMany({
-        data: data.authorIds.map(authorId => ({
-          bookId: id,
-          authorId,
-        })),
-      })
-    }
+      // Update author relationships if provided
+      if (data.authorIds) {
+        if (!data.authorIds || data.authorIds.length === 0) {
+          throw new Error('At least one author is required')
+        }
 
-    // Update publication relationships if provided
-    if (data.publicationIds) {
-      if (!data.publicationIds || data.publicationIds.length === 0) {
-        throw new Error('At least one publication is required')
-      }
+        // Delete existing relationships
+        await tx.bookAuthor.deleteMany({
+          where: { bookId: id },
+        })
 
-      // Delete existing relationships
-      await tx.bookPublication.deleteMany({
-        where: { bookId: id },
-      })
-
-      // Create new relationships
-      await tx.bookPublication.createMany({
-        data: data.publicationIds.map(publicationId => ({
-          bookId: id,
-          publicationId,
-        })),
-      })
-    }
-
-    // Update category relationships if provided
-    if (data.categoryIds) {
-      // Delete existing relationships
-      await tx.bookCategory.deleteMany({
-        where: { bookId: id },
-      })
-
-      // Create new relationships
-      if (data.categoryIds.length > 0) {
-        await tx.bookCategory.createMany({
-          data: data.categoryIds.map(categoryId => ({
+        // Create new relationships
+        await tx.bookAuthor.createMany({
+          data: data.authorIds.map(authorId => ({
             bookId: id,
-            categoryId,
+            authorId,
           })),
         })
       }
-    }
 
-    // Return updated book with relationships
-    return getBookById(id)
-  })
+      // Update publication relationships if provided
+      if (data.publicationIds) {
+        if (!data.publicationIds || data.publicationIds.length === 0) {
+          throw new Error('At least one publication is required')
+        }
+
+        // Delete existing relationships
+        await tx.bookPublication.deleteMany({
+          where: { bookId: id },
+        })
+
+        // Create new relationships
+        await tx.bookPublication.createMany({
+          data: data.publicationIds.map(publicationId => ({
+            bookId: id,
+            publicationId,
+          })),
+        })
+      }
+
+      // Update category relationships if provided
+      if (data.categoryIds) {
+        // Delete existing relationships
+        await tx.bookCategory.deleteMany({
+          where: { bookId: id },
+        })
+
+        // Create new relationships
+        if (data.categoryIds.length > 0) {
+          await tx.bookCategory.createMany({
+            data: data.categoryIds.map(categoryId => ({
+              bookId: id,
+              categoryId,
+            })),
+          })
+        }
+      }
+
+      // Return the book ID - fetch the full book outside the transaction
+      return { id }
+    },
+    {
+      maxWait: 10000, // Increase timeout to 10 seconds
+      timeout: 10000,
+    }
+  )
+
+  // Fetch and return the updated book with all relationships outside the transaction
+  return getBookById(id)
 }
 
 /**
