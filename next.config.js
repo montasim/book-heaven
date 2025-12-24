@@ -4,6 +4,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '12mb', // Set to 12MB to allow for 10MB files plus overhead
     },
+    serverComponentsExternalPackages: ['pdf-parse'],
   },
   images: {
     remotePatterns: [
