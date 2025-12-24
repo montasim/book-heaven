@@ -270,7 +270,7 @@ export default function BookDetailsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Book Details */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 sm:pb-8">
         {/* Back Navigation */}
         <div className="mb-6">
           <Link href="/books" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary">
@@ -279,12 +279,12 @@ export default function BookDetailsPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Book Cover and Actions */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               {/* Book Cover */}
-              <div className="relative mb-6">
+              <div className="relative mb-4 sm:mb-6 max-w-auto mx-auto lg:mx-0">
                 <div className="aspect-[3/4] overflow-hidden rounded-lg shadow-lg bg-muted">
                   {book.image ? (
                     <img
