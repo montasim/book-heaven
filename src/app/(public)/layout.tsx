@@ -6,6 +6,7 @@ import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/toaster'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { PublicHeader } from '@/components/layout/public-header'
+import { MDXViewerProvider } from 'mdx-craft'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,7 +36,9 @@ export default function PublicLayout({
               <PublicHeader />
 
               <div className="relative flex min-h-screen flex-col">
-                {children}
+                <MDXViewerProvider>
+                  {children}
+                </MDXViewerProvider>
               </div>
 
               {/* Mobile Bottom Navigation */}
