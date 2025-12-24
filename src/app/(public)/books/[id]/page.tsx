@@ -19,6 +19,7 @@ import { BookTypeBadge } from '@/components/books/book-type-badge'
 import { ReadingHeatmap } from '@/components/reading/reading-heatmap'
 import { PagesReadChart } from '@/components/reading/pages-read-chart'
 import { CircularProgressBar } from '@/components/reading/circular-progress-bar'
+import { MDXViewer } from '@/components/ui/mdx-viewer'
 import {
   BookOpen,
   Users,
@@ -29,6 +30,7 @@ import {
   Eye,
   Building2,
   Calendar,
+  CheckCircle,
 } from 'lucide-react'
 
 export default function BookDetailsPage() {
@@ -170,7 +172,7 @@ export default function BookDetailsPage() {
     }))
   }
 
-  // Reusable expandable description component
+  // Reusable expandable description component with MDX support
   const ExpandableDescription = ({
     description,
     sectionId,
@@ -179,25 +181,43 @@ export default function BookDetailsPage() {
     sectionId: string
   }) => {
     const isExpanded = expandedSections[sectionId]
-    const isLong = description.split('\n').length > 4
+    // Estimate if text is long enough to potentially exceed 4 lines
+    const isLong = description.length > 300 || description.split('\n').length > 4
 
     return (
-      <div>
-        <p
-          className={cn(
-            'text-sm leading-relaxed whitespace-pre-wrap',
-            !isExpanded && 'line-clamp-4'
-          )}
-        >
-          {description}
-        </p>
-        {isLong && (
-          <button
-            onClick={() => toggleExpanded(sectionId)}
-            className="text-primary text-sm mt-2 hover:underline"
-          >
-            {isExpanded ? 'View less...' : 'View more...'}
-          </button>
+      <div className="text-sm leading-relaxed">
+        {!isExpanded && isLong ? (
+          <div className="relative max-h-[5.6rem] overflow-hidden">
+            <div
+              className="pr-16"
+              style={{
+                maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+              }}
+            >
+              <MDXViewer content={description} className='text-sm [&>*]:leading-relaxed' />
+            </div>
+            <button
+              onClick={() => toggleExpanded(sectionId)}
+              className="absolute bottom-0 right-0 text-primary text-sm hover:underline bg-background"
+            >
+              View more...
+            </button>
+          </div>
+        ) : (
+          <>
+            <MDXViewer content={description} className='text-sm' />
+            {isLong && (
+              <div className="text-right">
+                <button
+                  onClick={() => toggleExpanded(sectionId)}
+                  className="text-primary text-sm mt-2 hover:underline"
+                >
+                  View less...
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     )
@@ -278,8 +298,23 @@ export default function BookDetailsPage() {
                 {/* Progress Badge */}
                 {book.readingProgress && (book.readingProgress.currentPage || book.readingProgress.currentEpocha) && (
                   <div className="absolute bottom-3 right-3">
-                    <Badge className="bg-primary/90 text-white">
-                      {book.readingProgress.isCompleted ? 'Completed' : `${Math.round(book.readingProgress.progress)}%`}
+                    <Badge className="bg-background/95 backdrop-blur-sm text-foreground border border-border font-semibold shadow-md">
+                      {book.readingProgress.isCompleted ? (
+                        <span className="flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          Done
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3 w-3" />
+                            <span>Progress</span>
+                          {book.readingProgress.currentPage && book.pageNumber ? (
+                            <>{book.readingProgress.currentPage}/{book.pageNumber}</>
+                          ) : (
+                            <>{Math.round(book.readingProgress.progress)}%</>
+                          )}
+                        </span>
+                      )}
                     </Badge>
                   </div>
                 )}
