@@ -102,6 +102,7 @@ model Book {
   categories      BookCategory[]
   publications    BookPublication[]
   readingProgress ReadingProgress[]
+  progressHistory ProgressHistory[]
   bookshelves     BookshelfItem[]
   entryBy         User              @relation("UserBooks", fields: [entryById], references: [id])
 
@@ -176,14 +177,15 @@ model User {
   username            String?   @unique
 
   // Relationships
-  subscription     Subscription?
-  readingProgress  ReadingProgress[]
-  bookshelves      Bookshelf[]
-  sessions         UserSession[]
-  authoredBooks    Author[]          @relation("UserAuthors")
-  books            Book[]            @relation("UserBooks")
-  categorizedBooks Category[]        @relation("UserCategories")
-  publishedBooks   Publication[]     @relation("UserPublications")
+  subscription      Subscription?
+  readingProgress   ReadingProgress[]
+  progressHistory   ProgressHistory[]
+  bookshelves       Bookshelf[]
+  sessions          UserSession[]
+  authoredBooks     Author[]          @relation("UserAuthors")
+  books             Book[]            @relation("UserBooks")
+  categorizedBooks  Category[]        @relation("UserCategories")
+  publishedBooks    Publication[]     @relation("UserPublications")
 
   @@map("users")
 }
@@ -244,6 +246,25 @@ model ReadingProgress {
 
   @@unique([userId, bookId])
   @@map("reading_progress")
+}
+
+model ProgressHistory {
+  id             String   @id @default(uuid())
+  userId         String
+  bookId         String
+  currentPage    Int?
+  currentEpocha  Float?
+  progress       Float    @default(0)
+  pagesRead      Int      @default(0)
+  timeSpent      Int      @default(0)
+  sessionDate    DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId, bookId, sessionDate])
+  @@map("progress_history")
 }
 
 model Bookshelf {
