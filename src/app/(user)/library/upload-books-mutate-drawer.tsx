@@ -35,13 +35,7 @@ import { Switch } from '@/components/ui/switch'
 import { FileUpload } from '@/components/ui/file-upload'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { createBook, updateBook } from './actions'
-import { Info } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 interface Props {
   open: boolean
@@ -274,16 +268,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book, p
                   <FormLabel className="flex items-center gap-2">
                     File Upload {isEditing && <span className="text-muted-foreground">(optional)</span>}
                     {!isEditing && <span className="text-destructive">*</span>}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Max file size: 10MB</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <InfoTooltip content="Max file size: 10MB" />
                   </FormLabel>
                   <FormControl>
                     <FileUpload
@@ -306,16 +291,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book, p
                   <FormLabel className="flex items-center gap-2">
                     Cover Image {isEditing && <span className="text-muted-foreground">(optional)</span>}
                     {!isEditing && <span className="text-destructive">*</span>}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Max file size: 1MB</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <InfoTooltip content="Max file size: 1MB" />
                   </FormLabel>
                   <FormControl>
                     <ImageUpload
@@ -338,16 +314,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book, p
                       <FormLabel className="flex items-center gap-2">
                       Make Public
                     </FormLabel>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>This book will be visible to other users in the library.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <InfoTooltip content="This book will be visible to other users in the library." />
                   </div>
                   <FormControl>
                     <Switch

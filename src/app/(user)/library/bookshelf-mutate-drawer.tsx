@@ -30,13 +30,8 @@ import { Switch } from '@/components/ui/switch'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { createBookshelf, updateBookshelf, getBookshelfById, checkBookshelfNameAvailability } from './actions'
 import { getBooks } from '@/app/dashboard/books/actions'
-import { Info, Loader2, X, Check, Plus } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Loader2, X, Check, Plus } from 'lucide-react'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 
@@ -333,16 +328,7 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
                     Cover Image
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Max file size: 1MB</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <InfoTooltip content="Max file size: 1MB" />
                   </FormLabel>
                   <FormControl>
                     <ImageUpload
@@ -363,16 +349,7 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
                 <FormItem className="flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-2">
                     <FormLabel> Make Public </FormLabel>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Public bookshelves can be viewed by other users.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <InfoTooltip content="Public bookshelves can be viewed by other users." />
                   </div>
                   <FormControl>
                     <Switch
