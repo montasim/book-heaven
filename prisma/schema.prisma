@@ -206,6 +206,8 @@ model User {
   readingProgress     ReadingProgress[]
   subscription        Subscription?
   sessions            UserSession[]
+  quizAttempts       QuizAttempt[]
+  quizStreak          QuizStreak?
 
   @@map("users")
 }
@@ -311,6 +313,64 @@ model BookshelfItem {
 
   @@unique([bookshelfId, bookId])
   @@map("bookshelf_items")
+}
+
+model QuizAttempt {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Quiz metadata
+  category          String
+  difficulty        String   // easy, medium, hard
+  questionCount     Int
+
+  // Results
+  score             Int      // Number of correct answers
+  totalQuestions    Int
+  accuracy          Float    // Percentage (0-100)
+  timeTaken         Int?     // Seconds
+
+  // Streaks achieved in this quiz
+  quizStreak        Int      // Max consecutive correct answers
+  dailyStreakAtTime Int      // Daily streak value when quiz was completed
+
+  // Combined score for leaderboard
+  combinedScore     Int
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([combinedScore(sort: Desc)])
+  @@index([createdAt])
+  @@map("quiz_attempts")
+}
+
+model QuizStreak {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Daily streak (consecutive days with at least one win)
+  currentDailyStreak Int     @default(0)
+  bestDailyStreak    Int     @default(0)
+  lastQuizDate       DateTime?
+
+  // Best quiz streak (consecutive correct answers in single quiz)
+  bestQuizStreak     Int     @default(0)
+
+  // Stats
+  totalQuizzes       Int     @default(0)
+  totalWins          Int     @default(0) // Score >= 50%
+  totalCorrect       Int     @default(0)
+  totalQuestions     Int     @default(0)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@map("quiz_streaks")
 }
 
 enum BookType {

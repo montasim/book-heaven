@@ -25,7 +25,7 @@ import {
   IconBooks,
   IconBookmark,
 } from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
+import { AudioWaveform, Brain, Command, GalleryVerticalEnd } from 'lucide-react'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
@@ -192,6 +192,11 @@ export const sidebarData: SidebarData = {
           title: 'My Requests',
           url: '/library/my-requests',
           icon: IconBooks,
+        },
+        {
+          title: 'Quiz Game',
+          url: '/quiz',
+          icon: Brain,
         },
         {
           title: 'Settings',
