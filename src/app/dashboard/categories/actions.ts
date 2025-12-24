@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 import { uploadFile, deleteFile } from '@/lib/google-drive'
+import { config } from '@/config'
 
 // Repository imports
 import {
@@ -166,7 +167,7 @@ export async function createCategory(formData: FormData) {
     // Handle file upload
     let imageUrl = null
     if (validatedData.image instanceof File) {
-      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(validatedData.image, config.google.driveFolderId)
     } else if (typeof validatedData.image === 'string') {
       imageUrl = validatedData.image
     }
@@ -220,7 +221,7 @@ export async function updateCategory(id: string, formData: FormData) {
     let imageUrl = existingCategory.image
     if (validatedData.image instanceof File) {
       // Upload new file
-      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(validatedData.image, config.google.driveFolderId)
       // Delete old file if it exists
       if (existingCategory.image) {
         await deleteFile(existingCategory.image)

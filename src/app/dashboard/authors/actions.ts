@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 import { uploadFile, deleteFile } from '@/lib/google-drive'
+import { config } from '@/config'
 
 // Repository imports
 import {
@@ -153,7 +154,7 @@ export async function createAuthor(formData: FormData) {
     // Handle file upload
     let imageUrl = null
     if (validatedData.image instanceof File) {
-      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(validatedData.image, config.google.driveFolderId)
     } else if (typeof validatedData.image === 'string') {
       imageUrl = validatedData.image
     }
@@ -207,7 +208,7 @@ export async function updateAuthor(id: string, formData: FormData) {
     let imageUrl = existingAuthor.image
     if (validatedData.image instanceof File) {
       // Upload new file
-      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(validatedData.image, config.google.driveFolderId)
       // Delete old file if it exists
       if (existingAuthor.image) {
         await deleteFile(existingAuthor.image)

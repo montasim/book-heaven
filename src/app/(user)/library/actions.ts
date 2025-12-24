@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 import { uploadFile } from '@/lib/google-drive'
+import { config } from '@/config'
 
 const bookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -53,14 +54,14 @@ export async function createBook(formData: FormData) {
     const file = formData.get('file') as File
     let fileUrl: string | null = null
     if (file && file.size > 0) {
-      fileUrl = await uploadFile(file, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      fileUrl = await uploadFile(file, config.google.driveFolderId)
     }
 
     // Upload image to Google Drive
     const image = formData.get('image') as File
     let imageUrl: string | null = null
     if (image && image.size > 0) {
-      imageUrl = await uploadFile(image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(image, config.google.driveFolderId)
     }
 
     let author = await prisma.author.findFirst({
@@ -148,14 +149,14 @@ export async function updateBook(id: string, formData: FormData) {
     const file = formData.get('file') as File
     let fileUrl = existingFileUrl || existingBook.fileUrl
     if (file && file.size > 0) {
-      fileUrl = await uploadFile(file, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      fileUrl = await uploadFile(file, config.google.driveFolderId)
     }
 
     // Handle image upload
     const image = formData.get('image') as File
     let imageUrl = existingImageUrl || existingBook.image
     if (image && image.size > 0) {
-      imageUrl = await uploadFile(image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(image, config.google.driveFolderId)
     }
 
     // Find or create author
@@ -282,7 +283,7 @@ export async function createBookshelf(formData: FormData) {
         const image = formData.get('image') as File
         let imageUrl: string | null = null
         if (image && image.size > 0) {
-            imageUrl = await uploadFile(image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+            imageUrl = await uploadFile(image, config.google.driveFolderId)
         }
 
         await prisma.bookshelf.create({
@@ -416,7 +417,7 @@ export async function updateBookshelf(id: string, formData: FormData, bookIds: s
     const image = formData.get('image') as File
     let imageUrl = existingImageUrl || existingShelf.image
     if (image && image.size > 0) {
-      imageUrl = await uploadFile(image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(image, config.google.driveFolderId)
     }
 
     // Update bookshelf

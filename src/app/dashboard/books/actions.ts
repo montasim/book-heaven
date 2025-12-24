@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 import { uploadFile, deleteFile } from '@/lib/google-drive'
+import { config } from '@/config'
 
 // Repository imports
 import {
@@ -365,14 +366,14 @@ export async function createBook(formData: FormData) {
     // Handle file uploads
     let imageUrl = null
     if (validatedData.image instanceof File) {
-      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(validatedData.image, config.google.driveFolderId)
     } else if (typeof validatedData.image === 'string') {
       imageUrl = validatedData.image
     }
 
     let fileUrl = null
     if (validatedData.fileUrl instanceof File) {
-      fileUrl = await uploadFile(validatedData.fileUrl, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      fileUrl = await uploadFile(validatedData.fileUrl, config.google.driveFolderId)
     } else if (typeof validatedData.fileUrl === 'string') {
       fileUrl = validatedData.fileUrl
     }
@@ -452,7 +453,7 @@ export async function updateBook(id: string, formData: FormData) {
     let imageUrl = existingBook.image
     if (validatedData.image instanceof File) {
       // Upload new file
-      imageUrl = await uploadFile(validatedData.image, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      imageUrl = await uploadFile(validatedData.image, config.google.driveFolderId)
       // Delete old file if it exists
       if (existingBook.image) {
         await deleteFile(existingBook.image)
@@ -471,7 +472,7 @@ export async function updateBook(id: string, formData: FormData) {
     let fileUrl = existingBook.fileUrl
     if (validatedData.fileUrl instanceof File) {
       // Upload new file
-      fileUrl = await uploadFile(validatedData.fileUrl, process.env.GOOGLE_DRIVE_FOLDER_ID)
+      fileUrl = await uploadFile(validatedData.fileUrl, config.google.driveFolderId)
       // Delete old file if it exists
       if (existingBook.fileUrl) {
         await deleteFile(existingBook.fileUrl)
