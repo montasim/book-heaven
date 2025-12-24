@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { MultiSelect } from '@/components/ui/multi-select'
-import { BookCard } from '@/components/books/book-card'
+import { BookGrid } from '@/components/books/book-grid'
 import { SearchBar } from '@/components/books/search-bar'
 import { useBooks } from '@/hooks/use-books'
 import Link from 'next/link'
@@ -571,24 +571,19 @@ export default function BooksPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
-                    {books.map((book) => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        variant={viewMode === 'list' ? 'compact' : 'default'}
-                        viewMoreHref={`/books/${book.id}`}
-                        showTypeBadge={true}
-                        showPremiumBadge={true}
-                        showCategories={true}
-                        showReaderCount={true}
-                        showAddToBookshelf={true}
-                        showUploader={true}
-                        showLockOverlay={true}
-                        coverHeight="tall"
-                      />
-                    ))}
-                  </div>
+                  <BookGrid
+                    books={books}
+                    viewMode={viewMode}
+                    viewMoreHref={(book) => `/books/${book.id}`}
+                    showTypeBadge={true}
+                    showPremiumBadge={true}
+                    showCategories={true}
+                    showReaderCount={true}
+                    showAddToBookshelf={true}
+                    showUploader={true}
+                    showLockOverlay={true}
+                    coverHeight="tall"
+                  />
                 )}
               </>
             )}
