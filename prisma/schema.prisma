@@ -35,11 +35,12 @@ model Invite {
 }
 
 model Author {
-  id          String       @id @default(uuid())
-  name        String
-  description String?
-  image       String?
-  entryDate   DateTime     @default(now())
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  image          String?
+  directImageUrl String?
+  entryDate      DateTime     @default(now())
   entryById   String
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -50,11 +51,12 @@ model Author {
 }
 
 model Publication {
-  id          String            @id @default(uuid())
-  name        String
-  description String?
-  image       String?
-  entryDate   DateTime          @default(now())
+  id             String            @id @default(uuid())
+  name           String
+  description    String?
+  image          String?
+  directImageUrl String?
+  entryDate      DateTime          @default(now())
   entryById   String
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -65,11 +67,12 @@ model Publication {
 }
 
 model Category {
-  id          String         @id @default(uuid())
-  name        String         @unique
-  description String?
-  image       String?
-  entryDate   DateTime       @default(now())
+  id             String         @id @default(uuid())
+  name           String         @unique
+  description    String?
+  image          String?
+  directImageUrl String?
+  entryDate      DateTime       @default(now())
   entryById   String
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -83,6 +86,7 @@ model Book {
   id              String            @id @default(uuid())
   name            String
   image           String?
+  directImageUrl  String?
   type            BookType
   buyingPrice     Float?
   sellingPrice    Float?
@@ -179,6 +183,7 @@ model User {
   username            String?           @unique
   phoneNumber         String?           @unique
   avatar              String?
+  directAvatarUrl     String?
   bio                 String?
   dob                 DateTime?
   theme               String?           @default("light")
@@ -290,15 +295,16 @@ model ProgressHistory {
 }
 
 model Bookshelf {
-  id          String          @id @default(uuid())
-  userId      String
-  name        String
-  description String?
-  isPublic    Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  image       String?
-  books       BookshelfItem[]
+  id             String          @id @default(uuid())
+  userId         String
+  name           String
+  description    String?
+  isPublic       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  image          String?
+  directImageUrl String?
+  books          BookshelfItem[]
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("bookshelves")
