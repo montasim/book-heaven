@@ -22,6 +22,8 @@ import { PagesReadChart } from '@/components/reading/pages-read-chart'
 import { CircularProgressBar } from '@/components/reading/circular-progress-bar'
 import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { BookGrid } from '@/components/books/book-grid'
+import { BookChatButton } from '@/components/books/book-chat-button'
+import { BookChatModal } from '@/components/books/book-chat-modal'
 import {
     BookOpen,
     LibraryBig,
@@ -51,6 +53,9 @@ export default function BookDetailsPage() {
 
   // PDF Reader Modal state
   const [isReaderModalOpen, setIsReaderModalOpen] = useState(false)
+
+  // Chat Modal state
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
 
   // Chart period state
   const [chartPeriod, setChartPeriod] = useState<'week' | 'month'>('week')
@@ -290,6 +295,16 @@ export default function BookDetailsPage() {
                     triggerVariant="icon"
                     triggerClassName="h-9 w-9"
                   />
+
+                  {/* Chat with AI Button - Full size when accessible */}
+                  {book.canAccess && (
+                    <div className="hidden sm:block">
+                      <BookChatButton
+                        book={book}
+                        onClick={() => setIsChatModalOpen(true)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Access Overlay */}
@@ -717,6 +732,15 @@ export default function BookDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Chat with AI Modal */}
+      {book && (
+        <BookChatModal
+          open={isChatModalOpen}
+          onOpenChange={setIsChatModalOpen}
+          book={book}
+        />
+      )}
 
       {/* PDF Reader Modal */}
       {book && book.fileUrl && (

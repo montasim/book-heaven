@@ -16,6 +16,10 @@ const serverConfig = {
   resendApiKey: process.env.RESEND_API_KEY,
   fromEmail: process.env.FROM_EMAIL,
 
+  // AI
+  zhipuAiApiKey: process.env.ZHIPU_AI_API_KEY, // z.ai api key
+  zhipuAiModel: process.env.ZHIPU_AI_MODEL || 'glm-4.7',
+
   // URLs
   baseUrl: process.env.BASE_URL,
   appUrl: process.env.NEXT_PUBLIC_APP_URL,
@@ -25,6 +29,13 @@ const serverConfig = {
     clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
     privateKey: process.env.GOOGLE_PRIVATE_KEY,
     driveFolderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
+  },
+
+  // Quiz API (Open Trivia Database)
+  quiz: {
+    apiBaseUrl: process.env.QUIZ_API_BASE_URL || 'https://opentdb.com',
+    timeout: parseInt(process.env.QUIZ_API_TIMEOUT || '10000', 10), // 10 seconds
+    maxRetries: parseInt(process.env.QUIZ_API_MAX_RETRIES || '3', 10),
   },
 } as const
 
