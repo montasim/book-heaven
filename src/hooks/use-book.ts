@@ -41,6 +41,12 @@ export interface ReadingProgress {
   lastReadAt?: string | null
 }
 
+export interface RecommendationReason {
+  authors: string[]
+  publications: string[]
+  categories: string[]
+}
+
 export interface Book {
   id: string
   name: string
@@ -66,6 +72,7 @@ export interface Book {
     avgProgress: number
   }
   relatedBooks?: Book[]
+  recommendationReasons?: Record<string, RecommendationReason>
   entryBy?: BookUser | null
 }
 

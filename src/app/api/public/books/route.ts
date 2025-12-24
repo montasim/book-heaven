@@ -170,12 +170,8 @@ function buildFilterConditions(
     } else if (premium === 'premium') {
         where.requiresPremium = true
     }
-    // If premium === 'all', no additional filtering
-
-    // If user doesn't have premium access, exclude premium books-old
-    if (!userHasPremium) {
-        where.requiresPremium = false
-    }
+    // If premium === 'all', show ALL books (both free and premium)
+    // Premium books will have a lock overlay for non-premium users
 
     return where
 }

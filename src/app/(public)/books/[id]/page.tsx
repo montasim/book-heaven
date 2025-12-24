@@ -21,6 +21,7 @@ import { ReadingHeatmap } from '@/components/reading/reading-heatmap'
 import { PagesReadChart } from '@/components/reading/pages-read-chart'
 import { CircularProgressBar } from '@/components/reading/circular-progress-bar'
 import { MDXViewer } from '@/components/ui/mdx-viewer'
+import { BookGrid } from '@/components/books/book-grid'
 import {
     BookOpen,
     LibraryBig,
@@ -475,9 +476,8 @@ export default function BookDetailsPage() {
 
             {/* Detailed Information Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="description">Description</TabsTrigger>
-                {/*<TabsTrigger value="details">Details</TabsTrigger>*/}
                 <TabsTrigger value="progress">My Progress</TabsTrigger>
               </TabsList>
 
@@ -619,7 +619,26 @@ export default function BookDetailsPage() {
 
               {/* Progress Tab */}
               <TabsContent value="progress" className="mt-6">
-                {book.readingProgress ? (
+                {!user ? (
+                  // Not authenticated - show login prompt
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <UserIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Sign In to Track Progress</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Log in to start reading this book and track your reading progress.
+                        </p>
+                        <Link href="/auth/sign-in">
+                          <Button>
+                            Sign In
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : book.readingProgress ? (
+                  // Authenticated with progress
                   <div className="space-y-6">
                     {/* Circular Progress Bar */}
                     <CircularProgressBar
@@ -658,6 +677,7 @@ export default function BookDetailsPage() {
                     {/*</Button>*/}
                   </div>
                 ) : (
+                  // Authenticated but no progress
                   <Card>
                     <CardContent className="pt-6">
                       <div className="text-center">
@@ -675,6 +695,25 @@ export default function BookDetailsPage() {
                 )}
               </TabsContent>
             </Tabs>
+
+            {/* Related Books Section */}
+            {book.relatedBooks && book.relatedBooks.length > 0 && (
+              <div className="mt-8 pt-8 border-t">
+                <h2 className="text-xl font-bold mb-6">Related Books</h2>
+                <BookGrid
+                  books={book.relatedBooks}
+                  viewMode="grid"
+                  viewMoreHref={(relatedBook) => `/books/${relatedBook.id}`}
+                  showTypeBadge={true}
+                  showPremiumBadge={true}
+                  showCategories={true}
+                  showReaderCount={true}
+                  showAddToBookshelf={true}
+                  showLockOverlay={true}
+                  coverHeight="tall"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

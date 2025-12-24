@@ -132,77 +132,231 @@ export async function GET(
             }, { status: 403 })
         }
 
-        // Check premium access
+        // Check premium access - don't block, just set canAccess flag
         const requiresPremium = book.requiresPremium
         const canAccess = !requiresPremium || userHasPremium
 
-        if (!canAccess) {
-            return NextResponse.json({
-                success: false,
-                error: 'Premium required',
-                message: 'This book requires a premium subscription to access',
-                requiresPremium: true
-            }, { status: 403 })
-        }
+        // Get related books with enhanced algorithm
+        // Priority: Author > Publication > Category
+        const currentBookAuthorIds = book.authors.map(ba => ba.authorId)
+        const currentBookPublicationIds = book.publications.map(bp => bp.publicationId)
+        const currentBookCategoryIds = book.categories.map(bc => bc.categoryId)
 
-        // Get related books-old (same category or author)
-        const relatedBooksQuery = {
+        // Fetch books by author (highest priority)
+        const authorMatches = await prisma.book.findMany({
             where: {
                 id: { not: bookId },
                 isPublic: true,
-                requiresPremium: userHasPremium ? undefined : false,
-                OR: [
-                    {
-                        categories: {
-                            some: {
-                                categoryId: {
-                                    in: book.categories.map(bc => bc.categoryId)
-                                }
-                            }
-                        }
-                    },
-                    {
-                        authors: {
-                            some: {
-                                authorId: {
-                                    in: book.authors.map(ba => ba.authorId)
-                                }
-                            }
-                        }
+                // Show ALL books (both free and premium) - premium books will have lock overlay
+                authors: {
+                    some: {
+                        authorId: { in: currentBookAuthorIds }
                     }
-                ]
+                }
             },
             include: {
                 authors: {
                     include: {
                         author: {
-                            select: {
-                                id: true,
-                                name: true,
-                            }
+                            select: { id: true, name: true }
                         }
                     }
                 },
                 categories: {
                     include: {
                         category: {
-                            select: {
-                                id: true,
-                                name: true,
-                            }
+                            select: { id: true, name: true }
                         }
+                    }
+                },
+                publications: {
+                    include: {
+                        publication: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                _count: {
+                    select: { readingProgress: true }
+                }
+            },
+            take: 10
+        })
+
+        // Fetch books by publication (medium priority)
+        const publicationMatches = await prisma.book.findMany({
+            where: {
+                id: {
+                    not: bookId,
+                    notIn: authorMatches.map(b => b.id)
+                },
+                isPublic: true,
+                // Show ALL books (both free and premium) - premium books will have lock overlay
+                publications: {
+                    some: {
+                        publicationId: { in: currentBookPublicationIds }
                     }
                 }
             },
-            take: 6,
-            orderBy: {
-                readingProgress: {
-                    _count: 'desc'
+            include: {
+                authors: {
+                    include: {
+                        author: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                categories: {
+                    include: {
+                        category: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                publications: {
+                    include: {
+                        publication: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                _count: {
+                    select: { readingProgress: true }
                 }
+            },
+            take: 10
+        })
+
+        // Fetch books by category (lower priority)
+        const categoryMatches = await prisma.book.findMany({
+            where: {
+                id: {
+                    not: bookId,
+                    notIn: [...authorMatches.map(b => b.id), ...publicationMatches.map(b => b.id)]
+                },
+                isPublic: true,
+                // Show ALL books (both free and premium) - premium books will have lock overlay
+                categories: {
+                    some: {
+                        categoryId: { in: currentBookCategoryIds }
+                    }
+                }
+            },
+            include: {
+                authors: {
+                    include: {
+                        author: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                categories: {
+                    include: {
+                        category: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                publications: {
+                    include: {
+                        publication: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                },
+                _count: {
+                    select: { readingProgress: true }
+                }
+            },
+            take: 10
+        })
+
+        // Score and combine related books
+        const scoreBook = (relatedBook: any, currentBookAuthors: string[], currentBookPubs: string[], currentBookCats: string[]) => {
+            let score = 0
+            const reasons: string[] = []
+
+            // Author matches: +3 points each
+            const matchedAuthors = relatedBook.authors
+                .map((ra: any) => ra.author.id)
+                .filter((id: string) => currentBookAuthors.includes(id))
+            if (matchedAuthors.length > 0) {
+                score += matchedAuthors.length * 3
+                reasons.push('author')
             }
+
+            // Publication matches: +2 points each
+            const matchedPubs = relatedBook.publications
+                .map((rp: any) => rp.publication.id)
+                .filter((id: string) => currentBookPubs.includes(id))
+            if (matchedPubs.length > 0) {
+                score += matchedPubs.length * 2
+                reasons.push('publication')
+            }
+
+            // Category matches: +1 point each
+            const matchedCats = relatedBook.categories
+                .map((rc: any) => rc.category.id)
+                .filter((id: string) => currentBookCats.includes(id))
+            if (matchedCats.length > 0) {
+                score += matchedCats.length
+                reasons.push('category')
+            }
+
+            // Popularity bonus: +0.5 points
+            const popularityScore = relatedBook._count.readingProgress * 0.1
+            score += popularityScore
+
+            return { score, reasons }
         }
 
-        const relatedBooks = await prisma.book.findMany(relatedBooksQuery)
+        // Process and sort all matches
+        const allRelatedBooks = [...authorMatches, ...publicationMatches, ...categoryMatches]
+        const scoredBooks = allRelatedBooks.map(relatedBook => ({
+            ...relatedBook,
+            ...scoreBook(relatedBook, currentBookAuthorIds, currentBookPublicationIds, currentBookCategoryIds)
+        }))
+
+        // Remove duplicates (keep highest score) and sort by score then popularity
+        const uniqueBooks = Array.from(
+            scoredBooks.reduce((map, book) => {
+                const existing = map.get(book.id)
+                if (!existing || book.score > existing.score) {
+                    map.set(book.id, book)
+                }
+                return map
+            }, new Map()).values()
+        ).sort((a, b) => {
+            // First sort by score
+            if (b.score !== a.score) return b.score - a.score
+            // Then by popularity
+            return b._count.readingProgress - a._count.readingProgress
+        })
+
+        // Take top 6
+        const relatedBooks = uniqueBooks.slice(0, 6)
+
+        // Build recommendation reasons map
+        const recommendationReasons: Record<string, { authors: string[], publications: string[], categories: string[] }> = {}
+        relatedBooks.forEach(relatedBook => {
+            const matchedAuthors = relatedBook.authors
+                .filter((ra: any) => currentBookAuthorIds.includes(ra.author.id))
+                .map((ra: any) => ra.author.name)
+
+            const matchedPublications = relatedBook.publications
+                .filter((rp: any) => currentBookPublicationIds.includes(rp.publication.id))
+                .map((rp: any) => rp.publication.name)
+
+            const matchedCategories = relatedBook.categories
+                .filter((rc: any) => currentBookCategoryIds.includes(rc.category.id))
+                .map((rc: any) => rc.category.name)
+
+            recommendationReasons[relatedBook.id] = {
+                authors: matchedAuthors,
+                publications: matchedPublications,
+                categories: matchedCategories
+            }
+        })
 
         // Transform book data
         const transformedBook = {
@@ -268,13 +422,15 @@ export async function GET(
                 totalReaders: book._count.readingProgress,
                 avgProgress: 0, // Could be calculated if needed
             },
-            // Related books-old
+            // Related books
             relatedBooks: relatedBooks.map(relatedBook => ({
                 id: relatedBook.id,
                 name: relatedBook.name,
                 type: relatedBook.type,
                 image: relatedBook.image,
                 requiresPremium: relatedBook.requiresPremium,
+                canAccess: !relatedBook.requiresPremium || userHasPremium,
+                readersCount: relatedBook._count.readingProgress,
                 authors: relatedBook.authors.map(ra => ({
                     id: ra.author.id,
                     name: ra.author.name,
@@ -283,7 +439,9 @@ export async function GET(
                     id: rc.category.id,
                     name: rc.category.name,
                 })),
-            }))
+            })),
+            // Recommendation reasons for each related book
+            recommendationReasons
         }
 
         // Return response
