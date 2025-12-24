@@ -130,12 +130,22 @@ export default function BooksPage() {
           {/* Header */}
         <div className="mb-8">
           {/* Desktop Header */}
-          <div className="hidden lg:flex lg:items-center justify-between mb-4">
+          <div className="hidden lg:flex lg:items-center justify-between mb-4 gap-6">
             <div>
               <h1 className="text-xl font-bold">Discover Books</h1>
               <p className="text-muted-foreground">
                 {booksData?.pagination?.totalBooks || 0} books available
               </p>
+            </div>
+
+            {/* Search Bar - Desktop */}
+            <div className="flex-1 max-w-md">
+              <SearchBar
+                onSearch={handleSearch}
+                initialValue={filters.search}
+                placeholder="Search books by title, author..."
+                className="w-full"
+              />
             </div>
 
             {/* Right Side Controls - Desktop Only */}
@@ -242,6 +252,7 @@ export default function BooksPage() {
             <div className="w-full mb-6">
               <SearchBar
                 onSearch={handleSearch}
+                initialValue={filters.search}
                 placeholder="Search books, authors, or categories..."
               />
             </div>

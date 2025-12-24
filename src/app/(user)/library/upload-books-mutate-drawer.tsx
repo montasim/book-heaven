@@ -48,12 +48,22 @@ interface Props {
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
   book?: any // Book object for editing
+  prefillData?: {
+    bookName: string
+    authorName: string
+    type: 'HARD_COPY' | 'EBOOK' | 'AUDIO'
+    edition?: string
+    publisher?: string
+    isbn?: string
+    description?: string
+    requestId: string
+  }
 }
 
 const formSchema = z.object({
   name: z.string().min(1, 'Book name is required.'),
   author: z.string().min(1, 'Author name is required.'),
-  type: z.enum(['EBOOK', 'AUDIO'] as const),
+  type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO'] as const),
   fileUrl: z.union([z.string(), z.any()]).optional(),
   image: z.union([z.string(), z.any()]).optional(),
   isPublic: z.boolean().default(false),
@@ -77,9 +87,10 @@ const formSchema = z.object({
 
 type BookForm = z.infer<typeof formSchema>
 
-export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }: Props) {
+export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book, prefillData }: Props) {
   const [loading, setLoading] = useState(false)
   const isEditing = !!book
+  const isApprovingRequest = !!prefillData
 
   const form = useForm<BookForm>({
     resolver: zodResolver(formSchema),
@@ -93,7 +104,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }:
     },
   })
 
-  // Pre-fill form when editing
+  // Pre-fill form when editing or approving a request
   useEffect(() => {
     if (book) {
       form.reset({
@@ -103,6 +114,15 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }:
         fileUrl: book.fileUrl || '',
         image: book.image || '',
         isPublic: book.isPublic || false,
+      })
+    } else if (prefillData) {
+      form.reset({
+        name: prefillData.bookName,
+        author: prefillData.authorName,
+        type: prefillData.type === 'HARD_COPY' ? 'EBOOK' : prefillData.type, // Convert HARD_COPY to EBOOK for uploads
+        fileUrl: '',
+        image: '',
+        isPublic: false,
       })
     } else {
       form.reset({
@@ -114,7 +134,7 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }:
         isPublic: false,
       })
     }
-  }, [book, form, open])
+  }, [book, prefillData, form, open])
 
   const onSubmit = async (data: BookForm) => {
     setLoading(true)
@@ -140,6 +160,11 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }:
         formData.append('image', data.image)
       } else if (typeof data.image === 'string' && data.image) {
         formData.append('existingImageUrl', data.image)
+      }
+
+      // Add requestId if approving a request
+      if (isApprovingRequest && prefillData?.requestId) {
+        formData.append('requestId', prefillData.requestId)
       }
 
       const result = isEditing
@@ -174,10 +199,14 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }:
     >
       <SheetContent className='flex flex-col max-w-2xl overflow-y-auto'>
         <SheetHeader className='text-left'>
-          <SheetTitle>{isEditing ? 'Edit Book' : 'Upload Book'}</SheetTitle>
+          <SheetTitle>
+            {isEditing ? 'Edit Book' : isApprovingRequest ? 'Approve Book Request' : 'Upload Book'}
+          </SheetTitle>
           <SheetDescription>
             {isEditing
               ? 'Update the book details. Change the file or image if needed.'
+              : isApprovingRequest
+              ? 'Complete the book details to approve this request. The information has been pre-filled from the request.'
               : 'Add a new book to your collection. You can choose to make it public.'}
           </SheetDescription>
         </SheetHeader>
@@ -340,7 +369,9 @@ export function UploadBooksMutateDrawer({ open, onOpenChange, onSuccess, book }:
             type='submit'
             disabled={loading || !form.formState.isValid}
           >
-            {loading ? (isEditing ? 'Updating...' : 'Uploading...') : (isEditing ? 'Update Book' : 'Upload Book')}
+            {loading
+              ? (isApprovingRequest ? 'Approving...' : isEditing ? 'Updating...' : 'Uploading...')
+              : (isApprovingRequest ? 'Approve Request' : isEditing ? 'Update Book' : 'Upload Book')}
           </Button>
         </SheetFooter>
       </SheetContent>

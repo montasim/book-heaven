@@ -16,7 +16,7 @@ import {
     TrendingUp,
     Target,
     ChevronUp,
-    ChevronDown
+    ChevronDown,
 } from 'lucide-react'
 import { BookList } from './book-list'
 import { Bookshelves } from './components/bookshelves'
@@ -29,6 +29,7 @@ import { BookshelfFilterToolbar } from './components/bookshelf-filter-toolbar'
 import { Book } from '@/app/dashboard/books/data/schema'
 import { deleteBook } from '@/app/dashboard/books/actions'
 import { getBookshelves, deleteBookshelf, getUserBooks } from './actions'
+import { calculateReadingTimeHours } from '@/lib/utils/reading-time'
 import LibraryContextProvider, { LibraryDialogType } from './context/library-context'
 import useDialogState from '@/hooks/use-dialog-state'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
@@ -71,8 +72,7 @@ function calculateLibraryStats(books: Book[]): LibraryStats {
     return sum + currentPage
   }, 0)
 
-  const readingTimeMinutes = totalPagesRead * 2
-  const readingTimeHours = Math.round(readingTimeMinutes / 60)
+  const readingTimeHours = calculateReadingTimeHours(totalPagesRead)
 
   return {
     completedBooks: completedBooks.length,

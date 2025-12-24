@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
+import { calculateReadingTime } from '@/lib/utils/reading-time'
 import { LibraryContext } from '@/app/(user)/library/context/library-context'
 import { AddToBookshelf } from '@/components/books/add-to-bookshelf'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
@@ -71,22 +72,6 @@ interface BookCardProps extends React.ComponentPropsWithoutRef<typeof Card> {
   showUploader?: boolean
   showLockOverlay?: boolean
   coverHeight?: 'default' | 'tall'
-}
-
-// Calculate estimated reading time based on page count (average reading speed: ~2 minutes per page)
-function calculateReadingTime(pageCount?: number | null): string | null {
-  if (!pageCount || pageCount <= 0) return null
-  const minutesPerPage = 2
-  const totalMinutes = pageCount * minutesPerPage
-
-  if (totalMinutes < 60) {
-    return `${totalMinutes} min read`
-  }
-  const hours = Math.floor(totalMinutes / 60)
-  const remainingMinutes = totalMinutes % 60
-  return remainingMinutes > 0
-    ? `${hours}h ${remainingMinutes}m`
-    : `${hours}h`
 }
 
 const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(

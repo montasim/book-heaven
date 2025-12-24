@@ -6,11 +6,12 @@ import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 import { uploadFile } from '@/lib/google-drive'
 import { config } from '@/config'
+import { RequestStatus } from '@prisma/client'
 
 const bookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   author: z.string().min(1, 'Author is required'),
-  type: z.enum(['EBOOK', 'AUDIO']),
+  type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   isPublic: z.boolean().default(false),
 })
 
@@ -23,9 +24,10 @@ export async function createBook(formData: FormData) {
 
     const name = formData.get('name') as string
     const authorName = formData.get('author') as string
-    const type = formData.get('type') as 'EBOOK' | 'AUDIO'
+    const type = formData.get('type') as 'HARD_COPY' | 'EBOOK' | 'AUDIO'
     const isPublic = formData.get('isPublic') === 'on'
-    
+    const requestId = formData.get('requestId') as string | null
+
     const validation = bookSchema.safeParse({
       name,
       author: authorName,
@@ -77,7 +79,7 @@ export async function createBook(formData: FormData) {
       })
     }
 
-    await prisma.book.create({
+    const book = await prisma.book.create({
       data: {
         name,
         type,
@@ -93,8 +95,20 @@ export async function createBook(formData: FormData) {
       }
     })
 
+    // If this is from a book request, update the request status to APPROVED
+    if (requestId) {
+      await prisma.bookRequest.update({
+        where: { id: requestId },
+        data: { status: RequestStatus.APPROVED }
+      })
+    }
+
     revalidatePath('/library')
-    return { success: true, message: 'Book uploaded successfully' }
+    revalidatePath('/dashboard/book-requests')
+    return {
+      success: true,
+      message: requestId ? 'Book request approved successfully' : 'Book uploaded successfully'
+    }
   } catch (error) {
     console.error('Error creating book:', error)
     return { success: false, message: 'Failed to create book' }
