@@ -17,6 +17,18 @@ import { toast } from '@/hooks/use-toast'
 import { useBookRequestsContext } from './context/book-requests-context'
 import { BookRequestsProvider } from './context/book-requests-context'
 import { BookRequestApproveDrawer } from './components/book-requests-approve-drawer'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
 interface BookRequest {
   id: string
@@ -29,6 +41,7 @@ interface BookRequest {
   description: string | null
   status: RequestStatus
   cancelReason: string | null
+  cancelledById: string | null
   createdAt: string
   requestedBy: {
     id: string
@@ -37,7 +50,16 @@ interface BookRequest {
     username: string | null
     name: string
     email: string
+    role: string
   }
+  cancelledBy: {
+    id: string
+    firstName: string
+    lastName: string | null
+    name: string
+    email: string
+    role: string
+  } | null
 }
 
 const statusConfig: Record<RequestStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -60,6 +82,10 @@ function BookRequestsPageContent() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [isApproveDrawerOpen, setIsApproveDrawerOpen] = useState(false)
   const [approvingRequest, setApprovingRequest] = useState<BookRequest | null>(null)
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+  const [requestToReject, setRequestToReject] = useState<BookRequest | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [reasonError, setReasonError] = useState('')
 
   const { currentRow, setCurrentRow } = useBookRequestsContext()
 
@@ -116,6 +142,49 @@ function BookRequestsPageContent() {
     } catch (error) {
       console.error('Error updating status:', error)
       toast({ title: 'Failed to update status', variant: 'destructive' })
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleRejectClick = (request: BookRequest) => {
+    setRequestToReject(request)
+    setRejectReason('')
+    setReasonError('')
+    setIsRejectDialogOpen(true)
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!requestToReject) return
+
+    if (!rejectReason.trim()) {
+      setReasonError('Please provide a reason for rejecting this request')
+      return
+    }
+
+    try {
+      setUpdatingId(requestToReject.id)
+      const response = await fetch(`/api/admin/book-requests/${requestToReject.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REJECTED', cancelReason: rejectReason }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        toast({ title: result.message })
+        fetchRequests()
+        setIsRejectDialogOpen(false)
+        setRequestToReject(null)
+        setRejectReason('')
+        setReasonError('')
+      } else {
+        toast({ title: result.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      console.error('Error rejecting request:', error)
+      toast({ title: 'Failed to reject request', variant: 'destructive' })
     } finally {
       setUpdatingId(null)
     }
@@ -285,8 +354,13 @@ function BookRequestsPageContent() {
                       <div className="text-sm bg-destructive/10 text-destructive border border-destructive/20 rounded-md p-3">
                         <div className="flex items-start gap-2">
                           <MessageCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <span className="font-medium">Cancel Reason:</span> {request.cancelReason}
+                          <div className="flex-1">
+                            <div className="font-medium">
+                              Cancelled by: {request.cancelledBy?.firstName || request.cancelledBy?.name || 'Unknown'} ({request.cancelledBy?.role || 'Unknown'})
+                            </div>
+                            <div className="mt-1">
+                              <span className="font-medium">Reason:</span> {request.cancelReason}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -314,7 +388,7 @@ function BookRequestsPageContent() {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => updateStatus(request.id, RequestStatus.REJECTED)}
+                          onClick={() => handleRejectClick(request)}
                           disabled={updatingId === request.id}
                         >
                           Reject
@@ -334,7 +408,7 @@ function BookRequestsPageContent() {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => updateStatus(request.id, RequestStatus.REJECTED)}
+                          onClick={() => handleRejectClick(request)}
                           disabled={updatingId === request.id}
                         >
                           Reject
@@ -361,6 +435,59 @@ function BookRequestsPageContent() {
         onSuccess={fetchRequests}
         requestData={approvingRequest}
       />
+
+      <AlertDialog open={isRejectDialogOpen} onOpenChange={(open) => {
+        setIsRejectDialogOpen(open)
+        if (!open) {
+          setRejectReason('')
+          setReasonError('')
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Book Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              {requestToReject && (
+                <div>
+                  Are you sure you want to reject the request for{' '}
+                  <strong>"{requestToReject.bookName}"</strong> by {requestToReject.authorName}?
+                  This action cannot be undone.
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-4">
+            <Label htmlFor="reject-reason">
+              Reason for rejection <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="reject-reason"
+              placeholder="Please provide a reason for rejecting this request..."
+              value={rejectReason}
+              onChange={(e) => {
+                setRejectReason(e.target.value)
+                setReasonError('')
+              }}
+              className={reasonError ? 'border-destructive' : ''}
+            />
+            {reasonError && (
+              <p className="text-sm text-destructive">{reasonError}</p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updatingId !== null}>
+              Keep Request
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRejectConfirm}
+              disabled={updatingId !== null}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {updatingId ? 'Rejecting...' : 'Reject Request'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

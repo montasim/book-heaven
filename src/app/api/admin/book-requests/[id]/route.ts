@@ -42,6 +42,17 @@ export async function GET(
             username: true,
             name: true,
             email: true,
+            role: true,
+          },
+        },
+        cancelledBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            name: true,
+            email: true,
+            role: true,
           },
         },
       },
@@ -118,10 +129,10 @@ export async function PATCH(
     // Prepare update data
     const updateData: any = { status: validation.data.status }
 
-    // If rejecting, add cancel reason and set cancelledBy to ADMIN
+    // If rejecting, add cancel reason and set cancelledById to the admin's user ID
     if (validation.data.status === 'REJECTED') {
       updateData.cancelReason = validation.data.cancelReason?.trim()
-      updateData.cancelledBy = 'ADMIN'
+      updateData.cancelledById = session.userId
     }
 
     // Update the request

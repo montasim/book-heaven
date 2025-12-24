@@ -22,12 +22,12 @@ model Invite {
   email     String    @unique
   token     String    @unique
   invitedBy String
-  role      UserRole  @default(ADMIN)
   desc      String?
   expiresAt DateTime
   used      Boolean   @default(false)
   createdAt DateTime  @default(now())
   usedAt    DateTime?
+  role      UserRole  @default(ADMIN)
 
   @@index([email, expiresAt])
   @@index([token])
@@ -84,9 +84,6 @@ model Book {
   name            String
   image           String?
   type            BookType
-  bindingType     BindingType?
-  pageNumber      Int?
-  fileUrl         String?
   buyingPrice     Float?
   sellingPrice    Float?
   numberOfCopies  Int?
@@ -95,16 +92,19 @@ model Book {
   entryById       String
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  summary         String?
+  bindingType     BindingType?
+  fileUrl         String?
   isPublic        Boolean           @default(false)
+  pageNumber      Int?
   requiresPremium Boolean           @default(false)
+  summary         String?
   authors         BookAuthor[]
   categories      BookCategory[]
   publications    BookPublication[]
-  readingProgress ReadingProgress[]
-  progressHistory ProgressHistory[]
-  bookshelves     BookshelfItem[]
   entryBy         User              @relation("UserBooks", fields: [entryById], references: [id])
+  bookshelves     BookshelfItem[]
+  progressHistory ProgressHistory[]
+  readingProgress ReadingProgress[]
 
   @@map("books")
 }
@@ -153,13 +153,14 @@ model BookRequest {
   edition       String?
   publisher     String?
   isbn          String?
-  description    String?
+  description   String?
   status        RequestStatus @default(PENDING)
-  cancelReason  String?
-  cancelledBy   CancelledBy?
   requestedById String
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  cancelReason  String?
+  cancelledById String?
+  cancelledBy   User?         @relation("UserCancelledRequests", fields: [cancelledById], references: [id])
   requestedBy   User          @relation("UserBookRequests", fields: [requestedById], references: [id])
 
   @@index([requestedById, status])
@@ -167,47 +168,44 @@ model BookRequest {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String   @default("")
-  firstName    String   @default("")
-  lastName     String?
-  passwordHash String
-  avatar       String?
-  role         UserRole @default(USER)
-  isActive     Boolean  @default(true)
-  isPremium    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Admin fields (nullable for regular users)
+  id                  String            @id @default(uuid())
+  email               String            @unique
+  passwordHash        String
+  role                UserRole          @default(USER)
+  name                String            @default("")
+  firstName           String            @default("")
+  lastName            String?
+  username            String?           @unique
+  phoneNumber         String?           @unique
+  avatar              String?
   bio                 String?
-  communicationEmails Boolean?  @default(false)
-  displayItems        Json?     @default("[\"recents\", \"home\", \"applications\", \"desktop\", \"downloads\", \"documents\"]")
   dob                 DateTime?
-  font                String?   @default("inter")
+  theme               String?           @default("light")
+  font                String?           @default("inter")
   language            String?
-  marketingEmails     Boolean?  @default(false)
-  mobileNotifications Boolean?  @default(false)
-  notificationType    String?   @default("all")
-  phoneNumber         String?   @unique
-  securityEmails      Boolean?  @default(true)
-  socialEmails        Boolean?  @default(false)
-  theme               String?   @default("light")
-  urls                Json?     @default("[]")
-  username            String?   @unique
-
-  // Relationships
-  subscription      Subscription?
-  readingProgress   ReadingProgress[]
-  progressHistory   ProgressHistory[]
-  bookshelves       Bookshelf[]
-  sessions          UserSession[]
-  authoredBooks     Author[]          @relation("UserAuthors")
-  books             Book[]            @relation("UserBooks")
-  categorizedBooks  Category[]        @relation("UserCategories")
-  publishedBooks    Publication[]     @relation("UserPublications")
-  bookRequests      BookRequest[]     @relation("UserBookRequests")
+  notificationType    String?           @default("all")
+  displayItems        Json?             @default("[\"recents\", \"home\", \"applications\", \"desktop\", \"downloads\", \"documents\"]")
+  urls                Json?             @default("[]")
+  communicationEmails Boolean?          @default(false)
+  marketingEmails     Boolean?          @default(false)
+  securityEmails      Boolean?          @default(true)
+  socialEmails        Boolean?          @default(false)
+  mobileNotifications Boolean?          @default(false)
+  isPremium           Boolean           @default(false)
+  isActive            Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  authoredBooks       Author[]          @relation("UserAuthors")
+  cancelledRequests   BookRequest[]     @relation("UserCancelledRequests")
+  bookRequests        BookRequest[]     @relation("UserBookRequests")
+  books               Book[]            @relation("UserBooks")
+  bookshelves         Bookshelf[]
+  categorizedBooks    Category[]        @relation("UserCategories")
+  progressHistory     ProgressHistory[]
+  publishedBooks      Publication[]     @relation("UserPublications")
+  readingProgress     ReadingProgress[]
+  subscription        Subscription?
+  sessions            UserSession[]
 
   @@map("users")
 }
@@ -257,33 +255,32 @@ model ReadingProgress {
   userId        String
   bookId        String
   currentPage   Int?
-  currentEpocha Float? // For audio books (position in seconds)
-  progress      Float    @default(0) // Percentage 0-100
+  currentEpocha Float?
+  progress      Float    @default(0)
   isCompleted   Boolean  @default(false)
   lastReadAt    DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   book          Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
   @@map("reading_progress")
 }
 
 model ProgressHistory {
-  id             String   @id @default(uuid())
-  userId         String
-  bookId         String
-  currentPage    Int?
-  currentEpocha  Float?
-  progress       Float    @default(0)
-  pagesRead      Int      @default(0)
-  timeSpent      Int      @default(0)
-  sessionDate    DateTime @default(now())
-  createdAt      DateTime @default(now())
-
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  userId        String
+  bookId        String
+  currentPage   Int?
+  currentEpocha Float?
+  progress      Float    @default(0)
+  pagesRead     Int      @default(0)
+  timeSpent     Int      @default(0)
+  sessionDate   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  book          Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, bookId, sessionDate])
   @@map("progress_history")
@@ -294,10 +291,10 @@ model Bookshelf {
   userId      String
   name        String
   description String?
-  image       String?
   isPublic    Boolean         @default(false)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  image       String?
   books       BookshelfItem[]
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -309,8 +306,8 @@ model BookshelfItem {
   bookshelfId String
   bookId      String
   addedAt     DateTime  @default(now())
-  bookshelf   Bookshelf @relation(fields: [bookshelfId], references: [id], onDelete: Cascade)
   book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookshelf   Bookshelf @relation(fields: [bookshelfId], references: [id], onDelete: Cascade)
 
   @@unique([bookshelfId, bookId])
   @@map("bookshelf_items")
@@ -344,9 +341,4 @@ enum RequestStatus {
   IN_PROGRESS
   APPROVED
   REJECTED
-}
-
-enum CancelledBy {
-  USER
-  ADMIN
 }

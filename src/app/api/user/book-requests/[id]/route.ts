@@ -128,7 +128,7 @@ export async function PATCH(
       data: {
         status: RequestStatus.REJECTED,
         cancelReason: cancelReason.trim(),
-        cancelledBy: 'USER',
+        cancelledById: session.userId,
       },
     })
 

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { BookOpen, Calendar, X, FileText, Plus } from 'lucide-react'
+import { BookOpen, Calendar, X, FileText, Plus, MessageCircle } from 'lucide-react'
 import { RequestStatus, BookType } from '@prisma/client'
 import { toast } from '@/hooks/use-toast'
 import { RequestBookDrawer } from '../request-book-drawer'
@@ -33,7 +33,16 @@ interface BookRequest {
   isbn: string | null
   description: string | null
   status: RequestStatus
+  cancelReason: string | null
+  cancelledById: string | null
   createdAt: string
+  cancelledBy: {
+    id: string
+    firstName: string
+    lastName: string | null
+    name: string
+    role: string
+  } | null
 }
 
 const statusConfig: Record<RequestStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -223,6 +232,24 @@ export default function MyRequestsPage() {
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {request.description}
                   </p>
+                )}
+
+                {request.cancelReason && (
+                  <div className="text-sm bg-destructive/10 text-destructive border border-destructive/20 rounded-md p-2 mt-2">
+                    <div className="flex items-start gap-2">
+                      <MessageCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-medium text-xs">
+                          Cancelled by: {request.cancelledById === user?.id
+                            ? 'You'
+                            : `${request.cancelledBy?.firstName || request.cancelledBy?.name || 'Unknown'} (${request.cancelledBy?.role || 'Unknown'})`}
+                        </div>
+                        <div className="text-xs mt-1">
+                          <span className="font-medium">Reason:</span> {request.cancelReason}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
