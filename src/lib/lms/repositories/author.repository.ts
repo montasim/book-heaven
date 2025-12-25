@@ -244,3 +244,335 @@ export async function getAuthorBooks(authorId: string) {
     },
   })
 }
+
+// ============================================================================
+// ADMIN AUTHOR DETAILS
+// ============================================================================
+
+/**
+ * Get author with complete details for admin dashboard
+ */
+export async function getAuthorWithCompleteDetails(id: string) {
+  const author = await prisma.author.findUnique({
+    where: { id },
+    include: {
+      entryBy: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatar: true,
+          directAvatarUrl: true,
+        },
+      },
+      books: {
+        include: {
+          book: {
+            include: {
+              publications: {
+                include: {
+                  publication: true,
+                },
+              },
+              categories: {
+                include: {
+                  category: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          book: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    },
+  })
+
+  if (!author) return null
+
+  // Get book IDs for this author
+  const bookIds = author.books.map(ab => ab.book.id)
+
+  // Get analytics data in parallel
+  const [viewStats, totalReaders, completedReaders] = await Promise.all([
+    // View stats
+    prisma.authorView.aggregate({
+      where: { authorId: id },
+      _count: {
+        id: true,
+      },
+    }),
+
+    // Total unique readers across all books
+    prisma.readingProgress.groupBy({
+      by: ['userId'],
+      where: {
+        bookId: { in: bookIds },
+      },
+    }).then(groups => groups.length),
+
+    // Completed readers across all books
+    prisma.readingProgress.count({
+      where: {
+        bookId: { in: bookIds },
+        isCompleted: true,
+      },
+    }),
+  ])
+
+  // Calculate book stats
+  const booksByType = {
+    HARD_COPY: author.books.filter(ab => ab.book.type === 'HARD_COPY').length,
+    EBOOK: author.books.filter(ab => ab.book.type === 'EBOOK').length,
+    AUDIO: author.books.filter(ab => ab.book.type === 'AUDIO').length,
+  }
+
+  const totalBooks = author.books.length
+  const totalPages = author.books.reduce((sum, ab) => sum + (ab.book.pageNumber || 0), 0)
+
+  return {
+    ...author,
+    analytics: {
+      totalViews: viewStats._count.id,
+      totalBooks,
+      totalReaders,
+      completedReaders,
+      booksByType,
+      totalPages,
+    },
+  }
+}
+
+/**
+ * Get all books by an author with their stats
+ */
+export async function getAuthorBooksWithStats(
+  authorId: string,
+  options: {
+    page?: number
+    limit?: number
+  } = {}
+) {
+  const { page = 1, limit = 20 } = options
+  const skip = (page - 1) * limit
+
+  const [books, total] = await Promise.all([
+    prisma.bookAuthor.findMany({
+      where: { authorId },
+      include: {
+        book: {
+          include: {
+            publications: {
+              include: {
+                publication: true,
+              },
+            },
+            categories: {
+              include: {
+                category: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        book: {
+          createdAt: 'desc',
+        },
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.bookAuthor.count({ where: { authorId } }),
+  ])
+
+  // Get stats for each book
+  const bookIds = books.map(ab => ab.book.id)
+  const bookStats = await prisma.bookView.groupBy({
+    by: ['bookId'],
+    where: { bookId: { in: bookIds } },
+    _count: {
+      id: true,
+    },
+  })
+
+  const readerStats = await prisma.readingProgress.groupBy({
+    by: ['bookId'],
+    where: { bookId: { in: bookIds } },
+    _count: {
+      id: true,
+    },
+  })
+
+  const statsMap = new Map()
+  bookStats.forEach(stat => {
+    statsMap.set(stat.bookId, stat._count.id)
+  })
+
+  const readersMap = new Map()
+  readerStats.forEach(stat => {
+    readersMap.set(stat.bookId, stat._count.id)
+  })
+
+  const booksWithStats = books.map(ab => ({
+    ...ab.book,
+    viewCount: statsMap.get(ab.book.id) || 0,
+    readerCount: readersMap.get(ab.book.id) || 0,
+  }))
+
+  return {
+    books: booksWithStats,
+    total,
+    pages: Math.ceil(total / limit),
+    currentPage: page,
+  }
+}
+
+/**
+ * Get readers across all author's books
+ */
+export async function getAuthorReaders(
+  authorId: string,
+  options: {
+    page?: number
+    limit?: number
+  } = {}
+) {
+  const { page = 1, limit = 20 } = options
+  const skip = (page - 1) * limit
+
+  // Get all books by this author
+  const authorBooks = await prisma.bookAuthor.findMany({
+    where: { authorId },
+    select: { bookId: true },
+  })
+
+  const bookIds = authorBooks.map(ab => ab.bookId)
+
+  // Get reading progress for all these books
+  const [progressRecords, total] = await Promise.all([
+    prisma.readingProgress.findMany({
+      where: {
+        bookId: { in: bookIds },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            directAvatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        lastReadAt: 'desc',
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.readingProgress.count({
+      where: { bookId: { in: bookIds } },
+    }),
+  ])
+
+  // Group by user and aggregate their reading across author's books
+  const userMap = new Map()
+
+  progressRecords.forEach(record => {
+    if (!userMap.has(record.userId)) {
+      userMap.set(record.userId, {
+        user: record.user,
+        booksRead: 0,
+        totalProgress: 0,
+        lastReadAt: record.lastReadAt,
+        completedBooks: 0,
+      })
+    }
+
+    const userData = userMap.get(record.userId)!
+    userData.booksRead += 1
+    userData.totalProgress += record.progress
+    if (record.isCompleted) {
+      userData.completedBooks += 1
+    }
+    if (new Date(record.lastReadAt) > new Date(userData.lastReadAt)) {
+      userData.lastReadAt = record.lastReadAt
+    }
+  })
+
+  const readers = Array.from(userMap.values()).map(data => ({
+    ...data,
+    avgProgress: Math.round(data.totalProgress / data.booksRead),
+  }))
+
+  return {
+    readers,
+    total,
+    pages: Math.ceil(total / limit),
+    currentPage: page,
+  }
+}
+
+/**
+ * Get aggregate reading statistics for an author
+ */
+export async function getAuthorReadingStats(authorId: string) {
+  // Get all books by this author
+  const authorBooks = await prisma.bookAuthor.findMany({
+    where: { authorId },
+    select: { bookId: true },
+  })
+
+  const bookIds = authorBooks.map(ab => ab.bookId)
+
+  const [
+    totalReadersResult,
+    completedReadersResult,
+    activeReadersResult,
+    avgProgressResult,
+  ] = await Promise.all([
+    // Total readers
+    prisma.readingProgress.groupBy({
+      by: ['userId'],
+      where: { bookId: { in: bookIds } },
+    }).then(groups => groups.length),
+
+    // Completed readers (count of completed progress records)
+    prisma.readingProgress.count({
+      where: {
+        bookId: { in: bookIds },
+        isCompleted: true,
+      },
+    }),
+
+    // Currently reading
+    prisma.readingProgress.groupBy({
+      by: ['userId'],
+      where: {
+        bookId: { in: bookIds },
+        isCompleted: false,
+        progress: { gt: 0 },
+      },
+    }).then(groups => groups.length),
+
+    // Average progress
+    prisma.readingProgress.aggregate({
+      where: { bookId: { in: bookIds } },
+      _avg: {
+        progress: true,
+      },
+    }),
+  ])
+
+  return {
+    totalReaders: totalReadersResult,
+    completedReaders: completedReadersResult,
+    activeReaders: activeReadersResult,
+    avgProgress: avgProgressResult._avg.progress || 0,
+  }
+}
