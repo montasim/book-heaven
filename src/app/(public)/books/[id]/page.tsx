@@ -489,7 +489,7 @@ export default function BookDetailsPage() {
               {book.categories && book.categories.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {book.categories.map((category) => (
-                    <Link key={category.id} href={`/books?category=${category.name.toLowerCase()}`}>
+                    <Link key={category.id} href={`/categories/${category.id}`}>
                       <Badge variant="outline" className="hover:bg-primary/10 cursor-pointer">
                         {category.name}
                       </Badge>
@@ -597,9 +597,11 @@ export default function BookDetailsPage() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg text-primary">
-                              {publication.name}
-                            </h3>
+                            <Link href={`/publications/${publication.id}`}>
+                              <h3 className="font-semibold text-lg text-primary hover:underline">
+                                {publication.name}
+                              </h3>
+                            </Link>
                             {publication.description && (
                               <div className="text-muted-foreground mt-1">
                                 <ExpandableDescription description={publication.description} sectionId={`publication-${publication.id}`} />
