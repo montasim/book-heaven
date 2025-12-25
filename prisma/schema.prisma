@@ -83,33 +83,43 @@ model Category {
 }
 
 model Book {
-  id              String            @id @default(uuid())
-  name            String
-  image           String?
-  directImageUrl  String?
-  type            BookType
-  buyingPrice     Float?
-  sellingPrice    Float?
-  numberOfCopies  Int?
-  purchaseDate    DateTime?
-  entryDate       DateTime          @default(now())
-  entryById       String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  bindingType     BindingType?
-  fileUrl         String?
-  directFileUrl   String?
-  isPublic        Boolean           @default(false)
-  pageNumber      Int?
-  requiresPremium Boolean           @default(false)
-  summary         String?
-  authors         BookAuthor[]
-  categories      BookCategory[]
-  publications    BookPublication[]
-  entryBy         User              @relation("UserBooks", fields: [entryById], references: [id])
-  bookshelves     BookshelfItem[]
-  progressHistory ProgressHistory[]
-  readingProgress ReadingProgress[]
+  id                  String            @id @default(uuid())
+  name                String
+  image               String?
+  directImageUrl      String?
+  type                BookType
+  buyingPrice         Float?
+  sellingPrice        Float?
+  numberOfCopies      Int?
+  purchaseDate        DateTime?
+  entryDate           DateTime          @default(now())
+  entryById           String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  bindingType         BindingType?
+  fileUrl             String?
+  directFileUrl       String?
+  isPublic            Boolean           @default(false)
+  pageNumber          Int?
+  requiresPremium     Boolean           @default(false)
+  summary             String?
+  authors             BookAuthor[]
+  categories          BookCategory[]
+  publications        BookPublication[]
+  entryBy             User              @relation("UserBooks", fields: [entryById], references: [id])
+  bookshelves         BookshelfItem[]
+  progressHistory     ProgressHistory[]
+  readingProgress     ReadingProgress[]
+
+  // Content cache fields
+  extractedContent    String?           // Full extracted text content
+  contentExtractedAt  DateTime?         // When content was extracted
+  contentHash         String?           // MD5 hash to detect changes
+  contentVersion      Int               @default(0) // Increment on changes
+  extractionStatus    String?           // 'pending', 'completed', 'failed'
+  contentPageCount    Int?              // Number of pages
+  contentWordCount    Int?              // Word count
+  contentSize         Int?              // Size in bytes
 
   @@map("books")
 }

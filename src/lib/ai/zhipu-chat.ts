@@ -31,6 +31,19 @@ export interface ChatResponse {
 }
 
 /**
+ * Trigger async content extraction (fire and forget)
+ */
+function triggerContentExtraction(bookId: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL || 'http://localhost:3000';
+
+  fetch(`${baseUrl}/api/books/${bookId}/extract-content`, {
+    method: 'POST',
+  }).catch(err => {
+    console.error('[Zhipu AI] Failed to trigger extraction:', err);
+  });
+}
+
+/**
  * Main chat function using Zhipu AI (GLM-4)
  * Processes user questions about books with PDF content as context
  */
@@ -76,32 +89,60 @@ export async function chatWithZhipuAI(request: ChatRequest): Promise<ChatRespons
   let bookContent = '';
 
   if (request.pdfContent) {
-    // Use pre-extracted content
+    // Pre-extracted content passed directly (highest priority)
     bookContent = extractRelevantContent(
       request.pdfContent,
       request.messages[request.messages.length - 1]?.content || '',
       15
     );
-  } else if (request.pdfUrl) {
-    // Download and extract PDF content
-    console.log('[Zhipu AI] Downloading PDF from:', request.pdfUrl);
+  } else if (request.bookId) {
+    // Try to get cached content from database
+    console.log('[Zhipu AI] Checking database for cached content...');
 
     try {
-      const pdfData = await downloadAndExtractPdf(
-        request.pdfUrl,
-        request.pdfDirectUrl // Pass direct URL for better performance
-      );
+      const { getBookWithExtractedContent } = await import('@/lib/lms/repositories/book.repository');
+      const bookWithContent = await getBookWithExtractedContent(request.bookId);
 
-      // Get a reasonable excerpt (first 20k chars) to avoid exceeding token limits
+      if (bookWithContent?.extractedContent) {
+        bookContent = extractRelevantContent(
+          bookWithContent.extractedContent,
+          request.messages[request.messages.length - 1]?.content || '',
+          15
+        );
+        console.log('[Zhipu AI] Using cached content from DB, version:', bookWithContent.contentVersion);
+        console.log('[Zhipu AI] Content extracted at:', bookWithContent.contentExtractedAt);
+
+        // Trigger async re-extraction if content is old (> 7 days)
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        if (bookWithContent.contentExtractedAt && bookWithContent.contentExtractedAt < sevenDaysAgo) {
+          console.log('[Zhipu AI] Content is old (>7 days), triggering refresh...');
+          triggerContentExtraction(request.bookId);
+        }
+      } else {
+        console.log('[Zhipu AI] No cached content found, downloading PDF...');
+        // Fallback to download
+        const pdfData = await downloadAndExtractPdf(request.pdfUrl, request.pdfDirectUrl);
+        bookContent = getPdfExcerpt(pdfData.text, 20000);
+        console.log('[Zhipu AI] PDF content extracted, length:', bookContent.length);
+        console.log('[Zhipu AI] PDF pages:', pdfData.numPages);
+
+        // Trigger async extraction for next time
+        console.log('[Zhipu AI] Triggering async content extraction...');
+        triggerContentExtraction(request.bookId);
+      }
+    } catch (error) {
+      console.error('[Zhipu AI] Error fetching cached content:', error);
+      // Fallback to direct download
+      const pdfData = await downloadAndExtractPdf(request.pdfUrl, request.pdfDirectUrl);
       bookContent = getPdfExcerpt(pdfData.text, 20000);
-
-      console.log('[Zhipu AI] PDF content extracted, length:', bookContent.length);
-      console.log('[Zhipu AI] PDF pages:', pdfData.numPages);
-    } catch (error: any) {
-      console.error('[Zhipu AI] PDF extraction failed:', error);
-      // Continue without PDF content - AI will answer based on metadata only
-      bookContent = `[Could not extract PDF content: ${error.message}]`;
     }
+  } else if (request.pdfUrl) {
+    // No book ID, download directly
+    console.log('[Zhipu AI] No book ID provided, downloading PDF directly...');
+    const pdfData = await downloadAndExtractPdf(request.pdfUrl, request.pdfDirectUrl);
+    bookContent = getPdfExcerpt(pdfData.text, 20000);
+    console.log('[Zhipu AI] PDF content extracted, length:', bookContent.length);
+    console.log('[Zhipu AI] PDF pages:', pdfData.numPages);
   }
 
   // Build system prompt

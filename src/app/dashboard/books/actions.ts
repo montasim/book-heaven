@@ -416,7 +416,13 @@ export async function createBook(formData: FormData) {
     }
 
     // Create book
-    await createBookInDb(processedData)
+    const createdBook = await createBookInDb(processedData)
+
+    // Trigger async content extraction for ebooks/audiobooks
+    if ((processedData.type === 'EBOOK' || processedData.type === 'AUDIO') && processedData.fileUrl) {
+      // Fire and forget - don't await
+      triggerAsyncContentExtraction(createdBook.id)
+    }
 
     revalidatePath('/dashboard/books-old')
     return { message: 'Book created successfully' }
@@ -539,8 +545,23 @@ export async function updateBook(id: string, formData: FormData) {
       categoryIds: validatedData.categoryIds || [],
     }
 
+    // Check if file URL changed
+    const fileChanged = existingBook.fileUrl !== fileUrl
+
     // Update book
     await updateBookInDb(id, processedData)
+
+    // Clear content cache and trigger re-extraction if file changed
+    if (fileChanged && (processedData.type === 'EBOOK' || processedData.type === 'AUDIO') && processedData.fileUrl) {
+      // Import repository functions
+      const { clearBookExtractedContent } = await import('@/lib/lms/repositories/book.repository')
+
+      // Clear existing content to force re-extraction
+      await clearBookExtractedContent(id)
+
+      // Trigger async extraction
+      triggerAsyncContentExtraction(id)
+    }
 
     revalidatePath('/dashboard/books-old')
     return { message: 'Book updated successfully' }
@@ -572,5 +593,24 @@ export async function deleteBook(id: string) {
   } catch (error) {
     console.error('Error deleting book:', error)
     throw error || new Error('Failed to delete book')
+  }
+}
+
+/**
+ * Trigger async content extraction for a book
+ * @param bookId - ID of the book to extract content from
+ */
+async function triggerAsyncContentExtraction(bookId: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL || 'http://localhost:3000'
+
+  try {
+    console.log(`[Book Actions] Triggering content extraction for book: ${bookId}`)
+    await fetch(`${baseUrl}/api/books/${bookId}/extract-content`, {
+      method: 'POST',
+    })
+    console.log(`[Book Actions] Content extraction triggered successfully`)
+  } catch (error) {
+    console.error('[Book Actions] Failed to trigger content extraction:', error)
+    // Don't throw - this is a fire-and-forget operation
   }
 }

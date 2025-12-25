@@ -531,3 +531,67 @@ export function getBookTypes() {
     { value: 'AUDIO', label: 'Audio Book' },
   ]
 }
+
+// ============================================================================
+// BOOK CONTENT CACHE MANAGEMENT
+// ============================================================================
+
+/**
+ * Get book with extracted content
+ */
+export async function getBookWithExtractedContent(id: string) {
+  return prisma.book.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      fileUrl: true,
+      directFileUrl: true,
+      extractedContent: true,
+      contentHash: true,
+      contentPageCount: true,
+      contentWordCount: true,
+      contentVersion: true,
+      extractionStatus: true,
+      contentExtractedAt: true,
+    }
+  })
+}
+
+/**
+ * Update book extracted content
+ */
+export async function updateBookExtractedContent(
+  id: string,
+  data: {
+    extractedContent: string
+    contentHash: string
+    contentPageCount: number
+    contentWordCount: number
+    contentSize: number
+    extractionStatus: string
+  }
+) {
+  return prisma.book.update({
+    where: { id },
+    data: {
+      ...data,
+      contentExtractedAt: new Date(),
+      contentVersion: { increment: 1 }
+    }
+  })
+}
+
+/**
+ * Clear book extracted content (for re-extraction)
+ */
+export async function clearBookExtractedContent(id: string) {
+  return prisma.book.update({
+    where: { id },
+    data: {
+      extractedContent: null,
+      contentHash: null,
+      extractionStatus: 'pending',
+    }
+  })
+}
