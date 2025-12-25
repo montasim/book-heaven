@@ -112,6 +112,13 @@ export async function chatWithZhipuAI(request: ChatRequest): Promise<ChatRespons
 
 Your task is to answer questions about the book "${request.bookName}" by ${authors} (${categories}).
 
+**LANGUAGE DETECTION AND RESPONSE:**
+1. Detect the language of the user's message (Bengali or English)
+2. Respond in the SAME language as the user's message
+3. If the user writes in Bengali (বাংলা), respond in Bengali
+4. If the user writes in English, respond in English
+5. The book content may be in Bengali or English - handle both languages appropriately
+
 **CRITICAL RULES:**
 1. Base ALL answers ONLY on the book content provided below
 2. If information is not found in the book content, explicitly say so
@@ -120,6 +127,7 @@ Your task is to answer questions about the book "${request.bookName}" by ${autho
 5. Be concise yet comprehensive
 6. Maintain a conversational, helpful tone
 7. If asked about topics not covered in the book, politely redirect to what IS available
+8. Match your response language to the user's question language
 
 ${bookContent ? `**BOOK CONTENT TO USE:**
 ${formatContentForAI(bookContent, request.bookName, request.authors)}` : '**BOOK CONTENT:** [No content available]'}
@@ -130,7 +138,7 @@ ${formatContentForAI(bookContent, request.bookName, request.authors)}` : '**BOOK
 - Categories: ${categories}
 - Type: ${request.bookType}
 
-Provide accurate, helpful responses based strictly on this book's content.`;
+Provide accurate, helpful responses based strictly on this book's content, ALWAYS matching the user's language (Bengali or English).`;
 
   // Prepare messages for API (exclude system message from history)
   const apiMessages: ChatMessage[] = [
