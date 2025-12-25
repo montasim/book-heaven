@@ -69,6 +69,15 @@ const createBookSchema = z.object({
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
 }).superRefine((data, ctx) => {
+  // Validate image format (PNG only)
+  if (data.image instanceof File && data.image.type !== 'image/png') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Only PNG images are allowed',
+      path: ['image'],
+    });
+  }
+
   if (data.type === 'HARD_COPY') {
     if (!data.bindingType) {
       ctx.addIssue({
@@ -128,6 +137,15 @@ const updateBookSchema = z.object({
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
 }).superRefine((data, ctx) => {
+  // Validate image format (PNG only)
+  if (data.image instanceof File && data.image.type !== 'image/png') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Only PNG images are allowed',
+      path: ['image'],
+    });
+  }
+
   if (data.type === 'HARD_COPY') {
     if (!data.bindingType) {
       ctx.addIssue({

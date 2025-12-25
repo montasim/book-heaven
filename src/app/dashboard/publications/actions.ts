@@ -35,12 +35,30 @@ const createPublicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   image: z.union([z.string(), z.any()]).optional(),
-})
+}).superRefine((data, ctx) => {
+  // Validate image format (PNG only)
+  if (data.image instanceof File && data.image.type !== 'image/png') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Only PNG images are allowed',
+      path: ['image'],
+    });
+  }
+});
 
 const updatePublicationSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   image: z.union([z.string(), z.any()]).optional(),
+}).superRefine((data, ctx) => {
+  // Validate image format (PNG only)
+  if (data.image instanceof File && data.image.type !== 'image/png') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Only PNG images are allowed',
+      path: ['image'],
+    });
+  }
 })
 
 // Types
