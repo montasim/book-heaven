@@ -16,6 +16,7 @@ export interface PdfContent {
 /**
  * Extracts relevant content from PDF based on user query
  * Uses keyword matching to find most relevant pages
+ * Supports multiple languages including English and Bengali
  *
  * @param pdfContent - Full PDF content or pages array
  * @param query - User's question/query
@@ -48,11 +49,15 @@ export function extractRelevantContent(
   }
 
   // Extract keywords from query for scoring
+  // Supports English and Bengali punctuation
   const keywords = query
     .toLowerCase()
+    // Remove English punctuation
     .replace(/[?.,!;:"'']/g, ' ')
+    // Remove Bengali punctuation (।, ॥, ॰, etc.)
+    .replace(/[।॥॰]/g, ' ')
     .split(' ')
-    .filter(w => w.length > 3) // Only meaningful words
+    .filter(w => w.length > 2) // Only meaningful words (reduced from 3 for Bengali)
     .slice(0, 10); // Limit to 10 keywords
 
   // Score pages by keyword matches
