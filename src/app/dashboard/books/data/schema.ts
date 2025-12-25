@@ -8,6 +8,7 @@ export const bookSchema = z.object({
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.number().optional().nullable(),
   fileUrl: z.string().optional().nullable(),
+  directFileUrl: z.string().optional().nullable(),
   summary: z.string().optional(),
   buyingPrice: z.number().nullable(),
   sellingPrice: z.number().nullable(),
