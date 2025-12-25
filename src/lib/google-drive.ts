@@ -1,6 +1,7 @@
 import { google } from 'googleapis'
 import { Readable } from 'stream'
 import { config } from '@/config'
+import { compressImage, createCompressedFile, isCompressionAvailable } from '@/lib/image/compressor'
 
 const SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -33,17 +34,32 @@ export async function uploadFile(file: File, folderId: string | undefined): Prom
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer())
+    // Compress image if it's an image file and compression is available
+    let fileToUpload = file;
+
+    if (isCompressionAvailable() && file.type.startsWith('image/')) {
+      try {
+        console.log('[Google Drive] Compressing image before upload...');
+        const compressed = await compressImage(file);
+        fileToUpload = createCompressedFile(compressed.buffer, file.name);
+        console.log('[Google Drive] Image compressed successfully');
+      } catch (error: any) {
+        console.warn('[Google Drive] Image compression failed, uploading original:', error.message);
+        // Continue with original file if compression fails
+      }
+    }
+
+    const buffer = Buffer.from(await fileToUpload.arrayBuffer())
     const stream = Readable.from(buffer)
 
     const response = await drive.files.create({
       requestBody: {
-        name: file.name,
-        mimeType: file.type,
+        name: fileToUpload.name,
+        mimeType: fileToUpload.type,
         parents: [folderId], // The ID of the folder shared with the service account
       },
       media: {
-        mimeType: file.type,
+        mimeType: fileToUpload.type,
         body: stream,
       },
       fields: 'id, webViewLink',

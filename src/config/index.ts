@@ -20,6 +20,9 @@ const serverConfig = {
   zhipuAiApiKey: process.env.ZHIPU_AI_API_KEY, // z.ai api key
   zhipuAiModel: process.env.ZHIPU_AI_MODEL || 'glm-4.7',
 
+  // Image Compression (Tinify)
+  tinifyApiKey: process.env.TINIFY_API_KEY,
+
   // URLs
   baseUrl: process.env.BASE_URL,
   appUrl: process.env.NEXT_PUBLIC_APP_URL,
