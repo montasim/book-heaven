@@ -12,6 +12,7 @@ interface ImageUploadProps {
   onChange: (value: File | null) => void
   onRemove: () => void
   value?: File | string | null
+  directUrl?: string | null // Direct URL for faster image loading
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -19,6 +20,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   onChange,
   onRemove,
   value,
+  directUrl,
 }) => {
   const [isMounted, setIsMounted] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
@@ -34,12 +36,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             setPreview(objectUrl)
             return () => URL.revokeObjectURL(objectUrl)
         } else if (typeof value === 'string') {
-            // Use proxied URL for Google Drive images
-            setPreview(getProxiedImageUrl(value) || value)
+            // Use direct URL for faster loading if available, otherwise use proxied URL
+            const urlToUse = directUrl || getProxiedImageUrl(value) || value
+            setPreview(urlToUse)
         } else {
             setPreview(null)
         }
-    }, [value])
+    }, [value, directUrl])
 
   if (!isMounted) {
     return null

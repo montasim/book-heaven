@@ -65,6 +65,7 @@ export async function createBook(formData: FormData) {
     // Upload image to Google Drive
     const image = formData.get('image') as File
     let imageUrl: string | null = null
+    let directImageUrl: string | null = null
     if (image && image.size > 0) {
       // Validate image format (PNG only)
       if (image.type !== 'image/png') {
@@ -72,6 +73,7 @@ export async function createBook(formData: FormData) {
       }
       const uploadResult = await uploadFile(image, config.google.driveFolderId)
       imageUrl = uploadResult.previewUrl
+      directImageUrl = uploadResult.directUrl
     }
 
     let author = await prisma.author.findFirst({
@@ -95,6 +97,7 @@ export async function createBook(formData: FormData) {
         fileUrl,
         directFileUrl,
         image: imageUrl,
+        directImageUrl: directImageUrl,
         entryById: session.userId,
         authors: {
           create: {
@@ -193,6 +196,7 @@ export async function updateBook(id: string, formData: FormData) {
     // Handle image upload/deletion
     const image = formData.get('image') as File
     let imageUrl = existingBook.image
+    let directImageUrl = existingBook.directImageUrl
 
     if (image && image.size > 0) {
       // Validate image format (PNG only)
@@ -205,12 +209,14 @@ export async function updateBook(id: string, formData: FormData) {
       }
       const uploadResult = await uploadFile(image, config.google.driveFolderId)
       imageUrl = uploadResult.previewUrl
+      directImageUrl = uploadResult.directUrl
     } else if (formData.get('removeImage') === 'true') {
       // Image explicitly removed
       if (existingBook.image) {
         await deleteFile(existingBook.image)
       }
       imageUrl = null
+      directImageUrl = null
     }
 
     // Find or create author
@@ -237,6 +243,7 @@ export async function updateBook(id: string, formData: FormData) {
         fileUrl,
         directFileUrl,
         image: imageUrl,
+        directImageUrl: directImageUrl,
         authors: {
           deleteMany: {},
           create: {
@@ -337,6 +344,7 @@ export async function createBookshelf(formData: FormData) {
         // Upload image to Google Drive
         const image = formData.get('image') as File
         let imageUrl: string | null = null
+        let directImageUrl: string | null = null
         if (image && image.size > 0) {
             // Validate image format (PNG only)
             if (image.type !== 'image/png') {
@@ -344,6 +352,7 @@ export async function createBookshelf(formData: FormData) {
             }
             const uploadResult = await uploadFile(image, config.google.driveFolderId)
             imageUrl = uploadResult.previewUrl
+            directImageUrl = uploadResult.directUrl
         }
 
         await prisma.bookshelf.create({
@@ -351,6 +360,7 @@ export async function createBookshelf(formData: FormData) {
                 name,
                 description,
                 image: imageUrl,
+                directImageUrl: directImageUrl,
                 isPublic,
                 userId: session.userId,
             }
@@ -476,6 +486,7 @@ export async function updateBookshelf(id: string, formData: FormData, bookIds: s
     // Handle image upload/deletion
     const image = formData.get('image') as File
     let imageUrl = existingImageUrl || existingShelf.image
+    let directImageUrl = existingShelf.directImageUrl
 
     if (image && image.size > 0) {
       // Validate image format (PNG only)
@@ -488,12 +499,14 @@ export async function updateBookshelf(id: string, formData: FormData, bookIds: s
       }
       const uploadResult = await uploadFile(image, config.google.driveFolderId)
       imageUrl = uploadResult.previewUrl
+      directImageUrl = uploadResult.directUrl
     } else if (formData.get('removeImage') === 'true') {
       // Image explicitly removed
       if (existingShelf.image) {
         await deleteFile(existingShelf.image)
       }
       imageUrl = null
+      directImageUrl = null
     }
 
     // Update bookshelf
@@ -503,6 +516,7 @@ export async function updateBookshelf(id: string, formData: FormData, bookIds: s
         name,
         description,
         image: imageUrl,
+        directImageUrl: directImageUrl,
         isPublic,
       }
     })

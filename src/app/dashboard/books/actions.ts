@@ -216,10 +216,12 @@ export async function getBooks() {
           id: book.id,
           name: book.name,
           image: book.image || '',
+          directImageUrl: book.directImageUrl || null,
           type: book.type,
           bindingType: book.bindingType,
           pageNumber: book.pageNumber,
           fileUrl: book.fileUrl || '',
+          directFileUrl: book.directFileUrl || null,
           summary: book.summary || '',
           buyingPrice: book.buyingPrice,
           sellingPrice: book.sellingPrice,
@@ -267,10 +269,12 @@ export async function getBookById(id: string) {
       id: book.id,
       name: book.name,
       image: book.image || '',
+      directImageUrl: book.directImageUrl || null,
       type: book.type,
       bindingType: book.bindingType,
       pageNumber: book.pageNumber ? book.pageNumber.toString() : '',
       fileUrl: book.fileUrl || '',
+      directFileUrl: book.directFileUrl || null,
       summary: book.summary || '',
       buyingPrice: book.buyingPrice,
       sellingPrice: book.sellingPrice,
@@ -389,11 +393,18 @@ export async function createBook(formData: FormData) {
 
     // Handle file uploads
     let imageUrl = null
+    let directImageUrl = null
     if (validatedData.image instanceof File) {
       const uploadResult = await uploadFile(validatedData.image, config.google.driveFolderId)
       imageUrl = uploadResult.previewUrl
+      directImageUrl = uploadResult.directUrl
     } else if (typeof validatedData.image === 'string') {
       imageUrl = validatedData.image
+      // Generate direct URL if it's a Google Drive URL
+      const fileIdMatch = imageUrl.match(/\/d\/([a-zA-Z0-9_-]+)/)
+      if (fileIdMatch) {
+        directImageUrl = `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`
+      }
     }
 
     let fileUrl = null
@@ -415,6 +426,7 @@ export async function createBook(formData: FormData) {
     const processedData = {
       name: validatedData.name,
       image: imageUrl,
+      directImageUrl: directImageUrl,
       type: validatedData.type,
       bindingType: validatedData.bindingType || null,
       pageNumber: validatedData.pageNumber ? parseInt(validatedData.pageNumber) : null,
@@ -498,10 +510,12 @@ export async function updateBook(id: string, formData: FormData) {
 
     // Handle file uploads and deletions
     let imageUrl = existingBook.image
+    let directImageUrl = existingBook.directImageUrl
     if (validatedData.image instanceof File) {
       // Upload new file
       const uploadResult = await uploadFile(validatedData.image, config.google.driveFolderId)
       imageUrl = uploadResult.previewUrl
+      directImageUrl = uploadResult.directUrl
       // Delete old file if it exists
       if (existingBook.image) {
         await deleteFile(existingBook.image)
@@ -512,9 +526,17 @@ export async function updateBook(id: string, formData: FormData) {
         await deleteFile(existingBook.image)
       }
       imageUrl = null
+      directImageUrl = null
     } else if (typeof validatedData.image === 'string') {
       // Keep existing URL
       imageUrl = validatedData.image
+      // Generate direct URL if not present
+      if (!directImageUrl) {
+        const fileIdMatch = imageUrl.match(/\/d\/([a-zA-Z0-9_-]+)/)
+        if (fileIdMatch) {
+          directImageUrl = `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`
+        }
+      }
     }
 
     let fileUrl = existingBook.fileUrl
@@ -551,6 +573,7 @@ export async function updateBook(id: string, formData: FormData) {
     const processedData = {
       name: validatedData.name,
       image: imageUrl,
+      directImageUrl: directImageUrl,
       type: validatedData.type,
       bindingType: validatedData.bindingType || null,
       pageNumber: validatedData.pageNumber ? parseInt(validatedData.pageNumber) : null,
