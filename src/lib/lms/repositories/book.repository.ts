@@ -595,3 +595,298 @@ export async function clearBookExtractedContent(id: string) {
     }
   })
 }
+
+// ============================================================================
+// AI SUMMARY MANAGEMENT
+// ============================================================================
+
+/**
+ * Update book AI summary
+ */
+export async function updateBookAISummary(
+  id: string,
+  data: {
+    aiSummary: string
+    aiSummaryStatus: string
+  }
+) {
+  return prisma.book.update({
+    where: { id },
+    data: {
+      ...data,
+      aiSummaryGeneratedAt: new Date(),
+    }
+  })
+}
+
+/**
+ * Get book with AI summary
+ */
+export async function getBookWithAISummary(id: string) {
+  return prisma.book.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      aiSummary: true,
+      aiSummaryGeneratedAt: true,
+      aiSummaryStatus: true,
+      questionsGeneratedAt: true,
+      questionsStatus: true,
+      extractedContent: true,
+    }
+  })
+}
+
+/**
+ * Get book with summary and questions (for public API)
+ */
+export async function getBookWithSummaryAndQuestions(id: string) {
+  return prisma.book.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      aiSummary: true,
+      aiSummaryGeneratedAt: true,
+      aiSummaryStatus: true,
+      questions: {
+        select: {
+          id: true,
+          question: true,
+          answer: true,
+          order: true,
+          isAIGenerated: true,
+        },
+        orderBy: { order: 'asc' },
+      },
+    }
+  })
+}
+
+// ============================================================================
+// QUESTION GENERATION STATUS
+// ============================================================================
+
+/**
+ * Update questions generation status
+ */
+export async function updateQuestionsStatus(
+  id: string,
+  data: {
+    questionsStatus: string
+    questionsGeneratedAt?: Date
+  }
+) {
+  return prisma.book.update({
+    where: { id },
+    data
+  })
+}
+
+// ============================================================================
+// ADMIN BOOK DETAILS
+// ============================================================================
+
+/**
+ * Get book with complete details for admin dashboard
+ */
+export async function getBookWithCompleteDetails(id: string) {
+  const book = await prisma.book.findUnique({
+    where: { id },
+    include: {
+      authors: {
+        include: {
+          author: true,
+        },
+      },
+      publications: {
+        include: {
+          publication: true,
+        },
+      },
+      categories: {
+        include: {
+          category: true,
+        },
+      },
+      questions: {
+        orderBy: { order: 'asc' },
+      },
+      entryBy: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatar: true,
+          directAvatarUrl: true,
+        },
+      },
+    },
+  })
+
+  if (!book) return null
+
+  // Get analytics data in parallel
+  const [viewStats, chatStats, readers] = await Promise.all([
+    // View stats
+    prisma.bookView.aggregate({
+      where: { bookId: id },
+      _count: {
+        id: true,
+      },
+    }),
+    // Chat stats
+    prisma.bookChatMessage.aggregate({
+      where: { bookId: id },
+      _count: {
+        id: true,
+      },
+    }),
+    // Readers
+    prisma.readingProgress.findMany({
+      where: { bookId: id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            directAvatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        lastReadAt: 'desc',
+      },
+    }),
+  ])
+
+  // Calculate reader stats
+  const totalReaders = readers.length
+  const completedReaders = readers.filter(r => r.isCompleted).length
+  const currentlyReading = readers.filter(
+    r => !r.isCompleted && r.progress > 0
+  ).length
+  const avgProgress =
+    totalReaders > 0
+      ? readers.reduce((sum, r) => sum + r.progress, 0) / totalReaders
+      : 0
+
+  return {
+    ...book,
+    analytics: {
+      totalViews: viewStats._count.id,
+      totalChatMessages: chatStats._count.id,
+      totalReaders,
+      completedReaders,
+      currentlyReading,
+      avgProgress: Math.round(avgProgress * 100) / 100,
+    },
+    readers,
+  }
+}
+
+/**
+ * Get all readers for a book with their progress
+ */
+export async function getBookReaders(
+  bookId: string,
+  options: {
+    page?: number
+    limit?: number
+    status?: 'all' | 'reading' | 'completed'
+  } = {}
+) {
+  const { page = 1, limit = 20, status = 'all' } = options
+  const skip = (page - 1) * limit
+
+  const where: any = { bookId }
+
+  if (status === 'reading') {
+    where.isCompleted = false
+    where.progress = { gt: 0 }
+  } else if (status === 'completed') {
+    where.isCompleted = true
+  }
+
+  const [readers, total] = await Promise.all([
+    prisma.readingProgress.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            directAvatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        lastReadAt: 'desc',
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.readingProgress.count({ where }),
+  ])
+
+  return {
+    readers,
+    total,
+    pages: Math.ceil(total / limit),
+    currentPage: page,
+  }
+}
+
+/**
+ * Get aggregate reading statistics for a book
+ */
+export async function getBookReadingStats(bookId: string) {
+  const [
+    totalReadersResult,
+    completedReadersResult,
+    currentlyReadingResult,
+    avgProgressResult,
+  ] = await Promise.all([
+    // Total readers
+    prisma.readingProgress.count({
+      where: { bookId },
+    }),
+
+    // Completed readers
+    prisma.readingProgress.count({
+      where: {
+        bookId,
+        isCompleted: true,
+      },
+    }),
+
+    // Currently reading
+    prisma.readingProgress.count({
+      where: {
+        bookId,
+        isCompleted: false,
+        progress: { gt: 0 },
+      },
+    }),
+
+    // Average progress
+    prisma.readingProgress.aggregate({
+      where: { bookId },
+      _avg: {
+        progress: true,
+      },
+    }),
+  ])
+
+  return {
+    totalReaders: totalReadersResult,
+    completedReaders: completedReadersResult,
+    currentlyReading: currentlyReadingResult,
+    avgProgress: avgProgressResult._avg.progress || 0,
+  }
+}

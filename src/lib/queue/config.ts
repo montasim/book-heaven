@@ -74,7 +74,7 @@ export function createBookExtractionWorker(): Worker<BookExtractionJobData, Book
         // Extract content from PDF
         const content = await extractBookContent({ fileUrl, directFileUrl })
 
-        await job.updateProgress(80)
+        await job.updateProgress(40)
 
         // Save to database
         await updateBookExtractedContent(bookId, {
@@ -85,6 +85,84 @@ export function createBookExtractionWorker(): Worker<BookExtractionJobData, Book
           contentSize: content.size,
           extractionStatus: 'completed'
         })
+
+        await job.updateProgress(60)
+
+        // Get book metadata for AI generation
+        const prisma = await import('@/lib/prisma').then(m => m.prisma)
+        const book = await prisma.book.findUnique({
+          where: { id: bookId },
+          include: {
+            authors: true,
+            categories: true,
+          }
+        })
+
+        if (book) {
+          const authorNames = book.authors.map(a => a.author.name)
+          const categoryNames = book.categories.map(c => c.category.name)
+
+          // Generate AI summary (non-blocking)
+          try {
+            console.log(`[Queue Worker] Generating AI summary for book ${bookId}`)
+            const { generateBookSummary } = await import('@/lib/ai/summary-generator')
+            const { updateBookAISummary } = await import('@/lib/lms/repositories/book.repository')
+
+            const { summary } = await generateBookSummary({
+              bookName: book.name,
+              authors: authorNames,
+              categories: categoryNames,
+              bookContent: content.text,
+              targetWords: 200,
+            })
+
+            await updateBookAISummary(bookId, {
+              aiSummary: summary,
+              aiSummaryStatus: 'completed',
+            })
+            console.log(`[Queue Worker] AI summary generated successfully`)
+          } catch (summaryError) {
+            console.error(`[Queue Worker] Failed to generate AI summary:`, summaryError)
+            // Don't fail the job, just log the error
+            const { updateBookAISummary } = await import('@/lib/lms/repositories/book.repository')
+            await updateBookAISummary(bookId, {
+              aiSummary: '',
+              aiSummaryStatus: 'failed',
+            })
+          }
+
+          await job.updateProgress(80)
+
+          // Generate suggested questions (non-blocking)
+          try {
+            console.log(`[Queue Worker] Generating questions for book ${bookId}`)
+            const { generateBookQuestions } = await import('@/lib/ai/question-generator')
+            const { createBookQuestions } = await import('@/lib/lms/repositories/book-question.repository')
+            const { updateQuestionsStatus } = await import('@/lib/lms/repositories/book.repository')
+
+            const { questions } = await generateBookQuestions({
+              bookName: book.name,
+              authors: authorNames,
+              categories: categoryNames,
+              bookContent: content.text,
+              questionCount: 20,
+            })
+
+            await createBookQuestions(bookId, questions)
+            await updateQuestionsStatus(bookId, {
+              questionsStatus: 'completed',
+              questionsGeneratedAt: new Date(),
+            })
+            console.log(`[Queue Worker] Questions generated successfully`)
+          } catch (questionsError) {
+            console.error(`[Queue Worker] Failed to generate questions:`, questionsError)
+            // Don't fail the job, just log the error
+            const { updateQuestionsStatus } = await import('@/lib/lms/repositories/book.repository')
+            await updateQuestionsStatus(bookId, {
+              questionsStatus: 'failed',
+            })
+          }
+        }
 
         await job.updateProgress(100)
 
@@ -104,7 +182,11 @@ export function createBookExtractionWorker(): Worker<BookExtractionJobData, Book
           const prisma = await import('@/lib/prisma').then(m => m.prisma)
           await prisma.book.update({
             where: { id: bookId },
-            data: { extractionStatus: 'failed' }
+            data: {
+              extractionStatus: 'failed',
+              aiSummaryStatus: 'failed',
+              questionsStatus: 'failed',
+            }
           })
         } catch (dbError) {
           console.error('[Queue Worker] Failed to update status:', dbError)

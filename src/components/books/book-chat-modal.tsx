@@ -38,6 +38,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
   const [conversationHistory, setConversationHistory] = useState<any[]>([])
   const [extractionStatus, setExtractionStatus] = useState<ExtractionStatus>('checking')
   const [extractionProgress, setExtractionProgress] = useState<string>('')
+  const [suggestedQuestions, setSuggestedQuestions] = useState<Array<{id: string, question: string}>>([])
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -118,6 +119,13 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       handleInitialChat()
     }
   }, [open, extractionStatus, user])
+
+  // Fetch suggested questions when extraction is ready
+  useEffect(() => {
+    if (open && extractionStatus === 'ready') {
+      fetchSuggestedQuestions()
+    }
+  }, [open, extractionStatus])
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -243,6 +251,28 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
     }
   }
 
+  const fetchSuggestedQuestions = async () => {
+    try {
+      const response = await fetch(`/api/books/${book.id}/suggested-questions`)
+      const data = await response.json()
+
+      if (data.questions && data.questions.length > 0) {
+        setSuggestedQuestions(data.questions)
+      }
+    } catch (error) {
+      console.error('Failed to fetch suggested questions:', error)
+    }
+  }
+
+  const handleQuestionClick = (question: string) => {
+    setInputValue(question)
+    // Focus the input after setting the value
+    setTimeout(() => {
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement
+      input?.focus()
+    }, 100)
+  }
+
   if (!user) {
     return null
   }
@@ -304,6 +334,29 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
                       This one-time process may take 30-60 seconds. The book content will be cached for all users.
                     </p>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Suggested Questions */}
+            {extractionStatus === 'ready' && suggestedQuestions.length > 0 && messages.length === 0 && !isLoading && (
+              <div className="mb-6">
+                <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Suggested questions
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedQuestions.slice(0, 6).map((sq) => (
+                    <Button
+                      key={sq.id}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuestionClick(sq.question)}
+                      className="text-left justify-start h-auto py-2 px-3 text-xs"
+                    >
+                      {sq.question}
+                    </Button>
+                  ))}
                 </div>
               </div>
             )}

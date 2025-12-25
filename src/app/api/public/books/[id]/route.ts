@@ -94,6 +94,18 @@ export async function GET(
                         }
                     }
                 },
+                questions: {
+                    select: {
+                        id: true,
+                        question: true,
+                        answer: true,
+                        order: true,
+                        isAIGenerated: true,
+                    },
+                    orderBy: { order: 'asc' },
+                    where: { isAIGenerated: true },
+                    take: 10,
+                },
                 readingProgress: userSession ? {
                     where: {
                         userId: userSession.userId,
@@ -363,6 +375,8 @@ export async function GET(
             id: book.id,
             name: book.name,
             summary: book.summary,
+            aiSummary: book.aiSummary,
+            aiSummaryGeneratedAt: book.aiSummaryGeneratedAt,
             type: book.type,
             // User who uploaded the book (only if public and user role is USER)
             entryBy: book.isPublic && book.entryBy.role === 'USER' ? {
@@ -387,6 +401,8 @@ export async function GET(
             canAccess,
             // Include file URL only if user has access
             fileUrl: canAccess ? book.fileUrl : null,
+            // Suggested questions
+            suggestedQuestions: book.questions,
             // Relationships
             authors: book.authors.map(ba => ({
                 id: ba.author.id,

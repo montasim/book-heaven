@@ -121,6 +121,22 @@ model Book {
   contentWordCount    Int?              // Word count
   contentSize         Int?              // Size in bytes
 
+  // AI-generated summary
+  aiSummary                    String?           // ~200 word AI summary
+  aiSummaryGeneratedAt         DateTime?         // When summary was generated
+  aiSummaryStatus              String?           // 'pending', 'completed', 'failed'
+
+  // Question generation tracking
+  questionsGeneratedAt         DateTime?         // When questions were generated
+  questionsStatus              String?           // 'pending', 'completed', 'failed'
+
+  // Questions relationship
+  questions                    BookQuestion[]
+
+  // Analytics and chat history
+  views                        BookView[]
+  chatMessages                 BookChatMessage[]
+
   @@map("books")
 }
 
@@ -158,6 +174,58 @@ model BookCategory {
 
   @@unique([bookId, categoryId])
   @@map("book_categories")
+}
+
+model BookQuestion {
+  id              String   @id @default(uuid())
+  bookId          String
+  question        String   // The question text
+  answer          String   // The answer text
+  order           Int      // Display order (1-20)
+  isAIGenerated   Boolean  @default(true) // Track if AI-generated or manual
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, order])
+  @@map("book_questions")
+}
+
+model BookView {
+  id          String    @id @default(uuid())
+  bookId      String
+  userId      String?   // Nullable for anonymous visits
+  sessionId   String?   // For anonymous tracking
+  visitedAt   DateTime  @default(now())
+  ip          String?   // Optional IP tracking
+  userAgent   String?   // Browser info
+  referrer    String?   // Where they came from
+
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([bookId, visitedAt])
+  @@index([userId, visitedAt])
+  @@map("book_views")
+}
+
+model BookChatMessage {
+  id            String      @id @default(uuid())
+  bookId        String
+  userId        String
+  sessionId     String      // To group messages into conversations
+  role          String      // 'user' or 'assistant'
+  content       String      @db.Text
+  createdAt     DateTime    @default(now())
+  messageIndex  Int         // Order within session
+
+  book          Book        @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, userId, sessionId])
+  @@index([bookId, createdAt])
+  @@map("book_chat_messages")
 }
 
 model BookRequest {
@@ -224,6 +292,10 @@ model User {
   sessions            UserSession[]
   quizAttempts       QuizAttempt[]
   quizStreak          QuizStreak?
+
+  // Analytics and chat history
+  bookViews           BookView[]
+  chatMessages        BookChatMessage[]
 
   @@map("users")
 }
