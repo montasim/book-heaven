@@ -4,7 +4,7 @@ import { generatePreFilledQuery } from '@/lib/ai/query-generator';
 import { saveChatMessage, getNextMessageIndex } from '@/lib/lms/repositories/book-chat.repository';
 import { getSession } from '@/lib/auth/session';
 import { findUserById } from '@/lib/user/repositories/user.repository';
-import { crypto } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 
 interface RouteContext {
   params: Promise<{
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       today.setHours(0, 0, 0, 0);
 
       // If no recent session, create new one
-      sessionId = crypto.randomBytes(16).toString('hex');
+      sessionId = randomBytes(16).toString('hex');
     }
 
     // Fetch book details from public API
