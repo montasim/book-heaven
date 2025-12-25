@@ -1,8 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { Row } from '@tanstack/react-table'
-import { IconTrash, IconEdit } from '@tabler/icons-react'
+import { IconTrash, IconEdit, IconEye } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const author = row.original as Author
+  const router = useRouter()
   const { setOpen, setCurrentRow } = useAuthorsContext()
 
   const handleEdit = () => {
@@ -46,7 +48,17 @@ export function DataTableRowActions<TData>({
           <span className='sr-only'>Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' className='w-[160px]'>
+      <DropdownMenuContent align='end' className='w-[200px]'>
+        <DropdownMenuItem
+          onClick={() => {
+            router.push(`/dashboard/authors/${author.id}`)
+          }}
+        >
+          View
+          <DropdownMenuShortcut>
+            <IconEye size={16} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleEdit}>
           Edit
           <DropdownMenuShortcut>
