@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Generate session ID for anonymous users
     const sessionId = user
-      ? null
+      ? undefined
       : request.cookies.get('anonymous_session_id')?.value ||
         randomBytes(16).toString('hex')
 
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const ip = request.headers.get('x-forwarded-for') ||
               request.headers.get('x-real-ip') ||
               null
-    const userAgent = request.headers.get('user-agent') || null
-    const referrer = request.headers.get('referer') || null
+    const userAgent = request.headers.get('user-agent') || undefined
+    const referrer = request.headers.get('referer') || undefined
 
     // Create view record
     await createCategoryView({
