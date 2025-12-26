@@ -687,7 +687,16 @@ export default function DashboardPage() {
     )
   }
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  // If no user, show loading while redirecting
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'
 
   if (isAdmin) {
     return <AdminDashboard />

@@ -5,6 +5,7 @@ import { AppQueryClientProvider } from '@/components/providers/query-client-prov
 import { Toaster } from '@/components/ui/toaster'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { PublicHeader } from '@/components/layout/public-header'
+import { UnderConstructionBanner } from '@/components/layout/under-construction-banner'
 import { MDXViewerProvider } from 'mdx-craft'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -25,6 +26,9 @@ export default function PublicLayout({
       <div className="min-h-screen bg-background">
         {/* Public Header/Navbar */}
         <PublicHeader />
+
+        {/* Under Construction Banner */}
+        <UnderConstructionBanner />
 
         <div className="relative flex min-h-screen flex-col">
           <MDXViewerProvider>
