@@ -8,6 +8,7 @@ import LongText from '@/components/long-text'
 import { Notice } from '../data/schema'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
+import { MDXViewer } from 'mdx-craft'
 
 export const columns: ColumnDef<Notice>[] = [
   {
@@ -57,9 +58,16 @@ export const columns: ColumnDef<Notice>[] = [
     cell: ({ row }) => {
       const content = row.getValue('content') as string
       return (
-        <LongText className="max-w-64">
-          {content || 'No content'}
-        </LongText>
+        <div className="max-w-md">
+          {content ? (
+            <MDXViewer
+              markdown={content}
+              className="text-sm line-clamp-3"
+            />
+          ) : (
+            <span className="text-muted-foreground">No content</span>
+          )}
+        </div>
       )
     },
     enableSorting: false,

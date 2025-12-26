@@ -15,7 +15,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
+import { MDXEditor } from '@/components/ui/mdx-editor'
+import { Calendar } from 'lucide-react'
 
 const noticeFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -80,20 +81,19 @@ export function NoticeForm({ initialData, onSubmit, isEdit = false, onCancel, lo
             <FormItem>
               <FormLabel>Content *</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="e.g., We've added 50 new books to our collection. Check them out now!"
-                  rows={4}
-                  {...field}
+                <MDXEditor
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  placeholder="Enter notice content in markdown format..."
                 />
               </FormControl>
               <FormDescription>
-                The main message content of the notice
+                The main message content of the notice (supports markdown)
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
           <FormField
               control={form.control}
               name="validFrom"

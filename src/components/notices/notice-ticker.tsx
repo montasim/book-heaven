@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Megaphone } from 'lucide-react'
+import { MDXViewer } from 'mdx-craft'
 
 interface Notice {
   id: string
@@ -65,10 +66,12 @@ export function NoticeTicker() {
             <div className="notice-scroll-container">
               <div className="notice-scroll-content">
                 {duplicatedNotices.map((notice, index) => (
-                  <div key={`${notice.id}-${index}`} className="notice-item">
+                  <div key={`${notice.id}-${index}`} className="notice-item flex items-center gap-2">
                     <span className="font-semibold text-primary">{notice.title}</span>
-                    <span className="mx-2 text-muted-foreground">:</span>
-                    <span>{notice.content}</span>
+                    <span className="text-muted-foreground">:</span>
+                    <span className="inline-flex">
+                      <MDXViewer markdown={notice.content} />
+                    </span>
                   </div>
                 ))}
               </div>
