@@ -100,13 +100,14 @@ export function NoticeTicker() {
         }
 
         .notice-item {
-          padding: 0 2rem;
+          padding: 0 1rem;
           font-size: 0.875rem;
         }
 
         .notice-item:not(:last-child)::after {
-          content: '•';
-          margin-left: 2rem;
+          content: '|';
+          margin-left: 1rem;
+          margin-right: 1rem;
           color: hsl(var(--primary'));
           font-weight: bold;
         }

@@ -62,15 +62,21 @@ export default function NoticesPage() {
     const noticeId = searchParams.get('notice')
     if (noticeId) {
       setExpandedNoticeId(noticeId)
-      // Scroll to the notice after a short delay
+    }
+  }, [searchParams])
+
+  // Scroll to expanded notice after data is loaded
+  useEffect(() => {
+    if (expandedNoticeId && !isLoading && notices.length > 0) {
+      // Small delay to ensure DOM is rendered
       setTimeout(() => {
-        const element = document.getElementById(`notice-${noticeId}`)
+        const element = document.getElementById(`notice-${expandedNoticeId}`)
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-      }, 100)
+      }, 300)
     }
-  }, [searchParams])
+  }, [expandedNoticeId, isLoading, notices])
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null
