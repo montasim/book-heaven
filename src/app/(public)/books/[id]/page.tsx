@@ -24,6 +24,7 @@ import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { BookGrid } from '@/components/books/book-grid'
 import { BookChatButton } from '@/components/books/book-chat-button'
 import { BookChatModal } from '@/components/books/book-chat-modal'
+import { BookDetailsSkeleton } from '@/components/books/book-details-skeleton'
 import {
     BookOpen,
     LibraryBig,
@@ -100,14 +101,7 @@ export default function BookDetailsPage() {
   )
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p>Loading book details...</p>
-        </div>
-      </div>
-    )
+    return <BookDetailsSkeleton />
   }
 
   if (error || !book) {

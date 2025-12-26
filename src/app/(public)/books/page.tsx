@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { MultiSelect } from '@/components/ui/multi-select'
 import { BookGrid } from '@/components/books/book-grid'
+import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
 import { SearchBar } from '@/components/books/search-bar'
 import { useBooks } from '@/hooks/use-books'
 import Link from 'next/link'
@@ -542,15 +543,9 @@ export default function BooksPage() {
 
             {/* Loading State */}
             {isLoading && (
-              <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"}>
                 {[...Array(12)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <div className="h-64 bg-muted rounded-t-lg" />
-                    <CardContent className="p-4">
-                      <div className="h-4 bg-muted rounded mb-2" />
-                      <div className="h-3 bg-muted rounded w-3/4" />
-                    </CardContent>
-                  </Card>
+                  <BookCardSkeleton key={i} viewMode={viewMode} />
                 ))}
               </div>
             )}

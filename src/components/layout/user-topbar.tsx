@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { BookOpen, User, Settings, LogOut, Menu, CreditCard } from 'lucide-react'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
@@ -42,7 +43,7 @@ export function UserTopbar({
   ...props
 }: UserTopbarProps) {
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, logout, isLoading } = useAuth()
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   const handleLogout = async () => {
@@ -75,7 +76,13 @@ export function UserTopbar({
 
       {/* User Profile or Auth Buttons */}
       <div className="flex items-center space-x-2">
-        {user ? (
+        {isLoading ? (
+          /* Show skeleton buttons during loading */
+          <>
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-20" />
+          </>
+        ) : user ? (
           /* User is logged in - show profile dropdown */
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -123,12 +130,12 @@ export function UserTopbar({
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
-                  {
-                      !isAdmin && <DropdownMenuItem onClick={() => handleNavigation('/library')}>
-                          <BookOpen className="mr-2 h-4 w-4" />
-                          My Library
-                      </DropdownMenuItem>
-                  }
+                {
+                    !isAdmin && <DropdownMenuItem onClick={() => handleNavigation('/library')}>
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        My Library
+                    </DropdownMenuItem>
+                }
                 <DropdownMenuItem onClick={() => handleNavigation('/settings/account')}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   Billing
