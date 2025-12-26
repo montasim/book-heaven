@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Megaphone } from 'lucide-react'
+import Link from 'next/link'
 
 interface Notice {
   id: string
@@ -53,7 +54,7 @@ export function NoticeTicker() {
   return (
     <div className="w-full border-b bg-primary/5 dark:bg-primary/10">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-4 overflow-hidden py-2">
+        <Link href="/notices" className="flex items-center gap-4 overflow-hidden py-2 hover:bg-primary/10 transition-colors">
           {/* Icon Section */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 shrink-0 rounded">
             <Megaphone className="h-4 w-4 text-primary" />
@@ -76,7 +77,7 @@ export function NoticeTicker() {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       <style jsx>{`
@@ -102,7 +103,7 @@ export function NoticeTicker() {
         .notice-item:not(:last-child)::after {
           content: '•';
           margin-left: 2rem;
-          color: hsl(var(--primary));
+          color: hsl(var(--primary'));
           font-weight: bold;
         }
 
