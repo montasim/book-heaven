@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BookOpen, User, Settings, LogOut, Menu, CreditCard } from 'lucide-react'
@@ -45,8 +55,14 @@ export function UserTopbar({
   const router = useRouter()
   const { user, logout, isLoading } = useAuth()
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setIsLogoutDialogOpen(true)
+  }
+
+  const confirmLogout = async () => {
+    setIsLogoutDialogOpen(false)
     await logout()
   }
 
@@ -180,30 +196,47 @@ export function UserTopbar({
   )
 
   return (
-    <header
-      className={cn(
-        'flex items-center gap-3 sm:gap-4 bg-background p-4 h-16',
-        className
-      )}
-      {...props}
-    >
-      {showSidebarToggle && (
-        <SidebarTrigger variant='outline' className='scale-125 sm:scale-100' />
-      )}
+    <>
+      <header
+        className={cn(
+          'flex items-center gap-3 sm:gap-4 bg-background p-4 h-16',
+          className
+        )}
+        {...props}
+      >
+        {showSidebarToggle && (
+          <SidebarTrigger variant='outline' className='scale-125 sm:scale-100' />
+        )}
 
-      {/* Logo for public pages */}
-      {!showSidebarToggle && (
-        <div className="flex items-center space-x-2">
-          <Link href="/" className="flex items-center space-x-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-bold hidden sm:block">Book Library</h1>
-          </Link>
-        </div>
-      )}
+        {/* Logo for public pages */}
+        {!showSidebarToggle && (
+          <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
+              <BookOpen className="h-6 w-6 text-primary" />
+              <h1 className="text-lg font-bold hidden sm:block">Book Library</h1>
+            </Link>
+          </div>
+        )}
 
-      <div className="flex-1" />
-      {renderUserMenu()}
-    </header>
+        <div className="flex-1" />
+        {renderUserMenu()}
+      </header>
+
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out? You will need to sign in again to access your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLogout}>Log out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
