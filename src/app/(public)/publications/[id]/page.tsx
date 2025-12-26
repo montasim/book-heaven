@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BookGrid } from '@/components/books/book-grid'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
+import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { usePublication } from '@/hooks/use-publication'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { getUserDisplayName } from '@/lib/utils/user'
@@ -138,7 +139,7 @@ export default function PublicationDetailsPage() {
           {/* Publisher Information and Books - Right Column */}
           <div className="lg:col-span-2">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">{publication.name}</h1>
+              <h1 className="text-xl font-bold mb-2">{publication.name}</h1>
 
               {/* Added by user */}
               {publication.entryBy && (
@@ -181,11 +182,7 @@ export default function PublicationDetailsPage() {
               {publication.description && (
                 <Card className="mb-6">
                   <CardContent className="pt-6">
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                        {publication.description}
-                      </p>
-                    </div>
+                    <MDXViewer content={publication.description} />
                   </CardContent>
                 </Card>
               )}

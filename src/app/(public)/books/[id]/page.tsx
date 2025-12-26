@@ -285,6 +285,15 @@ export default function BookDetailsPage() {
                   </Badge>
                 </div>
 
+                {/* Premium Badge - Bottom Left */}
+                {(book.requiresPremium || !book.canAccess) && (
+                  <div className="absolute bottom-3 left-3 z-10">
+                    <Badge variant="default" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs">
+                      Premium
+                    </Badge>
+                  </div>
+                )}
+
                 {/* Action Icons - Top Right */}
                 <div className="absolute top-3 right-3 flex items-center gap-2">
                   {/* Share Icon Button */}
@@ -305,27 +314,17 @@ export default function BookDetailsPage() {
                     triggerVariant="icon"
                     triggerClassName="h-9 w-9"
                   />
-
-                  {/* Chat with AI Button - Full size when accessible */}
-                  {book.canAccess && (
-                    <div className="hidden sm:block">
-                      <BookChatButton
-                        book={book}
-                        onClick={() => setIsChatModalOpen(true)}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* Access Overlay */}
-                {!book.canAccess && (
+                {book.requiresPremium || !book.canAccess ? (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
                     <div className="text-center text-white p-4">
                       <Lock className="h-12 w-12 mx-auto mb-2" />
                       <p className="font-semibold">Premium Content</p>
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {/* Progress Badge */}
                 {book.readingProgress && (book.readingProgress.currentPage || book.readingProgress.currentEpocha) && (
@@ -358,9 +357,14 @@ export default function BookDetailsPage() {
                   onClick={handleReadBook}
                   className="w-full"
                   size="lg"
-                  disabled={!book.canAccess}
+                  disabled={book.requiresPremium || !book.canAccess}
                 >
-                  {book.canAccess ? (
+                  {book.requiresPremium || !book.canAccess ? (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Need premium access to read
+                    </>
+                  ) : (
                     <>
                       {isEbook && <Eye className="h-4 w-4 mr-2" />}
                       {isAudio && <Play className="h-4 w-4 mr-2" />}
@@ -369,13 +373,19 @@ export default function BookDetailsPage() {
                       {isAudio && 'Listen Now'}
                       {isHardCopy && 'View Details'}
                     </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4 mr-2" />
-                      Upgrade to Read
-                    </>
                   )}
                 </Button>
+
+                {/* Chat with AI Button - Mobile only */}
+                {book.canAccess && (
+                  <div className="sm:hidden">
+                    <BookChatButton
+                      book={book}
+                      onClick={() => setIsChatModalOpen(true)}
+                      className="w-full"
+                    />
+                  </div>
+                )}
 
                 {/* Quick Stats */}
                 <div className="space-y-3 text-sm pt-2 p-4 rounded-xl border bg-card">
@@ -429,7 +439,19 @@ export default function BookDetailsPage() {
           {/* Book Information */}
           <div className="lg:col-span-2">
             <div className="mb-8">
-              <h1 className="text-xl lg:text-2xl font-bold mb-2">{book.name}</h1>
+              <div className='flex items-center justify-between'>
+                  <h1 className="text-xl lg:text-2xl font-bold mb-2">{book.name}</h1>
+
+                  {/* Chat with AI Button - Full size when accessible */}
+                  {book.canAccess && (
+                      <div className="hidden sm:block">
+                          <BookChatButton
+                              book={book}
+                              onClick={() => setIsChatModalOpen(true)}
+                          />
+                      </div>
+                  )}
+              </div>
 
               {/* Authors */}
               {book.authors && book.authors.length > 0 && (
@@ -438,7 +460,7 @@ export default function BookDetailsPage() {
                     by{' '}
                     {book.authors.map((author, index) => (
                       <span key={author.id}>
-                        <Link href={`/authors/${author.id}`} className="hover:text-primary transition-colors font-medium">
+                        <Link href={`/authors/${author.id}`} className="hover:text-primary hover:underline transition-colors font-medium">
                           {author.name}
                         </Link>
                         {index < book.authors!.length - 1 && ', '}
@@ -451,7 +473,7 @@ export default function BookDetailsPage() {
               {/* Added by user */}
               {book.entryBy && (
                 <div className="flex items-center gap-3 mb-4">
-                  <Link href={`/users/${book.entryBy.id}`} className="flex items-center gap-3 group">
+                  <Link href={`/users/${book.entryBy.id}`} className="flex items-center gap-3 group hover:underline">
                     <Avatar className="h-10 w-10">
                       <AvatarImage
                         src={book.entryBy.avatar ? getProxiedImageUrl(book.entryBy.avatar) || book.entryBy.avatar : undefined}
@@ -490,7 +512,7 @@ export default function BookDetailsPage() {
                 <div className="flex flex-wrap gap-2 mb-4">
                   {book.categories.map((category) => (
                     <Link key={category.id} href={`/categories/${category.id}`}>
-                      <Badge variant="outline" className="hover:bg-primary/10 cursor-pointer">
+                      <Badge variant="outline" className="hover:bg-primary/10 hover:underline cursor-pointer">
                         {category.name}
                       </Badge>
                     </Link>
@@ -560,7 +582,7 @@ export default function BookDetailsPage() {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <Link href={`/authors/${author.id}`}>
-                              <h3 className="font-semibold text-lg hover:text-primary transition-colors">
+                              <h3 className="font-semibold text-lg hover:text-primary hover:underline transition-colors">
                                 {author.name}
                               </h3>
                             </Link>
