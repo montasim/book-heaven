@@ -20,7 +20,7 @@ interface Bookshelf {
   image?: string | null
   completedBooks?: number
   progressPercent?: number
-  totalPages?: number
+  totalPages: number
 }
 
 interface BookshelvesProps {

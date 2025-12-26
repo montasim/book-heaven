@@ -309,6 +309,9 @@ export async function getUserBooks() {
       purchaseDate: book.purchaseDate?.toISOString() || null,
       aiSummaryGeneratedAt: book.aiSummaryGeneratedAt?.toISOString() || null,
 
+      // Override entryBy to be string ID instead of full object
+      entryBy: book.entryBy?.id || session.userId,
+
       // Flatten relations
       authors: book.authors.map(ba => ({ id: ba.author.id, name: ba.author.name })),
       publications: book.publications.map(bp => ({ id: bp.publication.id, name: bp.publication.name })),

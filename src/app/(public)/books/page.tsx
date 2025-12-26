@@ -349,7 +349,7 @@ export default function BooksPage() {
                     selected={filters.categories}
                     onChange={(values) => handleFilterChange('categories', values)}
                     placeholder="Select categories"
-                    maxDisplay={3}
+                    maxVisible={3}
                   />
                 </div>
 
@@ -522,7 +522,7 @@ export default function BooksPage() {
                     selected={filters.categories}
                     onChange={(values) => handleFilterChange('categories', values)}
                     placeholder="Select categories"
-                    maxDisplay={3}
+                    maxVisible={3}
                   />
                 </div>
               </CardContent>
