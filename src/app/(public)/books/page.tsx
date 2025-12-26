@@ -14,9 +14,12 @@ import { BookGrid } from '@/components/books/book-grid'
 import { BookCard } from '@/components/books/book-card'
 import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
 import { SearchBar } from '@/components/books/search-bar'
+import { MoodSelector } from '@/components/books/mood-selector'
 import { useBooks } from '@/hooks/use-books'
 import { useRecentVisits } from '@/hooks/use-recent-visits'
 import { useContinueReading } from '@/hooks/use-continue-reading'
+import { useMoodRecommendations } from '@/hooks/use-mood-recommendations'
+import type { Mood } from '@/components/books/mood-selector'
 import Link from 'next/link'
 import {
   Grid,
@@ -30,6 +33,9 @@ import {
   Settings,
   Clock,
   PlayCircle,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 
 export default function BooksPage() {
@@ -50,6 +56,8 @@ export default function BooksPage() {
   })
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
+  const [showMoodPicker, setShowMoodPicker] = useState(false)
 
   const { data: booksData, isLoading, error, refetch } = useBooks(filters)
 
@@ -60,6 +68,10 @@ export default function BooksPage() {
   // Fetch recently visited books (only for authenticated users)
   const { data: recentVisitsData, isLoading: isLoadingRecent } = useRecentVisits(8)
   const recentBooks = user ? recentVisitsData?.books || [] : []
+
+  // Fetch mood-based recommendations
+  const { data: moodData, isLoading: isLoadingMood } = useMoodRecommendations(selectedMood?.id || null, 8)
+  const moodBooks = moodData?.books || []
 
   // Update filters when URL params change
   useEffect(() => {
@@ -574,6 +586,72 @@ export default function BooksPage() {
                 </Button>
               </div>
             )}
+
+            {/* Mood-Based Recommendations Section */}
+            <div className="mb-8">
+              <Card>
+                <CardHeader className="cursor-pointer" onClick={() => setShowMoodPicker(!showMoodPicker)}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      <CardTitle>Recommended for Your Mood</CardTitle>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      {showMoodPicker ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </CardHeader>
+                {showMoodPicker && (
+                  <CardContent>
+                    {!selectedMood ? (
+                      <MoodSelector onSelectMood={setSelectedMood} />
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{selectedMood.emoji}</span>
+                            <div>
+                              <h3 className="font-semibold">{selectedMood.name} Mood</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {selectedMood.description}
+                              </p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedMood(null)}>
+                            Change Mood
+                          </Button>
+                        </div>
+
+                        {isLoadingMood ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[...Array(6)].map((_, i) => (
+                              <BookCardSkeleton key={i} viewMode="grid" />
+                            ))}
+                          </div>
+                        ) : moodBooks.length > 0 ? (
+                          <BookGrid
+                            books={moodBooks}
+                            viewMoreHref={(book) => `/books/${book.id}`}
+                            showTypeBadge={true}
+                            showPremiumBadge={true}
+                            showCategories={true}
+                            showReaderCount={true}
+                            showAddToBookshelf={true}
+                            showUploader={true}
+                            showLockOverlay={true}
+                            coverHeight="tall"
+                          />
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-muted-foreground">No books found for this mood. Try another mood!</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                )}
+              </Card>
+            </div>
 
             {/* Books Display */}
             {!isLoading && !error && (
