@@ -694,7 +694,43 @@ export async function updateQuestionsStatus(
 export async function getBookWithCompleteDetails(id: string) {
   const book = await prisma.book.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      directImageUrl: true,
+      type: true,
+      bindingType: true,
+      pageNumber: true,
+      fileUrl: true,
+      directFileUrl: true,
+      summary: true,
+      aiSummary: true,
+      aiSummaryGeneratedAt: true,
+      aiSummaryStatus: true,
+      contentHash: true,
+      contentPageCount: true,
+      contentWordCount: true,
+      contentExtractedAt: true,
+      extractionStatus: true,
+      buyingPrice: true,
+      sellingPrice: true,
+      numberOfCopies: true,
+      purchaseDate: true,
+      isPublic: true,
+      requiresPremium: true,
+      entryDate: true,
+      createdAt: true,
+      updatedAt: true,
+      entryBy: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatar: true,
+          directAvatarUrl: true,
+        },
+      },
       authors: {
         include: {
           author: true,
@@ -712,15 +748,6 @@ export async function getBookWithCompleteDetails(id: string) {
       },
       questions: {
         orderBy: { order: 'asc' },
-      },
-      entryBy: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          avatar: true,
-          directAvatarUrl: true,
-        },
       },
     },
   })
