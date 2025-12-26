@@ -61,6 +61,17 @@ export interface Book {
   entryDate: string
   image?: string | null
   fileUrl?: string | null
+  directFileUrl?: string | null
+  aiSummary?: string | null
+  aiSummaryGeneratedAt?: string | null
+  aiSummaryStatus?: string | null
+  suggestedQuestions?: Array<{
+    id: string
+    question: string
+    answer: string
+    order: number
+  }> | null
+  questionsStatus?: string | null
   requiresPremium: boolean
   canAccess: boolean
   authors: Author[]
