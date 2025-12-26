@@ -37,6 +37,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react'
+import { NoticeTicker } from '@/components/notices/notice-ticker'
 
 export default function BooksPage() {
   const searchParams = useSearchParams()
@@ -152,6 +153,9 @@ export default function BooksPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Notice Ticker */}
+      <NoticeTicker />
+
       <main className="container mx-auto px-4 py-8">
           {/* Header */}
         <div className="mb-8">
