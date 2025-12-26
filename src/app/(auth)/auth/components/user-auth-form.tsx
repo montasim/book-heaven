@@ -21,6 +21,7 @@ import { PasswordInput } from '@/components/password-input'
 
 import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/context/auth-context'
 
 type UserAuthFormProps = HTMLAttributes<HTMLDivElement> & {
   onStepChange?: (step: 'email' | 'password', email?: string) => void
@@ -45,6 +46,7 @@ const passwordSchema = z.object({
 
 export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
   const router = useRouter()
+  const { refreshUser } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState<'email' | 'password'>('email')
   const [email, setEmail] = useState('')
@@ -145,6 +147,9 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
         title: 'Success',
         description: 'Logged in successfully',
       })
+
+      // Refresh user context to get the latest user data
+      await refreshUser()
 
       // Redirect based on user role
       if (result.user?.role === 'USER') {
