@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { BookCard } from '@/components/books/book-card'
 import { ReadingHeatmap } from '@/components/reading/reading-heatmap'
 import { PagesReadChart } from '@/components/reading/pages-read-chart'
+import { UserProfileSkeleton } from '@/components/users/user-profile-skeleton'
 import { useUserProfile, useUserBookshelves, useUserReadingActivity } from '@/hooks/use-user-profile'
 import {BookOpen, LibraryBig, Calendar, Bookmark, Users, Home, ArrowLeft} from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
@@ -34,11 +35,7 @@ export default function UserProfilePage() {
   const readingActivity = readingActivityData?.data
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    )
+    return <UserProfileSkeleton />
   }
 
   if (error || !user) {

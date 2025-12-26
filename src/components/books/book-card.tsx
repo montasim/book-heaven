@@ -585,7 +585,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
               )}
 
               {/* Metadata - Desktop */}
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                 {showReaderCount && book.readersCount && book.readersCount > 0 && (
                   <span className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
