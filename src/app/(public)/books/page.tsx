@@ -11,9 +11,12 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { MultiSelect } from '@/components/ui/multi-select'
 import { BookGrid } from '@/components/books/book-grid'
+import { BookCard } from '@/components/books/book-card'
 import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
 import { SearchBar } from '@/components/books/search-bar'
 import { useBooks } from '@/hooks/use-books'
+import { useRecentVisits } from '@/hooks/use-recent-visits'
+import { useContinueReading } from '@/hooks/use-continue-reading'
 import Link from 'next/link'
 import {
   Grid,
@@ -24,7 +27,9 @@ import {
   Headphones,
   FileText,
   Plus,
-  Settings
+  Settings,
+  Clock,
+  PlayCircle,
 } from 'lucide-react'
 
 export default function BooksPage() {
@@ -47,6 +52,14 @@ export default function BooksPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const { data: booksData, isLoading, error, refetch } = useBooks(filters)
+
+  // Fetch continue reading books (only for authenticated users)
+  const { data: continueReadingData, isLoading: isLoadingContinueReading } = useContinueReading(8)
+  const continueReadingBooks = user ? continueReadingData?.books || [] : []
+
+  // Fetch recently visited books (only for authenticated users)
+  const { data: recentVisitsData, isLoading: isLoadingRecent } = useRecentVisits(8)
+  const recentBooks = user ? recentVisitsData?.books || [] : []
 
   // Update filters when URL params change
   useEffect(() => {
@@ -648,6 +661,65 @@ export default function BooksPage() {
                 </Button>
               </div>
             )}
+
+              {/* Continue Reading Section - For Authenticated Users */}
+              {user && continueReadingBooks.length > 0 && (
+                  <div className="mt-8">
+                      <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                              <PlayCircle className="h-5 w-5 text-primary" />
+                              <h2 className="text-xl font-semibold">Continue Reading</h2>
+                          </div>
+                          <Link href="/library?filter=reading">
+                              <Button variant="outline" size="sm">
+                                  View All
+                              </Button>
+                          </Link>
+                      </div>
+                      <BookGrid
+                          books={continueReadingBooks}
+                          viewMoreHref={(book) => `/books/${book.id}`}
+                          showTypeBadge={true}
+                          showPremiumBadge={true}
+                          showCategories={true}
+                          showReaderCount={true}
+                          showAddToBookshelf={true}
+                          showUploader={true}
+                          showLockOverlay={true}
+                          showProgressActions={true}
+                          coverHeight="tall"
+                      />
+                  </div>
+              )}
+
+              {/* Recently Visited Section - For Authenticated Users */}
+              {user && recentBooks.length > 0 && (
+                  <div className="mt-8">
+                      <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                              <Clock className="h-5 w-5 text-primary" />
+                              <h2 className="text-xl font-semibold">Recently Visited</h2>
+                          </div>
+                          <Link href="/library">
+                              <Button variant="outline" size="sm">
+                                  View All
+                              </Button>
+                          </Link>
+                      </div>
+                      <BookGrid
+                          books={recentBooks}
+                          viewMoreHref={(book) => `/books/${book.id}`}
+                          showTypeBadge={true}
+                          showPremiumBadge={true}
+                          showCategories={true}
+                          showReaderCount={true}
+                          showAddToBookshelf={true}
+                          showUploader={true}
+                          showLockOverlay={true}
+                          coverHeight="tall"
+                      />
+                  </div>
+              )}
           </div>
         </div>
       </main>
