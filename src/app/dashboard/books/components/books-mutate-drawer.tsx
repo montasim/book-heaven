@@ -45,6 +45,7 @@ import { ImageUpload } from '@/components/ui/image-upload'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Switch } from '@/components/ui/switch'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 interface Props {
   open: boolean
@@ -184,9 +185,9 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         sellingPrice: currentRow.sellingPrice?.toString() || '',
         numberOfCopies: currentRow.numberOfCopies?.toString() || '',
         purchaseDate: currentRow.purchaseDate || '',
-        authorIds: currentRow.authors.map(author => author.id) || [],
-        publicationIds: currentRow.publications.map(pub => pub.id) || [],
-        categoryIds: currentRow.categories.map(cat => cat.id) || [],
+        authorIds: currentRow.authors.map((author: any) => author.id || author.author?.id) || [],
+        publicationIds: currentRow.publications.map((pub: any) => pub.id || pub.publication?.id) || [],
+        categoryIds: currentRow.categories.map((cat: any) => cat.id || cat.category?.id) || [],
         isPublic: currentRow.isPublic || false,
         requiresPremium: currentRow.requiresPremium || false,
       } : {
@@ -416,7 +417,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                           onChange={field.onChange}
                           onRemove={() => field.onChange(null)}
                           accept={watchType === 'EBOOK' ? '.pdf' : '.mp3'}
-                          directUrl={currentRow?.directFileUrl}
+                          directUrl={(currentRow as any)?.directFileUrl || undefined}
                           isPdf={watchType === 'EBOOK'}
                         />
                       </FormControl>
@@ -437,7 +438,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                       value={field.value}
                       onChange={field.onChange}
                       onRemove={() => field.onChange(null)}
-                      directUrl={currentRow?.directImageUrl}
+                      directUrl={(currentRow as any)?.directImageUrl || (currentRow?.image ? getProxiedImageUrl(currentRow.image) : undefined)}
                     />
                   </FormControl>
                   <FormMessage />

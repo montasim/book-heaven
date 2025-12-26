@@ -1,6 +1,7 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,10 +29,12 @@ function ExpandableTags({
   items,
   variant,
   maxVisible = 1,
+  basePath,
 }: {
-  items: Array<{ name: string }>
+  items: Array<{ id: string; name: string }>
   variant?: 'secondary' | 'outline' | 'default'
   maxVisible?: number
+  basePath: string
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -45,9 +48,11 @@ function ExpandableTags({
   return (
     <div className='flex flex-wrap gap-1 max-w-48'>
       {visibleItems.map((item, index) => (
-        <Badge key={index} variant={variant} className='text-xs'>
-          {item.name}
-        </Badge>
+        <Link key={item.id} href={`${basePath}/${item.id}`}>
+          <Badge variant={variant} className='text-xs hover:underline cursor-pointer'>
+            {item.name}
+          </Badge>
+        </Link>
       ))}
       {!isExpanded && hiddenCount > 0 && (
         <Badge
@@ -143,7 +148,7 @@ export const columns: ColumnDef<Book>[] = [
     header: 'Authors',
     cell: ({ row }) => {
       const authors = (row.original as any).authors || []
-      return <ExpandableTags items={authors} variant='secondary' maxVisible={1} />
+      return <ExpandableTags items={authors} variant='secondary' maxVisible={1} basePath='/dashboard/authors' />
     },
     enableSorting: false,
   },
@@ -155,9 +160,11 @@ export const columns: ColumnDef<Book>[] = [
       return (
         <div className='flex flex-wrap gap-1 max-w-48'>
           {publications.slice(0, 2).map((pub: any, index: number) => (
-            <Badge key={index} variant='outline' className='text-xs'>
-              {pub.name}
-            </Badge>
+            <Link key={pub.id} href={`/dashboard/publications/${pub.id}`}>
+              <Badge variant='outline' className='text-xs hover:underline cursor-pointer'>
+                {pub.name}
+              </Badge>
+            </Link>
           ))}
           {publications.length > 2 && (
             <Badge variant='outline' className='text-xs'>
@@ -174,7 +181,7 @@ export const columns: ColumnDef<Book>[] = [
     header: 'Categories',
     cell: ({ row }) => {
       const categories = (row.original as any).categories || []
-      return <ExpandableTags items={categories} variant='default' maxVisible={1} />
+      return <ExpandableTags items={categories} variant='default' maxVisible={1} basePath='/dashboard/categories' />
     },
     enableSorting: false,
   },
