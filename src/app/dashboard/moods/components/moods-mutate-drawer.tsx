@@ -63,6 +63,7 @@ export function MoodsMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
   const isUpdate = !!currentRow
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([])
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   const form = useForm<MoodFormValues>({
     resolver: zodResolver(moodFormSchema),
