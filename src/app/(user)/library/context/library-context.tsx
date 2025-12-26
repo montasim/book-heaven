@@ -2,11 +2,11 @@
 
 import { createContext, useContext, Dispatch, SetStateAction } from 'react'
 
-export type LibraryDialogType = 'edit' | 'delete' | null
+export type LibraryDialogType = 'edit' | 'delete'
 
 interface LibraryContextProps {
-  open: LibraryDialogType
-  setOpen: Dispatch<SetStateAction<LibraryDialogType>>
+  open: LibraryDialogType | null
+  setOpen: Dispatch<SetStateAction<LibraryDialogType | null>>
   currentRow: any | null
   setCurrentRow: Dispatch<SetStateAction<any | null>>
   refreshBooks: () => void

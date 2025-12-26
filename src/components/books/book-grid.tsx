@@ -2,7 +2,6 @@
 
 import { BookCard } from './book-card'
 import { Book } from '@/app/dashboard/books/data/schema'
-import { Link } from 'next/link'
 
 export interface BookGridProps {
   books: Book[]

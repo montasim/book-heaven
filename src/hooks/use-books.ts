@@ -25,12 +25,17 @@ export interface BookUploader {
 export interface Book {
   id: string
   name: string
-  summary?: string
+  summary?: string | null
   type: BookType
-  image?: string
+  image?: string | null
+  directImageUrl?: string | null
   requiresPremium: boolean
   canAccess: boolean
   authors: Array<{
+    id: string
+    name: string
+  }>
+  publications?: Array<{
     id: string
     name: string
   }>
@@ -38,15 +43,42 @@ export interface Book {
     id: string
     name: string
   }>
-  fileUrl?: string
+  fileUrl?: string | null
+  directFileUrl?: string | null
   readersCount?: number
   pageNumber?: number | null
+  buyingPrice?: number | null
+  sellingPrice?: number | null
+  numberOfCopies?: number | null
+  purchaseDate?: string | null
+  isPublic?: boolean
+  entryDate?: string
+  entryBy?: string | BookUploader | null
+  createdAt?: string | null
+  updatedAt?: string | null
+  aiSummary?: string | null
+  aiSummaryGeneratedAt?: string | null
+  aiSummaryStatus?: string | null
+  suggestedQuestions?: Array<{
+    id: string
+    question: string
+    answer: string
+    order: number
+  }> | null
+  questionsStatus?: string | null
+  readingProgress?: Array<{
+    currentPage?: number | null
+    totalPages?: number | null
+    percentage?: number | null
+    progress?: number | null
+    status?: string | null
+    lastReadAt?: string | null
+  }> | null
   progress?: {
     currentPage?: number
     progress: number
     isCompleted?: boolean
   }
-  entryBy?: BookUploader | null
 }
 
 interface BooksResponse {

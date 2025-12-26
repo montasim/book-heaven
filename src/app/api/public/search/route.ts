@@ -134,10 +134,7 @@ export async function GET(request: NextRequest) {
                     },
                     skip,
                     take: limit,
-                    orderBy: [
-                        { _count: { readingProgress: 'desc' } },
-                        { name: 'asc' }
-                    ],
+                    orderBy: { name: 'asc' },
                 }),
                 prisma.book.count({ where })
             ])
@@ -194,10 +191,7 @@ export async function GET(request: NextRequest) {
                     },
                     skip: type === 'authors' ? skip : 0,
                     take: type === 'authors' ? limit : 10,
-                    orderBy: [
-                        { _count: { books: 'desc' } },
-                        { name: 'asc' }
-                    ],
+                    orderBy: { name: 'asc' },
                 }),
                 prisma.author.count({ where })
             ])
@@ -249,10 +243,7 @@ export async function GET(request: NextRequest) {
                     },
                     skip: type === 'categories' ? skip : 0,
                     take: type === 'categories' ? limit : 10,
-                    orderBy: [
-                        { _count: { books: 'desc' } },
-                        { name: 'asc' }
-                    ],
+                    orderBy: { name: 'asc' },
                 }),
                 prisma.category.count({ where })
             ])
@@ -350,7 +341,7 @@ export async function POST(request: NextRequest) {
                     image: true,
                 },
                 take: Math.ceil(limit / 2),
-                orderBy: { _count: { readingProgress: 'desc' } }
+                orderBy: { name: 'asc' }
             }),
             prisma.author.findMany({
                 where: {
@@ -370,11 +361,7 @@ export async function POST(request: NextRequest) {
                     image: true,
                 },
                 take: Math.ceil(limit / 4),
-                orderBy: {
-                    books: {
-                        _count: 'desc'
-                    }
-                }
+                orderBy: { name: 'asc' }
             }),
             prisma.category.findMany({
                 where: {
@@ -394,11 +381,7 @@ export async function POST(request: NextRequest) {
                     image: true,
                 },
                 take: Math.ceil(limit / 4),
-                orderBy: {
-                    books: {
-                        _count: 'desc'
-                    }
-                }
+                orderBy: { name: 'asc' }
             })
         ])
 
