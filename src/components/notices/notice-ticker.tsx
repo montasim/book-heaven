@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Megaphone } from 'lucide-react'
 import Link from 'next/link'
+import React from 'react'
 
 interface Notice {
   id: string
@@ -62,56 +63,41 @@ export function NoticeTicker() {
           </Link>
 
           {/* Scrolling Notices */}
-          <div className="flex-1 overflow-hidden">
-            <div className="notice-scroll-container">
-              <div className="notice-scroll-content">
-                {duplicatedNotices.map((notice, index) => (
-                  <Link
-                    key={`${notice.id}-${index}`}
-                    href={`/notices?notice=${notice.id}`}
-                    className="notice-item inline-flex items-center gap-2 hover:underline"
-                  >
-                    <span className="font-semibold text-primary whitespace-nowrap">{notice.title}</span>
-                    <span className="text-muted-foreground shrink-0">:</span>
-                    <span className="truncate">
-                      {notice.content?.trim() || notice.title}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+          <div className="flex-1 overflow-hidden whitespace-nowrap">
+            <div
+              className="inline-flex items-center"
+              style={{
+                animation: 'scroll 30s linear infinite',
+              }}
+            >
+              {duplicatedNotices.map((notice, index) => {
+                const originalIndex = index % notices.length
+                const isLastNotice = originalIndex === notices.length - 1 && index >= notices.length
+                return (
+                  <React.Fragment key={`${notice.id}-${index}`}>
+                    <Link
+                      href={`/notices?notice=${notice.id}`}
+                      className="inline-flex items-center gap-2 hover:underline"
+                      style={{ padding: '0 0.5rem', fontSize: '0.875rem' }}
+                    >
+                      <span className="font-semibold text-primary whitespace-nowrap">{notice.title}</span>
+                      <span className="text-muted-foreground shrink-0">:</span>
+                      <span className="truncate">
+                        {notice.content?.trim() || notice.title}
+                      </span>
+                    </Link>
+                    {!isLastNotice && (
+                      <span className="text-primary font-bold" style={{ padding: '0 0.5rem' }}>|</span>
+                    )}
+                  </React.Fragment>
+                )
+              })}
             </div>
           </div>
         </div>
       </div>
 
       <style jsx>{`
-        .notice-scroll-container {
-          overflow: hidden;
-          white-space: nowrap;
-        }
-
-        .notice-scroll-content {
-          display: inline-flex;
-          animation: scroll 40s linear infinite;
-        }
-
-        .notice-scroll-container:hover .notice-scroll-content {
-          animation-play-state: paused;
-        }
-
-        .notice-item {
-          padding: 0 1rem;
-          font-size: 0.875rem;
-        }
-
-        .notice-item:not(:last-child)::after {
-          content: '|';
-          margin-left: 1rem;
-          margin-right: 1rem;
-          color: hsl(var(--primary'));
-          font-weight: bold;
-        }
-
         @keyframes scroll {
           0% {
             transform: translateX(0);

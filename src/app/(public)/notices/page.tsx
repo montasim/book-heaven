@@ -65,19 +65,6 @@ export default function NoticesPage() {
     }
   }, [searchParams])
 
-  // Scroll to expanded notice after data is loaded
-  useEffect(() => {
-    if (expandedNoticeId && !isLoading && notices.length > 0) {
-      // Small delay to ensure DOM is rendered
-      setTimeout(() => {
-        const element = document.getElementById(`notice-${expandedNoticeId}`)
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      }, 300)
-    }
-  }, [expandedNoticeId, isLoading, notices])
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -95,6 +82,26 @@ export default function NoticesPage() {
   }
 
   const validNotices = notices.filter(isNoticeValid)
+
+  // Check if expanded notice exists in valid notices
+  const expandedNoticeExists = expandedNoticeId
+    ? validNotices.some(n => n.id === expandedNoticeId)
+    : false
+
+  // Scroll to expanded notice after data is loaded
+  useEffect(() => {
+    if (expandedNoticeId && !isLoading && expandedNoticeExists) {
+      // Wait for next tick to ensure DOM is rendered
+      const scrollTimer = setTimeout(() => {
+        const element = document.getElementById(`notice-${expandedNoticeId}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 300)
+
+      return () => clearTimeout(scrollTimer)
+    }
+  }, [expandedNoticeId, isLoading, expandedNoticeExists])
 
   return (
     <div className="min-h-screen bg-background">
