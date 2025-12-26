@@ -202,21 +202,40 @@ export function MoodsMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                   <FormLabel>Emoji *</FormLabel>
                   <FormControl>
                     <div className="space-y-2">
-                      <Input placeholder="Select or type an emoji" {...field} />
-                      <div className="flex flex-wrap gap-1">
-                        {EMOJI_OPTIONS.map((emoji) => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => field.onChange(emoji)}
-                            className="w-10 h-10 text-xl flex items-center justify-center border rounded hover:bg-muted transition-colors"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Click to select an emoji"
+                          {...field}
+                          readOnly
+                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                          className="cursor-pointer"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        >
+                          {field.value || '😀'}
+                        </Button>
                       </div>
+                      {showEmojiPicker && (
+                        <div className="border rounded-md p-2 bg-background">
+                          <EmojiPicker
+                            onEmojiClick={(emojiData) => {
+                              field.onChange(emojiData.emoji)
+                              setShowEmojiPicker(false)
+                            }}
+                            height={350}
+                            width="100%"
+                          />
+                        </div>
+                      )}
                     </div>
                   </FormControl>
+                  <FormDescription>
+                    Click the input or button to select an emoji
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
