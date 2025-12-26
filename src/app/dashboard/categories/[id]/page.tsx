@@ -25,6 +25,7 @@ import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
 import { ViewsOverTimeChart } from '@/components/analytics/views-over-time-chart'
+import { StatCard } from '@/components/analytics/stat-card'
 
 export default function AdminCategoryDetailsPage() {
   const params = useParams()
@@ -108,42 +109,23 @@ export default function AdminCategoryDetailsPage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{category.analytics?.totalViews || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Books</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{category.analytics?.totalBooks || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {category.analytics?.totalPages || 0} total pages
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Readers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{category.analytics?.totalReaders || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {category.analytics?.completedReaders || 0} completed
-              </p>
-            </CardContent>
-          </Card>
-
+          <StatCard
+            title="Total Views"
+            value={category.analytics?.totalViews || 0}
+            icon={Eye}
+          />
+          <StatCard
+            title="Books"
+            value={category.analytics?.totalBooks || 0}
+            icon={BookOpen}
+            description={`${category.analytics?.totalPages || 0} total pages`}
+          />
+          <StatCard
+            title="Readers"
+            value={category.analytics?.totalReaders || 0}
+            icon={Users}
+            description={`${category.analytics?.completedReaders || 0} completed`}
+          />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Books by Type</CardTitle>
