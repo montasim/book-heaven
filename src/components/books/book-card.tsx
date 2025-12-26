@@ -2,6 +2,7 @@
 
 import React, { useState, useContext } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ import { getUserDisplayName } from '@/lib/utils/user'
 import { LibraryContext } from '@/app/(user)/library/context/library-context'
 import { AddToBookshelf } from '@/components/books/add-to-bookshelf'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
+import { useQueryClient } from '@tanstack/react-query'
 import type { BookType } from '@prisma/client'
 
 interface Book {
@@ -96,6 +98,29 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
     coverHeight = 'default',
     ...props
   }, ref) => {
+    const queryClient = useQueryClient()
+    const router = useRouter()
+
+    // Prefetch book data on hover
+    const handleMouseEnter = () => {
+      if (viewMoreHref) {
+        // Extract book ID from href (e.g., /books/d7dfc67b-7179-43c1-9386-0e46c36618e4)
+        const bookId = viewMoreHref.split('/').pop()
+        if (bookId) {
+          queryClient.prefetchQuery({
+            queryKey: ['book', bookId],
+            queryFn: async () => {
+              const response = await fetch(`/api/public/books/${bookId}`)
+              if (!response.ok) {
+                throw new Error('Failed to fetch book')
+              }
+              return response.json()
+            }
+          })
+        }
+      }
+    }
+
     // Safely get library context - it may not be available in all contexts (e.g., public books page)
     const libraryContext = useContext(LibraryContext)
     const { setOpen, setCurrentRow } = libraryContext || { setOpen: () => {}, setCurrentRow: () => {} }
@@ -153,6 +178,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
             className
           )}
           onClick={handleClick}
+          onMouseEnter={handleMouseEnter}
           {...props}
         >
           <CardContent className="p-4">
@@ -263,7 +289,12 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
                 {/* View More Button */}
                 {viewMoreHref && (
-                  <Link href={viewMoreHref} className="inline-block" onClick={(e) => e.stopPropagation()}>
+                  <Link
+                    href={viewMoreHref}
+                    className="inline-block"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={handleMouseEnter}
+                  >
                     <Button variant="outline" size="sm" className="w-full">
                       View More
                     </Button>
@@ -286,6 +317,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
           className
         )}
         onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
         {...props}
       >
         <CardContent className="p-4">
@@ -449,7 +481,12 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
                 {/* View More Button - Mobile */}
                 {viewMoreHref && (
-                  <Link href={viewMoreHref} className="block" onClick={(e) => e.stopPropagation()}>
+                  <Link
+                    href={viewMoreHref}
+                    className="block"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={handleMouseEnter}
+                  >
                     <Button variant="outline" size="sm" className="w-full">
                       View More
                     </Button>
@@ -649,7 +686,12 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
               {/* View More Button - Desktop */}
               {viewMoreHref && (
-                <Link href={viewMoreHref} className="block" onClick={(e) => e.stopPropagation()}>
+                <Link
+                  href={viewMoreHref}
+                  className="block"
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseEnter={handleMouseEnter}
+                >
                   <Button variant="outline" size="sm" className="w-full">
                     View More
                   </Button>
