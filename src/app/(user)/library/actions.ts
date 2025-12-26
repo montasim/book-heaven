@@ -276,21 +276,61 @@ export async function getUserBooks() {
             author: true
           }
         },
+        publications: {
+          include: {
+            publication: true
+          }
+        },
+        categories: {
+          include: {
+            category: true
+          }
+        },
+        questions: true,
         readingProgress: {
           where: {
             userId: session.userId
           }
-        }
+        },
+        entryBy: true
       },
       orderBy: {
         createdAt: 'desc'
       }
     })
 
-    // Flatten authors structure
+    // Flatten relations and format to match Book type
     return books.map(book => ({
       ...book,
-      authors: book.authors.map(ba => ba.author)
+      // Fix Date to string conversions
+      entryDate: book.entryDate.toISOString(),
+      createdAt: book.createdAt.toISOString(),
+      updatedAt: book.updatedAt.toISOString(),
+      purchaseDate: book.purchaseDate?.toISOString() || null,
+      aiSummaryGeneratedAt: book.aiSummaryGeneratedAt?.toISOString() || null,
+
+      // Flatten relations
+      authors: book.authors.map(ba => ({ id: ba.author.id, name: ba.author.name })),
+      publications: book.publications.map(bp => ({ id: bp.publication.id, name: bp.publication.name })),
+      categories: book.categories.map(bc => ({ id: bc.category.id, name: bc.category.name })),
+
+      // Map questions to suggestedQuestions
+      suggestedQuestions: book.questions?.map(q => ({
+        id: q.id,
+        question: q.question,
+        answer: q.answer,
+        order: q.order,
+      })) || null,
+
+      // Format readingProgress
+      readingProgress: book.readingProgress.map(rp => ({
+        currentPage: rp.currentPage,
+        totalPages: book.pageNumber,
+        percentage: rp.progress,
+        progress: rp.progress,
+        status: rp.isCompleted ? 'completed' : (rp.progress > 0 ? 'reading' : 'not_started'),
+        lastReadAt: rp.lastReadAt?.toISOString()
+      }))
     }))
   } catch (error) {
     console.error('Error fetching user books:', error)
@@ -422,7 +462,7 @@ export async function getBookshelves() {
                 bookCount: totalBooks,
                 completedBooks,
                 progressPercent,
-                totalPages
+                totalPages: totalPages || 0
             }
         })
     } catch (error) {
