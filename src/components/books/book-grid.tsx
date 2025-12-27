@@ -66,10 +66,10 @@ export function BookGrid({
     return viewMoreHref || ''
   }
 
-  // List/Compact view uses a 3-column grid layout with compact variant
+  // List/Compact view uses a 2-column grid layout with compact variant
   if (viewMode === 'list') {
     return (
-      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${gridClassName || ''}`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${gridClassName || ''}`}>
         {books.map((book) => (
           <BookCard
             key={book.id}
