@@ -517,7 +517,7 @@ export default function BookDetailsPage() {
               ) : null}
 
               {/* Added by user */}
-              {book.entryBy && (
+              {book.entryBy && typeof book.entryBy === 'object' && (
                 <div className="flex items-center gap-3 mb-4">
                   <Link href={`/users/${book.entryBy.id}`} className="flex items-center gap-3 group hover:underline">
                     <Avatar className="h-10 w-10">

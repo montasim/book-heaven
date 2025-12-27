@@ -179,18 +179,18 @@ function buildFilterConditions(
 /**
  * Build sort conditions for books-old query
  */
-function buildSortConditions(sortBy: string, sortOrder: string) {
+function buildSortConditions(sortBy: string, sortOrder: string): any {
     switch (sortBy) {
         case 'title':
-            return { name: sortOrder }
+            return { name: sortOrder as 'asc' | 'desc' }
         case 'author':
-            return { authors: { _count: sortOrder } }
+            return { authors: { _count: sortOrder as 'asc' | 'desc' } }
         case 'createdAt':
-            return { createdAt: sortOrder }
+            return { createdAt: sortOrder as 'asc' | 'desc' }
         case 'purchaseDate':
-            return { purchaseDate: sortOrder }
+            return { purchaseDate: sortOrder as 'asc' | 'desc' }
         default:
-            return { name: sortOrder }
+            return { name: sortOrder as 'asc' | 'desc' }
     }
 }
 

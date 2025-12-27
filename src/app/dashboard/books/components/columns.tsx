@@ -65,7 +65,7 @@ function ExpandableTags({
       )}
       {isExpanded && items.length > maxVisible && (
         <Badge
-          variant='ghost'
+          variant='outline'
           className='text-xs cursor-pointer hover:opacity-80'
           onClick={() => setIsExpanded(false)}
         >
@@ -197,7 +197,7 @@ export const columns: ColumnDef<Book>[] = [
       if (type === 'HARD_COPY') {
         return (
           <Badge variant='secondary'>
-            {copies || 0} copies
+            {`${copies || 0} copies`}
           </Badge>
         )
       }

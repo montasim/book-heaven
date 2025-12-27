@@ -25,39 +25,14 @@ import { LibraryContext } from '@/app/(user)/library/context/library-context'
 import { AddToBookshelf } from '@/components/books/add-to-bookshelf'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
 import { useQueryClient } from '@tanstack/react-query'
-import type { BookType } from '@prisma/client'
-
-interface Book {
-  id: string
-  name: string
-  type?: BookType
-  summary?: string
-  image?: string
-  authors?: Array<{ id: string; name: string }>
-  categories?: Array<{ id: string; name: string }>
-  pageNumber?: number | null
-  fileUrl?: string
-  readingProgress?: Array<{ currentPage?: number; progress?: number; lastReadAt?: string }>
-  progress?: { currentPage?: number; progress?: number; isCompleted?: boolean }
-  requiresPremium?: boolean
-  canAccess?: boolean
-  readersCount?: number
-  entryBy?: {
-    id: string
-    username?: string | null
-    firstName?: string | null
-    lastName?: string | null
-    name?: string
-    avatar?: string | null
-  } | null
-}
+import type { Book as BookTypePublic } from '@/hooks/use-book'
 
 interface BookCardProps extends React.ComponentPropsWithoutRef<typeof Card> {
-  book: Book
+  book: BookTypePublic
   variant?: 'default' | 'compact'
 
   // Click/navigation
-  onClick?: (book: Book) => void
+  onClick?: (book: BookTypePublic) => void
   viewMoreHref?: string
 
   // Library-specific features
@@ -130,7 +105,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
     const isHardCopy = book.type === 'HARD_COPY'
 
     // Unified progress handling
-    const progressData = book.readingProgress?.[0] || book.progress
+    const progressData = book.readingProgress
     const progress = Math.round(progressData?.progress || 0)
     const currentPage = progressData?.currentPage || 0
     const totalPages = book.pageNumber || '?'

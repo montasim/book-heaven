@@ -173,7 +173,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
 
   useEffect(() => {
     if (open) {
-      const defaultValues = isUpdate && currentRow ? {
+      const defaultValues: BookForm = isUpdate && currentRow ? {
         name: currentRow.name || '',
         image: currentRow.image || '',
         type: currentRow.type,
@@ -193,7 +193,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       } : {
         name: '',
         image: '',
-        type: 'HARD_COPY',
+        type: 'HARD_COPY' as const,
         bindingType: undefined,
         pageNumber: '',
         fileUrl: '',
@@ -207,7 +207,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         categoryIds: [],
         isPublic: false,
         requiresPremium: false,
-      };
+      } as BookForm;
       form.reset(defaultValues);
       setPurchaseDate(currentRow?.purchaseDate ? new Date(currentRow.purchaseDate) : undefined);
     }

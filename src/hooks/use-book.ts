@@ -23,21 +23,21 @@ export interface Publication {
 
 export interface BookUser {
   id: string
-  firstName: string
+  firstName?: string | null
   lastName?: string | null
   username?: string | null
-  name: string
+  name?: string
   avatar?: string | null
   bio?: string | null
-  createdAt: string
+  createdAt?: string
 }
 
 export interface ReadingProgress {
-  id: string
+  id?: string
   currentPage?: number | null
   currentEpocha?: number | null
   progress: number
-  isCompleted: boolean
+  isCompleted?: boolean
   lastReadAt?: string | null
 }
 
@@ -58,7 +58,7 @@ export interface Book {
   sellingPrice?: number | null
   numberOfCopies?: number | null
   purchaseDate?: string | null
-  entryDate: string
+  entryDate?: string
   image?: string | null
   fileUrl?: string | null
   directFileUrl?: string | null
@@ -76,7 +76,7 @@ export interface Book {
   canAccess: boolean
   authors: Author[]
   categories: Category[]
-  publications: Publication[]
+  publications?: Publication[]
   readingProgress?: ReadingProgress | null
   statistics?: {
     totalReaders: number
@@ -87,7 +87,18 @@ export interface Book {
   }
   relatedBooks?: Book[]
   recommendationReasons?: Record<string, RecommendationReason>
-  entryBy?: BookUser | null
+  entryBy?: string | BookUploader | BookUser | null
+}
+
+export interface BookUploader {
+  id: string
+  firstName?: string | null
+  lastName?: string | null
+  username?: string | null
+  name?: string
+  avatar?: string | null
+  bio?: string | null
+  createdAt?: string
 }
 
 export interface UserAccess {

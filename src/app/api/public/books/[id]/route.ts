@@ -456,11 +456,11 @@ export async function GET(
                 requiresPremium: relatedBook.requiresPremium,
                 canAccess: !relatedBook.requiresPremium || userHasPremium,
                 readersCount: relatedBook._count.readingProgress,
-                authors: relatedBook.authors.map(ra => ({
+                authors: relatedBook.authors.map((ra: any) => ({
                     id: ra.author.id,
                     name: ra.author.name,
                 })),
-                categories: relatedBook.categories.map(rc => ({
+                categories: relatedBook.categories.map((rc: any) => ({
                     id: rc.category.id,
                     name: rc.category.name,
                 })),

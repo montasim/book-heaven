@@ -11,7 +11,6 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { MultiSelect } from '@/components/ui/multi-select'
 import { BookGrid } from '@/components/books/book-grid'
-import { BookCard } from '@/components/books/book-card'
 import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
 import { SearchBar } from '@/components/books/search-bar'
 import { MoodSelector } from '@/components/books/mood-selector'
@@ -29,8 +28,6 @@ import {
   BookOpen,
   Headphones,
   FileText,
-  Plus,
-  Settings,
   Clock,
   PlayCircle,
   Sparkles,
@@ -42,7 +39,6 @@ import { NoticeTicker } from '@/components/notices/notice-ticker'
 export default function BooksPage() {
   const searchParams = useSearchParams()
   const { user } = useAuth()
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   const [filters, setFilters] = useState({
     search: searchParams?.get('search') || '',
@@ -63,11 +59,11 @@ export default function BooksPage() {
   const { data: booksData, isLoading, error, refetch } = useBooks(filters)
 
   // Fetch continue reading books (only for authenticated users)
-  const { data: continueReadingData, isLoading: isLoadingContinueReading } = useContinueReading(8)
+  const { data: continueReadingData } = useContinueReading(8)
   const continueReadingBooks = user ? continueReadingData?.books || [] : []
 
   // Fetch recently visited books (only for authenticated users)
-  const { data: recentVisitsData, isLoading: isLoadingRecent } = useRecentVisits(8)
+  const { data: recentVisitsData } = useRecentVisits(8)
   const recentBooks = user ? recentVisitsData?.books || [] : []
 
   // Fetch mood-based recommendations

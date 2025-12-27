@@ -526,9 +526,9 @@ export async function getAllPublications() {
  */
 export function getBookTypes() {
   return [
-    { value: 'HARD_COPY', label: 'Hard Copy' },
-    { value: 'EBOOK', label: 'eBook' },
-    { value: 'AUDIO', label: 'Audio Book' },
+    { value: 'HARD_COPY' as const, label: 'Hard Copy' },
+    { value: 'EBOOK' as const, label: 'eBook' },
+    { value: 'AUDIO' as const, label: 'Audio Book' },
   ]
 }
 
@@ -554,6 +554,7 @@ export async function getBookWithExtractedContent(id: string) {
       contentVersion: true,
       extractionStatus: true,
       contentExtractedAt: true,
+      questionsStatus: true,
     }
   })
 }

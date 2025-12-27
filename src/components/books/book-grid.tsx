@@ -1,7 +1,7 @@
 'use client'
 
 import { BookCard } from './book-card'
-import { Book } from '@/app/dashboard/books/data/schema'
+import { Book } from '@/hooks/use-book'
 
 export interface BookGridProps {
   books: Book[]

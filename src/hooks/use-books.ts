@@ -15,11 +15,13 @@ interface BookFilters {
 
 export interface BookUploader {
   id: string
-  username?: string | null
   firstName?: string | null
   lastName?: string | null
+  username?: string | null
   name?: string
   avatar?: string | null
+  bio?: string | null
+  createdAt?: string
 }
 
 export interface Book {
@@ -66,14 +68,14 @@ export interface Book {
     order: number
   }> | null
   questionsStatus?: string | null
-  readingProgress?: Array<{
+  readingProgress?: {
+    id?: string
     currentPage?: number | null
-    totalPages?: number | null
-    percentage?: number | null
-    progress?: number | null
-    status?: string | null
+    currentEpocha?: number | null
+    progress: number
+    isCompleted?: boolean
     lastReadAt?: string | null
-  }> | null
+  } | null
   progress?: {
     currentPage?: number
     progress: number

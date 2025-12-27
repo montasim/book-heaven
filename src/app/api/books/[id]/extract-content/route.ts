@@ -70,8 +70,19 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     // Fallback to synchronous processing if queue is not available
     console.log('[Content Extraction API] Processing extraction synchronously...');
 
+    // Check if fileUrl exists
+    if (!book.fileUrl) {
+      return NextResponse.json(
+        { error: 'Book has no file URL to extract content from' },
+        { status: 400 }
+      )
+    }
+
     // Extract content
-    const content = await extractBookContent(book);
+    const content = await extractBookContent({
+      fileUrl: book.fileUrl,
+      directFileUrl: book.directFileUrl,
+    });
 
     // Save to database
     await updateBookExtractedContent(id, {
