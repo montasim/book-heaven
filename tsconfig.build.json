@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Reduce memory usage during production builds
+    "skipDefaultLibCheck": true,
+    // Disable incremental for cleaner builds
+    "incremental": false,
+    // Reduce memory by not emitting declaration files
+    "declaration": false,
+    "declarationMap": false
+  },
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__/**",
+    ".next/**",
+    "out/**"
+  ]
+}
