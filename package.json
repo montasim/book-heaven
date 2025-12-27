@@ -5,11 +5,10 @@
   "scripts": {
     "dev": "infisical run --env=dev -- next dev --turbopack",
     "dev:plain": "next dev --turbopack",
-    "build:with-infiscal": "infisical run --env=prod -- next build",
-    "build:normal": "prisma generate && next build",
-    "build": "prisma generate && NODE_OPTIONS='--max-old-space-size=1536' next build",
-    "start": "next start",
     "build:plain": "next build",
+    "build:normal": "prisma generate && next build",
+    "build": "infisical run --env=prod -- next build",
+    "start": "next start",
     "lint": "eslint .",
     "postinstall": "prisma generate"
   },
