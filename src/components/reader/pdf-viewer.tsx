@@ -41,27 +41,6 @@ export interface PDFViewerRef {
   downloadPDF: () => void
 }
 
-interface PDFDocument {
-  numPages: number
-  getPage: (pageNumber: number) => Promise<PDFPage>
-}
-
-interface PDFPage {
-  viewport: {
-    width: number
-    height: number
-    scale: (scale: number) => PDFViewport
-  }
-  getViewport: (params: { scale: number }) => PDFViewport
-  render: (params: { viewport: PDFViewport; canvasContext: CanvasRenderingContext2D }) => Promise<void>
-  textContent: () => Promise<{ items: Array<{ str: string }> }>
-}
-
-interface PDFViewport {
-  width: number
-  height: number
-}
-
 export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   fileUrl,
   directFileUrl,
@@ -78,7 +57,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [pdfDocument, setPdfDocument] = useState<PDFDocument | null>(null)
+  const [pdfDocument, setPdfDocument] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [internalScale, setInternalScale] = useState(initialScale)
   const [internalRotation, setInternalRotation] = useState(0)
@@ -141,12 +120,12 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
       }
 
       const pdfjs = await loadPDFJS()
-      const loadingTask = pdfjs.getDocument({
-        url: proxiedUrl,
-        onProgress: (progress: any) => {
-          setLoadingProgress(Math.round((progress.loaded / progress.total) * 100))
-        }
-      })
+      const loadingTask = pdfjs.getDocument(proxiedUrl)
+
+      // Set up progress callback
+      loadingTask.onProgress = (progress: any) => {
+        setLoadingProgress(Math.round((progress.loaded / progress.total) * 100))
+      }
 
       const pdf = await loadingTask.promise
       setPdfDocument(pdf)
@@ -164,7 +143,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   }, [directFileUrl, fileUrl, initialPage, loadPDFJS, onPageChange, onProgressChange])  
 
   // Render specific page
-  const renderPage = useCallback(async (pdf: PDFDocument, pageNumber: number, currentScale: number, currentRotation: number) => {
+  const renderPage = useCallback(async (pdf: any, pageNumber: number, currentScale: number, currentRotation: number) => {
     if (!canvasRef.current) return
 
     try {

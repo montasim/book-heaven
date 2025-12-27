@@ -13,7 +13,6 @@ import {
   Volume2,
   VolumeX,
   Repeat,
-  RepeatOne,
   Shuffle,
   Heart,
   Bookmark,
@@ -377,7 +376,7 @@ export function AudioPlayer({
               className={repeatMode !== 'none' ? 'text-primary' : ''}
             >
               {repeatMode === 'one' ? (
-                <RepeatOne className="h-4 w-4" />
+                <Repeat className="h-4 w-4" />
               ) : (
                 <Repeat className="h-4 w-4" />
               )}
