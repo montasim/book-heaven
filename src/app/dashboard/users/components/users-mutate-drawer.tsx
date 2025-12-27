@@ -50,7 +50,7 @@ const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
   phoneNumber: z.string().optional(),
   status: z.enum(['active', 'inactive', 'invited', 'suspended'] as const),
-  role: z.enum(['superadmin', 'admin', 'cashier', 'manager'] as const),
+  role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN'] as const),
 })
 type UsersForm = z.infer<typeof formSchema>
 
@@ -73,7 +73,7 @@ export function UsersMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       email: currentRow.email || '',
       phoneNumber: currentRow.phoneNumber || '',
       status: currentRow.status || 'active',
-      role: currentRow.role || 'cashier',
+      role: currentRow.role || 'USER',
     } : {
       firstName: '',
       lastName: '',
@@ -81,7 +81,7 @@ export function UsersMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       email: '',
       phoneNumber: '',
       status: 'active',
-      role: 'cashier',
+      role: 'USER',
     },
     mode: 'onChange',
   })

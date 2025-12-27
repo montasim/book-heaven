@@ -219,7 +219,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
   // When type changes, trigger form re-validation to update conditional field requirements
   useEffect(() => {
     form.trigger()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [watchType, form])
 
   useEffect(() => {
