@@ -6,9 +6,9 @@ export type LibraryDialogType = 'edit' | 'delete'
 
 interface LibraryContextProps {
   open: LibraryDialogType | null
-  setOpen: Dispatch<SetStateAction<LibraryDialogType | null>>
+  setOpen: (value: LibraryDialogType | null) => void
   currentRow: any | null
-  setCurrentRow: Dispatch<SetStateAction<any | null>>
+  setCurrentRow: (value: any | null) => void
   refreshBooks: () => void
 }
 

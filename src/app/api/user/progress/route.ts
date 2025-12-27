@@ -66,8 +66,9 @@ export async function GET(request: NextRequest) {
         } else if (type === 'completed') {
             result = await getCompletedBooks(userSession.userId, limit)
         } else {
+            // type === 'all'
             result = await getUserReadingProgress(userSession.userId, {
-                isCompleted: type === 'completed' ? true : type === 'in-progress' ? false : undefined,
+                isCompleted: undefined,
                 bookType,
                 page,
                 limit,
