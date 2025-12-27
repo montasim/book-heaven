@@ -583,13 +583,13 @@ function BooksPageContent({
             )}
 
             {/* Mood-Based Recommendations Section */}
-            <div className="mb-8">
+            <div className="mb-4 sm:mb-8">
               <Card>
-                <CardHeader className="cursor-pointer" onClick={() => setShowMoodPicker(!showMoodPicker)}>
+                <CardHeader className="cursor-pointer py-3 sm:py-6 px-4 sm:px-6" onClick={() => setShowMoodPicker(!showMoodPicker)}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-primary" />
-                      <CardTitle>Recommended for Your Mood</CardTitle>
+                      <CardTitle className="text-base sm:text-lg">Recommended for Your Mood</CardTitle>
                     </div>
                     <Button variant="ghost" size="sm">
                       {showMoodPicker ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -597,7 +597,7 @@ function BooksPageContent({
                   </div>
                 </CardHeader>
                 {showMoodPicker && (
-                  <CardContent>
+                  <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
                     {!selectedMood ? (
                       <MoodSelector onSelectMood={setSelectedMood} />
                     ) : (
