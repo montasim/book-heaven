@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BookOpen } from 'lucide-react'
@@ -157,10 +158,13 @@ function SuggestionCard({ book, reason }: SuggestionCardProps) {
           {/* Book Cover */}
           <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-muted">
             {book.image ? (
-              <img
+              <Image
                 src={getProxiedImageUrl(book.image) || book.image}
                 alt={book.name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                unoptimized
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-muted-foreground">

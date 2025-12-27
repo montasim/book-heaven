@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -265,10 +266,13 @@ export default function BookDetailsPage() {
               <div className="relative mb-4 sm:mb-6 max-w-auto mx-auto lg:mx-0">
                 <div className="aspect-[3/4] overflow-hidden rounded-lg shadow-lg bg-muted">
                   {book.image ? (
-                    <img
+                    <Image
                       src={getProxiedImageUrl(book.image) || book.image}
                       alt={book.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -673,12 +677,15 @@ export default function BookDetailsPage() {
                     <CardContent className="space-y-6">
                       {book.publications.map((publication) => (
                         <div key={publication.id} className="flex gap-4">
-                          <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                             {publication.image ? (
-                              <img
+                              <Image
                                 src={getProxiedImageUrl(publication.image) || publication.image}
                                 alt={publication.name}
-                                className="h-full w-full object-cover"
+                                fill
+                                className="object-cover"
+                                sizes="64px"
+                                unoptimized
                               />
                             ) : (
                               <Building2 className="h-8 w-8 text-muted-foreground" />

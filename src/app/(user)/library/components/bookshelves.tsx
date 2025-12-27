@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
@@ -34,25 +34,32 @@ interface BookshelvesProps {
 export function Bookshelves({ onEdit, onDelete, bookshelves: externalBookshelves, isLoading: externalIsLoading, onRefresh }: BookshelvesProps) {
   const [internalBookshelves, setInternalBookshelves] = useState<Bookshelf[]>([])
   const [internalIsLoading, setInternalIsLoading] = useState(true)
+  const hasInitializedRef = useRef(false)
+  const [isPending, startTransition] = useTransition()
 
   const bookshelves = externalBookshelves ?? internalBookshelves
   const isLoading = externalIsLoading ?? internalIsLoading
 
-  const fetchBookshelves = async () => {
-    setInternalIsLoading(true)
-    const data = await getBookshelves()
-    setInternalBookshelves(data)
-    setInternalIsLoading(false)
-  }
+  const fetchBookshelves = useCallback(async () => {
+    startTransition(async () => {
+      setInternalIsLoading(true)
+      const data = await getBookshelves()
+      setInternalBookshelves(data)
+      setInternalIsLoading(false)
+    })
+  }, [])
 
+  // Initial fetch when no external bookshelves provided
   useEffect(() => {
-    if (!externalBookshelves) {
+    if (!externalBookshelves && !hasInitializedRef.current) {
+      hasInitializedRef.current = true
       fetchBookshelves()
     }
-  }, [externalBookshelves])
+  }, [externalBookshelves, fetchBookshelves])
 
+  // Refresh when onRefresh changes
   useEffect(() => {
-    if (onRefresh) {
+    if (onRefresh && hasInitializedRef.current) {
       fetchBookshelves()
     }
   }, [onRefresh, fetchBookshelves])
@@ -103,10 +110,13 @@ export function Bookshelves({ onEdit, onDelete, bookshelves: externalBookshelves
               <div className="w-20 h-28 sm:w-24 sm:h-32 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                 <Link href={`/library?tab=bookshelves&bookshelfId=${shelf.id}`} className="block w-full h-full">
                   {shelf.image ? (
-                    <img
+                    <Image
                       src={getProxiedImageUrl(shelf.image) || shelf.image}
                       alt={shelf.name}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 80px, 96px"
+                      unoptimized
                     />
                   ) : (
                     <Bookmark className="h-8 w-8 text-muted-foreground" />

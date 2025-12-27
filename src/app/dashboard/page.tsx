@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -523,12 +524,15 @@ function UserDashboard() {
                       <Card key={book.id} className="min-w-[92vw] snap-center sm:min-w-[320px]">
                         <CardContent className="p-4">
                           <div className="flex gap-4">
-                            <div className="w-20 h-28 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <div className="w-20 h-28 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                               {book.image ? (
-                                <img
+                                <Image
                                   src={getProxiedImageUrl(book.image) || book.image}
                                   alt={book.name}
-                                  className="h-full w-full object-cover"
+                                  fill
+                                  className="object-cover"
+                                  sizes="80px"
+                                  unoptimized
                                 />
                               ) : (
                                 <BookOpen className="h-8 w-8 text-muted-foreground" />
@@ -583,12 +587,15 @@ function UserDashboard() {
                     <Card key={book.id}>
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          <div className="w-12 h-16 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0">
+                          <div className="w-12 h-16 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                             {book.image ? (
-                              <img
+                              <Image
                                 src={getProxiedImageUrl(book.image) || book.image}
                                 alt={book.name}
-                                className="h-full w-full object-cover"
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                                unoptimized
                               />
                             ) : (
                               <BookOpen className="h-6 w-6 text-muted-foreground" />

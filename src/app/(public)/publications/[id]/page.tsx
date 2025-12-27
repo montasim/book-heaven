@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -98,10 +99,13 @@ export default function PublicationDetailsPage() {
               <div className="relative mb-6 max-w-xs mx-auto lg:mx-0">
                 <div className="aspect-square rounded-lg overflow-hidden shadow-lg bg-muted">
                   {publication.image ? (
-                    <img
+                    <Image
                       src={getProxiedImageUrl(publication.image) || publication.image}
                       alt={publication.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

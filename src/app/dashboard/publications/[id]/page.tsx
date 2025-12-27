@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
+import Image from 'next/image'
 import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -313,11 +314,16 @@ function BooksByPublicationTab({ publicationId }: { publicationId: string }) {
             {booksData.books.map((book: any) => (
               <div key={book.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
-                  <img
-                    src={book.directImageUrl || book.image || '/placeholder-book.png'}
-                    alt={book.name}
-                    className="w-12 h-16 object-cover rounded"
-                  />
+                  <div className="relative w-12 h-16 rounded overflow-hidden flex-shrink-0">
+                    <Image
+                      src={book.directImageUrl || book.image || '/placeholder-book.png'}
+                      alt={book.name}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                      unoptimized
+                    />
+                  </div>
                   <div>
                     <p className="font-medium">{book.name}</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

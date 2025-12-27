@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import useSWR, { mutate } from 'swr'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -250,11 +251,16 @@ export default function AdminBookDetailsPage() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex gap-6">
-            <img
-              src={imageUrl}
-              alt={book.name}
-              className="w-32 h-44 object-cover rounded-lg shadow-lg"
-            />
+            <div className="relative w-32 h-44 rounded-lg overflow-hidden shadow-lg flex-shrink-0">
+              <Image
+                src={imageUrl}
+                alt={book.name}
+                fill
+                className="object-cover"
+                sizes="128px"
+                unoptimized
+              />
+            </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-bold">{book.name}</h1>
               <div className="flex items-center gap-2">

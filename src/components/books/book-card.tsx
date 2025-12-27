@@ -2,6 +2,7 @@
 
 import React, { useState, useContext } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -167,10 +168,13 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
               <div className="flex-shrink-0">
                 <div className="relative w-16 h-20 overflow-hidden rounded bg-muted">
                   {book.image ? (
-                    <img
+                    <Image
                       src={getProxiedImageUrl(book.image) || book.image}
                       alt={book.name}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="64px"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -309,10 +313,13 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
               <div className="relative mb-2">
                 <div className="w-20 h-28 bg-muted rounded-t flex items-center justify-center overflow-hidden relative">
                   {book.image ? (
-                    <img
+                    <Image
                       src={getProxiedImageUrl(book.image) || book.image}
                       alt={book.name}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="80px"
+                      unoptimized
                     />
                   ) : (
                     <div className="flex items-center justify-center text-muted-foreground">
@@ -387,12 +394,15 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                     className="flex items-center gap-1 hover:text-foreground transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                       {book.entryBy.avatar ? (
-                        <img
+                        <Image
                           src={getProxiedImageUrl(book.entryBy.avatar) || book.entryBy.avatar}
                           alt=""
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="16px"
+                          unoptimized
                         />
                       ) : (
                         <span className="text-[8px] font-medium">
@@ -481,10 +491,13 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
             {/* Book Cover - Desktop */}
             <div className="relative w-full bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden group" style={{ height: coverHeight === 'tall' ? '16rem' : '12rem' }}>
               {book.image ? (
-                <img
+                <Image
                   src={getProxiedImageUrl(book.image) || book.image}
                   alt={book.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  unoptimized
                 />
               ) : (
                 <div className="flex items-center justify-center text-muted-foreground w-full h-full">

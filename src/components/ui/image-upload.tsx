@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Image as ImageIcon, Trash2, AlertCircle } from 'lucide-react'
@@ -33,22 +34,29 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
     return null
   })
+  const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
 
   // Synchronize preview with value prop
   useEffect(() => {
     if (value instanceof File) {
       const objectUrl = URL.createObjectURL(value)
-      setPreview(objectUrl)
+      startTransition(() => {
+        setPreview(objectUrl)
+      })
       return () => URL.revokeObjectURL(objectUrl)
     } else if (typeof value === 'string') {
       // Use proxied URL for Google Drive images (better compatibility)
       // For non-Google Drive URLs, use directUrl if available
       const proxiedUrl = getProxiedImageUrl(value)
       const urlToUse = proxiedUrl || (directUrl && directUrl.trim() !== '' ? directUrl : value)
-      setPreview(urlToUse)
+      startTransition(() => {
+        setPreview(urlToUse)
+      })
     } else {
-      setPreview(null)
+      startTransition(() => {
+        setPreview(null)
+      })
     }
   }, [value, directUrl])
 
@@ -78,7 +86,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     <div>
       {preview ? (
         <div className='relative h-32 w-32'>
-          <img src={preview} alt='Image preview' className='h-full w-full rounded-md object-cover' />
+          <Image
+            src={preview}
+            alt='Image preview'
+            fill
+            className='rounded-md object-cover'
+            sizes='128px'
+            unoptimized
+          />
           <div className='absolute top-0 right-0'>
             <Button type='button' onClick={onRemove} variant='destructive' size='icon' disabled={disabled}>
               <Trash2 className='h-4 w-4' />

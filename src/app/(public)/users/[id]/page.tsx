@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -217,12 +218,15 @@ export default function UserProfilePage() {
                     >
                       <div className="flex items-center gap-4">
                         {/* Bookshelf Image */}
-                        <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                           {bookshelf.image ? (
-                            <img
+                            <Image
                               src={getProxiedImageUrl(bookshelf.image) || bookshelf.image}
                               alt={bookshelf.name}
-                              className="h-full w-full object-cover"
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                              unoptimized
                             />
                           ) : (
                             <Bookmark className="h-8 w-8 text-muted-foreground" />
