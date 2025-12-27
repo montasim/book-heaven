@@ -149,7 +149,7 @@ function BooksPageContent({
 
       <main className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
           {/* Header */}
-        <div className="mb-8">
+        <div className="">
           {/* Desktop Header */}
           <div className="hidden lg:flex lg:items-center justify-between mb-4 gap-6">
             <div>
@@ -270,7 +270,7 @@ function BooksPageContent({
             </div>
 
             {/* Mobile Search Bar - Below Discover Books Section */}
-            <div className="w-full mb-6">
+            <div className="w-full">
               <SearchBar
                 onSearch={handleSearch}
                 initialValue={filters.search}
