@@ -115,30 +115,29 @@ export default function SiteSettingsPage() {
   }
 
   return (
-    <>
-      <HeaderContainer>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Construction className="h-6 w-6" />
-              Site Settings
-            </h1>
-            <p className="text-muted-foreground">
-              Manage site-wide settings and maintenance modes
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={fetchSettings}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </HeaderContainer>
+    <div>
+        <div className="flex items-center justify-between mb-6">
+            <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <Construction className="h-6 w-6" />
+                    Site Settings
+                </h1>
+                <p className="text-muted-foreground">
+                    Manage site-wide settings and maintenance modes
+                </p>
+            </div>
 
-      <div className="space-y-6 p-4">
+            <Button
+                variant="outline"
+                onClick={fetchSettings}
+                disabled={isLoading}
+            >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+            </Button>
+        </div>
+
+      <div className="space-y-6">
         {/* Under Construction Settings */}
         <Card>
           <CardHeader>
@@ -222,6 +221,6 @@ export default function SiteSettingsPage() {
           </Card>
         )}
       </div>
-    </>
+    </div>
   )
 }
