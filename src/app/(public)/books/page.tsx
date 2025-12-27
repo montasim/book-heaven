@@ -636,6 +636,7 @@ function BooksPageContent({
                             showUploader={true}
                             showLockOverlay={true}
                             coverHeight="tall"
+                            showProgressActions={true}
                           />
                         ) : (
                           <div className="text-center py-8">
@@ -676,6 +677,7 @@ function BooksPageContent({
                     showUploader={true}
                     showLockOverlay={true}
                     coverHeight="tall"
+                    showProgressActions={true}
                   />
                 )}
               </>

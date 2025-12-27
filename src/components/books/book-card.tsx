@@ -111,8 +111,8 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
       return <BookOpen className="h-6 w-6" />
     }
 
-    // Unified progress handling
-    const progressData = book.readingProgress
+    // Unified progress handling - check both readingProgress and progress fields
+    const progressData = book.readingProgress || book.progress
     const progress = Math.round(progressData?.progress || 0)
     const currentPage = progressData?.currentPage || 0
     const totalPages = book.pageNumber || '?'
@@ -182,14 +182,14 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
               <div className="flex gap-3">
                 {/* Book Cover - Larger on mobile */}
                 <div className="flex-shrink-0">
-                  <div className="relative w-24 h-32 overflow-hidden rounded bg-muted">
+                  <div className="relative w-36 h-52 overflow-hidden rounded bg-muted">
                     {book.image ? (
                       <Image
                         src={getProxiedImageUrl(book.image) || book.image}
                         alt={book.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        sizes="96px"
+                        sizes="144px"
                         unoptimized
                       />
                     ) : (
@@ -314,12 +314,21 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
                     {/* Progress bar (if any progress) */}
                     {progress > 0 && (
-                      <div className="space-y-0.5">
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span>{isCompleted ? 'Completed' : `${progress}%`}</span>
-                          <span>Page {currentPage} of {totalPages}</span>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-muted-foreground">{isCompleted ? 'Completed' : 'Progress'}</span>
+                          <span>{progress}%</span>
                         </div>
                         <Progress value={progress} className="h-1" />
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>Page {currentPage} of {totalPages}</span>
+                          {estimatedReadingTime && (
+                            <span className="flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              {estimatedReadingTime}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
 

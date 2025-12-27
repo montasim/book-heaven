@@ -78,6 +78,11 @@ export interface Book {
   categories: Category[]
   publications?: Publication[]
   readingProgress?: ReadingProgress | null
+  progress?: {
+    currentPage?: number
+    progress: number
+    isCompleted?: boolean
+  }
   statistics?: {
     totalReaders: number
     avgProgress: number

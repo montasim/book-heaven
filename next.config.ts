@@ -26,8 +26,6 @@ const nextConfig: NextConfig = {
         },
     },
 
-    middlewareClientMaxBodySize: "30mb", // ✅ THIS is the key fix
-
     // Optimize webpack configuration
     webpack: (config, { isServer }) => {
         // Reduce memory usage by splitting chunks more aggressively
