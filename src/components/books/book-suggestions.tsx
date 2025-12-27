@@ -55,7 +55,7 @@ export function BookSuggestions({
         <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">No suggestions available</h3>
         <p className="text-muted-foreground">
-          We couldn't find any similar books at this time.
+          We couldn&apos;t find any similar books at this time.
         </p>
       </div>
     )

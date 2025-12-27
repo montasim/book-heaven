@@ -66,7 +66,7 @@ export function MoodSelector({ onSelectMood, selectedMood }: MoodSelectorProps) 
     <div className="space-y-4">
       <div className="text-center mb-6">
         <h3 className="text-2xl font-bold mb-2">How are you feeling today?</h3>
-        <p className="text-muted-foreground">Select your mood and we'll suggest the perfect books for you</p>
+        <p className="text-muted-foreground">Select your mood and we&apos;ll suggest the perfect books for you</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

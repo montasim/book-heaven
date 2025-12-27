@@ -283,10 +283,10 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
         <SheetHeader className="px-6 py-4 border-b text-left">
           <SheetTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Chat about "{book.name}"
+            Chat about &quot;{book.name}&quot;
           </SheetTitle>
           <SheetDescription>
-            Ask questions about this book. AI answers based on the book's content.
+            Ask questions about this book. AI answers based on the book&apos;s content.
           </SheetDescription>
         </SheetHeader>
 
@@ -465,7 +465,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
           </div>
           <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
             <Sparkles className="h-3 w-3" />
-            AI only answers from this book's content. Responses may not be 100% accurate.
+            AI only answers from this book&apos;s content. Responses may not be 100% accurate.
           </p>
         </div>
       </SheetContent>
