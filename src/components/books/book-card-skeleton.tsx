@@ -7,37 +7,72 @@ import { cn } from '@/lib/utils'
 interface BookCardSkeletonProps {
   viewMode?: 'grid' | 'list'
   className?: string
+  coverHeight?: 'default' | 'tall'
 }
 
-export function BookCardSkeleton({ viewMode = 'grid', className }: BookCardSkeletonProps) {
-  // List/Compact view skeleton
+export function BookCardSkeleton({ viewMode = 'grid', className, coverHeight = 'default' }: BookCardSkeletonProps) {
+  const coverHeightClass = coverHeight === 'tall' ? 'h-64' : 'h-48'
+
+  // Compact variant (list view)
   if (viewMode === 'list') {
     return (
       <Card className={cn('transition-all duration-200', className)}>
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            {/* Book Cover - Compact */}
-            <div className="flex-shrink-0">
-              <Skeleton className="w-16 h-20 rounded bg-muted" />
+        <CardContent className="p-3">
+          <div>
+            {/* Badges - Top right */}
+            <div className="flex justify-end gap-1 mb-2">
+              <Skeleton className="h-4 w-12 bg-muted" />
             </div>
 
-            {/* Book Info - Compact */}
-            <div className="flex-1 min-w-0 space-y-2">
-              {/* Title */}
-              <Skeleton className="h-5 w-3/4 bg-muted" />
+            <div className="flex gap-3">
+              {/* Book Cover */}
+              <div className="flex-shrink-0">
+                <div className="relative w-36 h-52 overflow-hidden rounded bg-muted">
+                  <Skeleton className="w-full h-full bg-muted" />
+                  {/* Add to Bookshelf placeholder */}
+                  <Skeleton className="absolute top-1 right-1 h-6 w-6 bg-muted/50" />
+                </div>
 
-              {/* Author */}
-              <Skeleton className="h-4 w-1/2 bg-muted" />
-
-              {/* Metadata */}
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-3 w-16 bg-muted" />
+                {/* Reader count */}
+                <Skeleton className="h-3 w-8 mt-1.5 bg-muted" />
               </div>
 
-              {/* Progress */}
-              <div className="space-y-1">
-                <Skeleton className="h-3 w-20 bg-muted" />
-                <Skeleton className="h-1.5 w-full bg-muted" />
+              {/* Book Info */}
+              <div className="flex-1 min-w-0 flex flex-col">
+                <div className="flex-1">
+                  {/* Title */}
+                  <Skeleton className="h-4 w-full mb-1 bg-muted" />
+
+                  {/* Author */}
+                  <Skeleton className="h-3.5 w-2/3 mb-1.5 bg-muted" />
+
+                  {/* Uploader */}
+                  <div className="flex items-center gap-1 mb-2">
+                    <Skeleton className="h-4 w-4 rounded-full bg-muted" />
+                    <Skeleton className="h-3.5 w-20 bg-muted" />
+                  </div>
+
+                  {/* Categories */}
+                  <div className="flex items-center gap-1 mb-2">
+                    <Skeleton className="h-5 w-12 bg-muted" />
+                    <Skeleton className="h-5 w-16 bg-muted" />
+                  </div>
+                </div>
+
+                {/* Progress */}
+                <div className="space-y-1.5 mb-1.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-16 bg-muted" />
+                    <Skeleton className="h-3 w-8 bg-muted" />
+                  </div>
+                  <Skeleton className="h-1 w-full bg-muted" />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 flex-1 bg-muted" />
+                  <Skeleton className="h-6 flex-1 bg-muted" />
+                </div>
               </div>
             </div>
           </div>
@@ -46,66 +81,49 @@ export function BookCardSkeleton({ viewMode = 'grid', className }: BookCardSkele
     )
   }
 
-  // Grid view skeleton (responsive - horizontal on mobile, vertical on desktop)
+  // Grid view (responsive - horizontal on mobile, vertical on desktop)
   return (
     <Card className={cn('transition-all hover:shadow-lg', className)}>
       <CardContent className="p-4">
-        {/* Mobile: Horizontal layout */}
-        <div className="flex gap-4 md:hidden">
-          {/* Book Cover - Mobile */}
-          <div className="flex-shrink-0">
-            <Skeleton className="w-20 h-28 rounded-t bg-muted" />
-          </div>
-
-          {/* Metadata - Mobile */}
-          <div className="w-20 space-y-1.5">
-            <Skeleton className="h-4 w-4 rounded-full bg-muted" />
-            <Skeleton className="h-3 w-12 bg-muted" />
-          </div>
-
-          {/* Book Info - Mobile */}
-          <div className="flex-1 min-w-0 flex flex-col justify-between">
-            <div className="space-y-1">
-              <Skeleton className="h-4 w-full bg-muted" />
-              <Skeleton className="h-3 w-2/3 bg-muted" />
-            </div>
-
-            {/* Progress - Mobile */}
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-16 bg-muted" />
-              <Skeleton className="h-2 w-full bg-muted" />
-            </div>
-          </div>
+        {/* Unified vertical layout for both mobile and desktop */}
+        {/* Book Cover */}
+        <div className="relative w-full bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+          <Skeleton className={cn("w-full bg-muted", coverHeightClass)} />
         </div>
 
-        {/* Desktop: Vertical layout */}
-        <div className="hidden md:block">
-          {/* Book Cover - Desktop */}
-          <div className="relative w-full bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-            <Skeleton className="w-full h-64 bg-muted" />
+        {/* Book Info */}
+        <div className="space-y-3">
+          {/* Title */}
+          <Skeleton className="h-5 w-full bg-muted" />
+
+          {/* Author */}
+          <Skeleton className="h-4 w-3/4 bg-muted" />
+
+          {/* Uploader */}
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-5 w-5 rounded-full bg-muted" />
+            <Skeleton className="h-3.5 w-24 bg-muted" />
           </div>
 
-          {/* Book Info - Desktop */}
-          <div className="space-y-3">
-            {/* Title */}
-            <Skeleton className="h-6 w-full bg-muted" />
-
-            {/* Author */}
-            <Skeleton className="h-4 w-3/4 bg-muted" />
-
-            {/* Metadata */}
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-4 w-20 bg-muted" />
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3.5 w-16 bg-muted" />
+              <Skeleton className="h-3.5 w-8 bg-muted" />
             </div>
+            <Skeleton className="h-2 w-full bg-muted" />
+          </div>
 
-            {/* Progress - Desktop */}
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <Skeleton className="h-4 w-16 bg-muted" />
-                <Skeleton className="h-4 w-8 bg-muted" />
-              </div>
-              <Skeleton className="h-2 w-full bg-muted" />
-            </div>
+          {/* Categories */}
+          <div className="flex items-center gap-1">
+            <Skeleton className="h-6 w-16 bg-muted" />
+            <Skeleton className="h-6 w-20 bg-muted" />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between gap-2 pt-2">
+            <Skeleton className="h-9 flex-1 bg-muted" />
+            <Skeleton className="h-9 flex-1 bg-muted" />
           </div>
         </div>
       </CardContent>
