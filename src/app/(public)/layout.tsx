@@ -1,5 +1,6 @@
 import React from "react";
 import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
 import '../globals.css'
 import { AppQueryClientProvider } from '@/components/providers/query-client-provider'
 import { Toaster } from '@/components/ui/toaster'
@@ -10,7 +11,7 @@ import { MDXViewerProvider } from 'mdx-craft'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Your Book Library - Discover, Read, and Share Books',
   description: 'Discover amazing books-old, track your reading progress, and share your favorite reads with our comprehensive book management platform.',
   keywords: ['books', 'reading', 'library', 'ebooks', 'audiobooks', 'book discovery'],

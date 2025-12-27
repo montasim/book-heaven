@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth-context'
@@ -801,7 +801,7 @@ function BooksPageContent({
 }
 
 // Wrapper component that resets state when searchParams change
-export default function BooksPage() {
+function BooksPageWrapper() {
   const searchParams = useSearchParams()
   const { user } = useAuth()
 
@@ -816,5 +816,14 @@ export default function BooksPage() {
       searchParams={searchParams}
       user={user}
     />
+  )
+}
+
+// Wrapper with Suspense boundary for useSearchParams
+export default function BooksPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <BooksPageWrapper />
+    </Suspense>
   )
 }
