@@ -7,11 +7,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { BookmarkPlus, Check, Loader2, Trash2 } from 'lucide-react'
+import { BookmarkPlus, Check, Loader2, Trash2, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/auth-context'
 import { addBookToBookshelf, getUserBookshelvesForBook, removeBookFromBookshelf } from '@/app/(user)/library/actions'
 import { toast } from '@/hooks/use-toast'
+import { BookshelfMutateDrawer } from '@/app/(user)/library/bookshelf-mutate-drawer'
 
 interface Bookshelf {
   id: string
@@ -45,6 +46,7 @@ export const AddToBookshelf: React.FC<AddToBookshelfProps> = ({
   const [loadingBookshelves, setLoadingBookshelves] = useState(false)
   const [addingToBookshelf, setAddingToBookshelf] = useState<string | null>(null)
   const [removingFromBookshelf, setRemovingFromBookshelf] = useState<string | null>(null)
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
 
   // Fetch user's bookshelves when popover opens
   const handleOpenChange = async (open: boolean) => {
@@ -149,123 +151,156 @@ export const AddToBookshelf: React.FC<AddToBookshelfProps> = ({
     }
   }
 
+  // Handle create bookshelf drawer open
+  const handleCreateBookshelf = () => {
+    setIsCreateDrawerOpen(true)
+  }
+
+  // Handle bookshelf created successfully
+  const handleBookshelfCreated = async () => {
+    // Refresh the bookshelves list
+    const shelves = await getUserBookshelvesForBook(bookId)
+    setBookshelves(shelves)
+    onRefresh?.()
+  }
+
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        {triggerVariant === 'button' ? (
-          <Button
-            variant="outline"
-            className={triggerClassName}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <BookmarkPlus className="h-4 w-4 mr-2" />
-            Add to Bookshelf
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              'bg-background/80 hover:bg-background backdrop-blur-sm p-0',
-              triggerClassName
-            )}
-            aria-label="Add to bookshelf"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <BookmarkPlus className="h-4 w-4" />
-          </Button>
-        )}
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-2" align="end">
-        <div className="text-sm font-medium mb-2 px-2">
-          {variant === 'manage' ? 'Manage Bookshelves' : 'Add to Bookshelf'}
-        </div>
-        {variant === 'manage' && (
-          <div className="px-2 mb-2">
-            <div className="h-px bg-border" />
-          </div>
-        )}
-        {!user ? (
-          <div className="text-sm text-muted-foreground py-2 px-2">
-            Please login to add books to your bookshelves.
-          </div>
-        ) : loadingBookshelves ? (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </div>
-        ) : bookshelves.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-2 px-2">
-            No bookshelves found. Create one in your library.
-          </div>
-        ) : (
-          <div className="max-h-64 overflow-y-auto">
-            {bookshelves.map((shelf) => (
-              <div
-                key={shelf.id}
-                className={cn(
-                  'flex items-center justify-between px-2 py-2 rounded-md transition-colors',
-                  variant === 'manage' && shelf.hasBook ? 'bg-accent/50' : 'hover:bg-accent'
-                )}
+    <>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          {triggerVariant === 'button' ? (
+            <Button
+              variant="outline"
+              className={triggerClassName}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <BookmarkPlus className="h-4 w-4 mr-2" />
+              Add to Bookshelf
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'bg-background/80 hover:bg-background backdrop-blur-sm p-0',
+                triggerClassName
+              )}
+              aria-label="Add to bookshelf"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <BookmarkPlus className="h-4 w-4" />
+            </Button>
+          )}
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-2" align="end">
+          <div className="flex items-center justify-between mb-2 px-2">
+            <span className="text-sm font-medium">
+              {variant === 'manage' ? 'Manage Bookshelves' : 'Add to Bookshelf'}
+            </span>
+            {variant === 'manage' && (
+              <button
+                onClick={handleCreateBookshelf}
+                className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                title="Create new bookshelf"
               >
-                <span className="text-sm truncate flex-1">{shelf.name}</span>
-                <span className="text-xs text-muted-foreground flex items-center gap-2">
-                  {shelf._count.books} {shelf._count.books === 1 ? 'book' : 'books'}
-                  {variant === 'add' ? (
-                    // Add-only variant: show checkmark if has book, disabled state
-                    shelf.hasBook ? (
-                      <Check className="h-3 w-3 text-green-600" />
-                    ) : addingToBookshelf === shelf.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <button
-                        onClick={() => handleAddToBookshelf(shelf.id, shelf.name)}
-                        disabled={addingToBookshelf !== null}
-                        className="ml-2 text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        <BookmarkPlus className="h-3 w-3" />
-                      </button>
-                    )
-                  ) : (
-                    // Manage variant: show add/remove buttons
-                    shelf.hasBook ? (
-                      <button
-                        onClick={() => handleRemoveFromBookshelf(shelf.id, shelf.name)}
-                        disabled={removingFromBookshelf === shelf.id}
-                        className="ml-2 text-destructive hover:text-destructive/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        {removingFromBookshelf === shelf.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <>
-                            <Trash2 className="h-3 w-3" />
-                            Remove
-                          </>
-                        )}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleAddToBookshelf(shelf.id, shelf.name)}
-                        disabled={addingToBookshelf === shelf.id}
-                        className="ml-2 text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        {addingToBookshelf === shelf.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <>
-                            <BookmarkPlus className="h-3 w-3" />
-                            Add
-                          </>
-                        )}
-                      </button>
-                    )
-                  )}
-                </span>
-              </div>
-            ))}
+                <Plus className="h-4 w-4" />
+              </button>
+            )}
           </div>
-        )}
-      </PopoverContent>
-    </Popover>
+          {variant === 'manage' && (
+            <div className="px-2 mb-2">
+              <div className="h-px bg-border" />
+            </div>
+          )}
+          {!user ? (
+            <div className="text-sm text-muted-foreground py-2 px-2">
+              Please login to add books to your bookshelves.
+            </div>
+          ) : loadingBookshelves ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          ) : bookshelves.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-2 px-2">
+              No bookshelves found. Create one in your library.
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto">
+              {bookshelves.map((shelf) => (
+                <div
+                  key={shelf.id}
+                  className={cn(
+                    'flex items-center justify-between px-2 py-2 rounded-md transition-colors',
+                    variant === 'manage' && shelf.hasBook ? 'bg-accent/50' : 'hover:bg-accent'
+                  )}
+                >
+                  <span className="text-sm truncate flex-1">{shelf.name}</span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-2">
+                    {shelf._count.books} {shelf._count.books === 1 ? 'book' : 'books'}
+                    {variant === 'add' ? (
+                      // Add-only variant: show checkmark if has book, disabled state
+                      shelf.hasBook ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : addingToBookshelf === shelf.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <button
+                          onClick={() => handleAddToBookshelf(shelf.id, shelf.name)}
+                          disabled={addingToBookshelf !== null}
+                          className="ml-2 text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          <BookmarkPlus className="h-3 w-3" />
+                        </button>
+                      )
+                    ) : (
+                      // Manage variant: show add/remove buttons
+                      shelf.hasBook ? (
+                        <button
+                          onClick={() => handleRemoveFromBookshelf(shelf.id, shelf.name)}
+                          disabled={removingFromBookshelf === shelf.id}
+                          className="ml-2 text-destructive hover:text-destructive/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {removingFromBookshelf === shelf.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <>
+                              <Trash2 className="h-3 w-3" />
+                              Remove
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAddToBookshelf(shelf.id, shelf.name)}
+                          disabled={addingToBookshelf === shelf.id}
+                          className="ml-2 text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {addingToBookshelf === shelf.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <>
+                              <BookmarkPlus className="h-3 w-3" />
+                              Add
+                            </>
+                          )}
+                        </button>
+                      )
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+
+      {/* Create Bookshelf Drawer */}
+      <BookshelfMutateDrawer
+        open={isCreateDrawerOpen}
+        onOpenChange={setIsCreateDrawerOpen}
+        onSuccess={handleBookshelfCreated}
+      />
+    </>
   )
 }
 
