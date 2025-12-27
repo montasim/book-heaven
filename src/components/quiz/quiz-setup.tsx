@@ -18,7 +18,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 interface QuizConfig {
   category: string
   categoryName: string
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: 'any' | 'easy' | 'medium' | 'hard'
   questionCount: 5 | 10 | 15
 }
 
@@ -32,7 +32,7 @@ interface QuizSetupProps {
 
 export function QuizSetup({ onStartQuiz }: QuizSetupProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('any')
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'any' | 'easy' | 'medium' | 'hard'>('any')
   const [questionCount, setQuestionCount] = useState<5 | 10 | 15>(10)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -124,14 +124,15 @@ export function QuizSetup({ onStartQuiz }: QuizSetupProps) {
         {/* Difficulty Selection */}
         <div className="space-y-2">
           <Label htmlFor="difficulty">Difficulty</Label>
-          <Select value={selectedDifficulty} onValueChange={(v: any) => setSelectedDifficulty(v)}>
+          <Select value={selectedDifficulty} onValueChange={(v) => setSelectedDifficulty(v as 'any' | 'easy' | 'medium' | 'hard')}>
             <SelectTrigger id="difficulty">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="easy">Easy (5 questions)</SelectItem>
-              <SelectItem value="medium">Medium (10 questions)</SelectItem>
-              <SelectItem value="hard">Hard (15 questions)</SelectItem>
+              <SelectItem value="any">Any Difficulty</SelectItem>
+              <SelectItem value="easy">Easy</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="hard">Hard</SelectItem>
             </SelectContent>
           </Select>
         </div>

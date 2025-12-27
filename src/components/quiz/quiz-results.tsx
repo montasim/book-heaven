@@ -11,7 +11,7 @@ import useSWR from 'swr'
 interface QuizConfig {
   category: string
   categoryName: string
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: 'any' | 'easy' | 'medium' | 'hard'
   questionCount: number
 }
 

@@ -18,7 +18,7 @@ type QuizState = 'setup' | 'playing' | 'results'
 interface QuizConfig {
   category: string
   categoryName: string
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: 'any' | 'easy' | 'medium' | 'hard'
   questionCount: 5 | 10 | 15
 }
 

@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Flame, Target, Trophy, TrendingUp, Calendar, CheckCircle, Loader2 } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuth } from '@/context/auth-context'
 import { getUserDisplayName } from '@/lib/utils/user'
 
@@ -66,20 +66,13 @@ export function QuizStats() {
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              {user?.avatar ? (
-                <AvatarImage src={user.avatar} alt={user.username || user.email || 'User'} />
-              ) : (
-                <AvatarFallback className="text-xl">
-                  {(user?.firstName || user?.username || user?.name || user?.email || 'U')?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              )}
+              <AvatarFallback className="text-xl">
+                {(user?.name || user?.email || 'U')?.[0]?.toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <h3 className="text-xl font-bold">
                 {getUserDisplayName({
-                  firstName: user?.firstName,
-                  lastName: user?.lastName,
-                  username: user?.username,
                   name: user?.name,
                   email: user?.email || '',
                 })}
