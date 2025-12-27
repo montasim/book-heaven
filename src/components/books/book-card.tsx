@@ -388,7 +388,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
               {/* Metadata below image - Mobile */}
               <div className="w-20 space-y-1.5">
                 {/* Uploader info */}
-                {showUploader && book.entryBy && (
+                {showUploader && book.entryBy && typeof book.entryBy === 'object' && (
                   <Link
                     href={`/users/${book.entryBy.id}`}
                     className="flex items-center gap-1 hover:text-foreground transition-colors"
@@ -586,7 +586,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                   </span>
                 )}
                 {/* Uploader - Desktop */}
-                {showUploader && book.entryBy && (
+                {showUploader && book.entryBy && typeof book.entryBy === 'object' && (
                   <Link
                     href={`/users/${book.entryBy.id}`}
                     className="flex items-center gap-1.5 hover:text-foreground transition-colors"
