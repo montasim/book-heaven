@@ -5,7 +5,7 @@
  * This module provides utilities for extracting information from Next.js requests
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import {NextRequest, NextResponse} from 'next/server'
 
 /**
  * Extract client IP address from request
@@ -28,7 +28,7 @@ export function getClientIp(request: NextRequest): string {
     }
 
     // Fallback to request IP (may not be available in all environments)
-    return request.ip || '127.0.0.1'
+    return request?.ip || '127.0.0.1'
 }
 
 /**
@@ -39,8 +39,7 @@ export function getClientIp(request: NextRequest): string {
  */
 export async function parseRequestBody(request: NextRequest): Promise<any> {
     try {
-        const body = await request.json()
-        return body
+        return await request.json()
     } catch (error) {
         console.error('Error parsing request body:', error)
         return null

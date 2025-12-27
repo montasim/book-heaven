@@ -50,6 +50,7 @@ export interface LoginResponse {
 export interface SendOtpResponse {
   success: true
   expiresAt: string
+  sessionCreated?: boolean
 }
 
 export interface VerifyOtpResponse {
