@@ -17,14 +17,12 @@ const toPublicBook = (book: Book): PublicBook => ({
 
 export function BookList({
   books,
-  openDrawer,
-  onEdit,
-  onCardClick
+  onEditAction,
+  onCardClickAction
 }: {
   books: Book[]
-  openDrawer?: () => void
-  onEdit?: (book: Book) => void
-  onCardClick?: (book: Book) => void
+  onEditAction?: (book: Book) => void
+  onCardClickAction?: (book: Book) => void
 }) {
   const publicBooks = books.map(toPublicBook)
 
@@ -32,17 +30,17 @@ export function BookList({
   const bookMap = new Map(books.map(b => [b.id, b]))
 
   // Wrap callbacks to convert back to dashboard Book type
-  const handleEdit = onEdit
+  const handleEdit = onEditAction
     ? (publicBook: PublicBook) => {
         const originalBook = bookMap.get(publicBook.id)
-        if (originalBook) onEdit(originalBook)
+        if (originalBook) onEditAction(originalBook)
       }
     : undefined
 
-  const handleCardClick = onCardClick
+  const handleCardClick = onCardClickAction
     ? (publicBook: PublicBook) => {
         const originalBook = bookMap.get(publicBook.id)
-        if (originalBook) onCardClick(originalBook)
+        if (originalBook) onCardClickAction(originalBook)
       }
     : undefined
 

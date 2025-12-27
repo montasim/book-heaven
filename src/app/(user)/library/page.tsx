@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback, useTransition } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, useTransition, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -84,7 +84,7 @@ function calculateLibraryStats(books: Book[]): LibraryStats {
   }
 }
 
-export default function LibraryPage() {
+function LibraryPageContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -472,9 +472,8 @@ export default function LibraryPage() {
             <div className={`overflow-y-auto pb-24 md:overflow-y-visible md:max-h-none md:pb-0 ${showSummary ? 'max-h-[calc(100vh-46rem)]' : 'max-h-[calc(100vh-28rem)]'}`}>
               <BookList
                 books={filteredBooks}
-                openDrawer={() => setIsBookDrawerOpen(true)}
-                onEdit={handleEditBook}
-                onCardClick={handleBookClick}
+                onEditAction={handleEditBook}
+                onCardClickAction={handleBookClick}
               />
             </div>
           </TabsContent>
@@ -560,5 +559,14 @@ export default function LibraryPage() {
         />
       )}
     </LibraryContextProvider>
+  )
+}
+
+// Wrapper with Suspense boundary for useSearchParams
+export default function LibraryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LibraryPageContent />
+    </Suspense>
   )
 }
