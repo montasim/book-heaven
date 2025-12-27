@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
             '@tanstack/react-table',
             'recharts',
         ],
+        // Configure server actions for large file uploads (PDFs up to 30MB)
+        serverActions: {
+            bodySizeLimit: '30mb', // Increase from default 1mb to 30mb for pdf uploads
+        },
     },
     // Optimize webpack configuration
     webpack: (config, { isServer }) => {
