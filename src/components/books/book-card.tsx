@@ -27,7 +27,7 @@ import { BookTypeBadge } from '@/components/books/book-type-badge'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Book as BookTypePublic } from '@/hooks/use-book'
 
-interface BookCardProps extends React.ComponentPropsWithoutRef<typeof Card> {
+interface BookCardProps extends Omit<React.ComponentPropsWithoutRef<typeof Card>, 'onClick'> {
   book: BookTypePublic
   variant?: 'default' | 'compact'
 
@@ -37,8 +37,8 @@ interface BookCardProps extends React.ComponentPropsWithoutRef<typeof Card> {
 
   // Library-specific features
   showEditActions?: boolean
-  onEdit?: (book: Book) => void
-  onDelete?: (book: Book) => void
+  onEdit?: (book: BookTypePublic) => void
+  onDelete?: (book: BookTypePublic) => void
   showProgressActions?: boolean
 
   // Public catalog features
@@ -103,6 +103,11 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
     const isEbook = book.type === 'EBOOK'
     const isAudio = book.type === 'AUDIO'
     const isHardCopy = book.type === 'HARD_COPY'
+
+    // Get icon based on book type
+    const getTypeIcon = () => {
+      return <BookOpen className="h-6 w-6" />
+    }
 
     // Unified progress handling
     const progressData = book.readingProgress
@@ -235,10 +240,10 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
                 {/* Metadata */}
                 <div className="flex items-center gap-3 mb-2 text-xs text-muted-foreground">
-                  {showReaderCount && book.readersCount && book.readersCount > 0 && (
+                  {showReaderCount && book.statistics?.totalReaders && book.statistics.totalReaders > 0 && (
                     <span className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      {book.readersCount}
+                      {book.statistics.totalReaders}
                     </span>
                   )}
                 </div>
@@ -408,10 +413,10 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                 )}
 
                 {/* Reader count */}
-                {showReaderCount && book.readersCount && book.readersCount > 0 && (
+                {showReaderCount && book.statistics?.totalReaders && book.statistics.totalReaders > 0 && (
                   <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
                     <Users className="h-3 w-3" />
-                    <span>{book.readersCount}</span>
+                    <span>{book.statistics.totalReaders}</span>
                   </div>
                 )}
               </div>
@@ -561,10 +566,10 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
               {/* Metadata - Desktop */}
               <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-                {showReaderCount && book.readersCount && book.readersCount > 0 && (
+                {showReaderCount && book.statistics?.totalReaders && book.statistics.totalReaders > 0 && (
                   <span className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
-                    {book.readersCount} {book.readersCount === 1 ? 'reader' : 'readers'}
+                    {book.statistics.totalReaders} {book.statistics.totalReaders === 1 ? 'reader' : 'readers'}
                   </span>
                 )}
                 {/* Uploader - Desktop */}

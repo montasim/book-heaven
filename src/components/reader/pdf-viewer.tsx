@@ -161,7 +161,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     } finally {
       setIsLoading(false)
     }
-  }, [directFileUrl, fileUrl, initialPage, loadPDFJS, onPageChange, onProgressChange]) // eslint-disable-line react-hooks/exhaustive-deps -- scale & rotation read via closure, not as deps
+  }, [directFileUrl, fileUrl, initialPage, loadPDFJS, onPageChange, onProgressChange])  
 
   // Render specific page
   const renderPage = useCallback(async (pdf: PDFDocument, pageNumber: number, currentScale: number, currentRotation: number) => {
