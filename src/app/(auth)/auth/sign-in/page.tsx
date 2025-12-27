@@ -23,7 +23,7 @@ export default function SignIn() {
                     {authStep === 'email' ? (
                         <>
                             Enter your email to continue <br />
-                            We'll guide you through the sign-in process
+                            We&apos;ll guide you through the sign-in process
                         </>
                     ) : (
                         <>

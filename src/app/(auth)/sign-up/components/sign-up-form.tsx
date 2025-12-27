@@ -303,7 +303,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           </div>
           <div className=''>
             <p className='text-xs text-muted-foreground mb-4'>
-              Didn't receive the email? Check your spam folder or try again later.
+              Didn&apos;t receive the email? Check your spam folder or try again later.
             </p>
             <Button
               variant="outline"

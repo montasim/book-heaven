@@ -312,7 +312,7 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
           </p>
           <div className='mt-3 flex items-center justify-between'>
             <span className='text-xs text-muted-foreground'>
-              Didn't receive the code?
+              Didn&apos;t receive the code?
             </span>
             <Button
               type='button'
