@@ -22,29 +22,35 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   value,
   directUrl,
 }) => {
-  const [isMounted, setIsMounted] = useState(false)
-  const [preview, setPreview] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(true)
+  const [preview, setPreview] = useState<string | null>(() => {
+    // Initialize preview from value
+    if (value instanceof File) {
+      return URL.createObjectURL(value)
+    } else if (typeof value === 'string') {
+      const proxiedUrl = getProxiedImageUrl(value)
+      return proxiedUrl || (directUrl && directUrl.trim() !== '' ? directUrl : value)
+    }
+    return null
+  })
   const { toast } = useToast()
 
+  // Synchronize preview with value prop
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-    useEffect(() => {
-        if (value instanceof File) {
-            const objectUrl = URL.createObjectURL(value)
-            setPreview(objectUrl)
-            return () => URL.revokeObjectURL(objectUrl)
-        } else if (typeof value === 'string') {
-            // Use proxied URL for Google Drive images (better compatibility)
-            // For non-Google Drive URLs, use directUrl if available
-            const proxiedUrl = getProxiedImageUrl(value)
-            const urlToUse = proxiedUrl || (directUrl && directUrl.trim() !== '' ? directUrl : value)
-            setPreview(urlToUse)
-        } else {
-            setPreview(null)
-        }
-    }, [value, directUrl])
+    if (value instanceof File) {
+      const objectUrl = URL.createObjectURL(value)
+      setPreview(objectUrl)
+      return () => URL.revokeObjectURL(objectUrl)
+    } else if (typeof value === 'string') {
+      // Use proxied URL for Google Drive images (better compatibility)
+      // For non-Google Drive URLs, use directUrl if available
+      const proxiedUrl = getProxiedImageUrl(value)
+      const urlToUse = proxiedUrl || (directUrl && directUrl.trim() !== '' ? directUrl : value)
+      setPreview(urlToUse)
+    } else {
+      setPreview(null)
+    }
+  }, [value, directUrl])
 
   if (!isMounted) {
     return null

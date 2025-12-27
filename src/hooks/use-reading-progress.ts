@@ -179,22 +179,33 @@ export function useReadingProgressManager(
 
 // Hook for reading session tracking
 export function useReadingSession(bookId: string, initialProgress?: ReadingProgress) {
-  const sessionStartTime = useRef<number>(Date.now())
+  const sessionStartTimeRef = useRef<number>(0)
   const sessionReadingTime = useRef<number>(0)
-  const lastActiveTime = useRef<number>(Date.now())
+  const lastActiveTimeRef = useRef<number>(0)
+  const hasInitialized = useRef(false)
+
   const { saveProgressImmediate } = useReadingProgressManager(bookId, { autoSave: false })
+
+  // Initialize refs on mount only
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true
+      sessionStartTimeRef.current = Date.now()
+      lastActiveTimeRef.current = Date.now()
+    }
+  }, [])
 
   // Track reading time
   const trackReadingTime = useCallback(() => {
     const now = Date.now()
-    const timeSinceLastActive = now - lastActiveTime.current
+    const timeSinceLastActive = now - lastActiveTimeRef.current
 
     // Only count if active within last 5 minutes
     if (timeSinceLastActive < 5 * 60 * 1000) {
       sessionReadingTime.current += timeSinceLastActive
     }
 
-    lastActiveTime.current = now
+    lastActiveTimeRef.current = now
   }, [])
 
   // End session and save
@@ -211,9 +222,9 @@ export function useReadingSession(bookId: string, initialProgress?: ReadingProgr
       })
 
       // Reset session tracking
-      sessionStartTime.current = Date.now()
+      sessionStartTimeRef.current = Date.now()
       sessionReadingTime.current = 0
-      lastActiveTime.current = Date.now()
+      lastActiveTimeRef.current = Date.now()
     },
     [trackReadingTime, saveProgressImmediate, initialProgress?.readingTime]
   )
@@ -227,7 +238,7 @@ export function useReadingSession(bookId: string, initialProgress?: ReadingProgr
       if (document.hidden) {
         trackReadingTime()
       } else {
-        lastActiveTime.current = Date.now()
+        lastActiveTimeRef.current = Date.now()
       }
     }
 
