@@ -253,17 +253,21 @@ export async function deleteUser(id: string) {
  *
  * @param {Object} data - Session data
  * @param {string} data.userId - User ID
- * @param {string} data.id - Session ID (token)
+ * @param {string} data.token - Session token
  * @param {Date} data.expiresAt - Expiration date
  * @returns {Promise<UserSession>} Created session
  */
 export async function createUserSession(data: {
     userId: string
-    id: string
+    token: string
     expiresAt: Date
 }) {
     return prisma.userSession.create({
-        data,
+        data: {
+            userId: data.userId,
+            token: data.token,
+            expiresAt: data.expiresAt,
+        }
     })
 }
 
@@ -349,8 +353,7 @@ export async function updateUserRole(id: string, role: 'USER' | 'ADMIN' | 'SUPER
  *
  * @param {Object} data - User data
  * @param {string} data.email - User email
- * @param {string} data.firstName - User first name
- * @param {string} [data.lastName] - User last name
+ * @param {string} data.name - User name
  * @param {string} data.passwordHash - Hashed password
  * @param {string} [data.role] - User role (defaults to USER)
  * @param {string} [data.phoneNumber] - Optional phone number
@@ -358,8 +361,7 @@ export async function updateUserRole(id: string, role: 'USER' | 'ADMIN' | 'SUPER
  */
 export async function createFullUser(data: {
     email: string
-    firstName: string
-    lastName?: string
+    name: string
     passwordHash: string
     role?: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
     phoneNumber?: string
@@ -398,8 +400,7 @@ export async function createFullUser(data: {
 export async function updateUserProfile(
     id: string,
     data: {
-        firstName?: string
-        lastName?: string | null
+        name?: string
         email?: string
         phoneNumber?: string | null
         passwordHash?: string

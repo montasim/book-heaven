@@ -25,7 +25,7 @@ const BreadcrumbList = React.forwardRef<
 BreadcrumbList.displayName = 'BreadcrumbList'
 
 const BreadcrumbItem = React.forwardRef<
-  HTMLElement,
+  HTMLLIElement,
   React.ComponentProps<'li'>
 >(({ className, ...props }, ref) => (
   <li
