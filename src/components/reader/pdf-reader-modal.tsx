@@ -249,13 +249,23 @@ export function PDFReaderModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="h-[95vh] w-[95vw] max-w-none p-0 gap-0 border-0 rounded-lg overflow-hidden [&>button]:hidden flex flex-col"
+        className="h-[95vh] sm:h-[95vh] w-[95vw] max-w-none p-0 gap-0 border-0 rounded-lg overflow-hidden [&>button]:hidden flex flex-col max-h-[100dvh]"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0)',
+          paddingLeft: 'env(safe-area-inset-left, 0)',
+          paddingRight: 'env(safe-area-inset-right, 0)',
+        }}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={() => onClose()}
         aria-label="PDF Reader Modal"
       >
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b px-2 sm:px-4 py-2 bg-background flex-shrink-0 gap-2">
+        <div
+          className="flex items-center justify-between border-b px-2 sm:px-4 py-2 bg-background flex-shrink-0 gap-2 sticky top-0 z-10"
+          style={{
+            paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0))',
+          }}
+        >
           {/* Mobile: Toolbar controls, Desktop: Reading Mode text */}
           <div className="flex items-center gap-1 sm:gap-2 flex-1">
             {/* Mobile toolbar controls */}
@@ -340,7 +350,7 @@ export function PDFReaderModal({
         </div>
 
         {/* PDF Viewer Container */}
-        <div className="flex-1 overflow-hidden bg-neutral-100 dark:bg-neutral-900 min-h-0">
+        <div className="flex-1 overflow-hidden bg-neutral-100 dark:bg-neutral-900 min-h-0 relative">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full">
               <Loader2 className="h-8 w-8 animate-spin mb-4" />
