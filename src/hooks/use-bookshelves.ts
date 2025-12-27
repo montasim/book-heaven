@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-interface Bookshelf {
+export interface Bookshelf {
   id: string
   name: string
   description?: string
+  image?: string | null
   isPublic: boolean
   userId: string
   createdAt: string
@@ -14,7 +15,7 @@ interface Bookshelf {
   }
 }
 
-interface BookshelfItem {
+export interface BookshelfItem {
   id: string
   bookshelfId: string
   bookId: string

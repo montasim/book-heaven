@@ -80,7 +80,7 @@ export function useReadingProgressManager(
   options: AutoSaveOptions = { debounceMs: 5000, autoSave: true }
 ) {
   const queryClient = useQueryClient()
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const pendingUpdateRef = useRef<ProgressUpdateData | null>(null)
 
   const mutation = useMutation({
@@ -172,7 +172,7 @@ export function useReadingProgressManager(
   return {
     saveProgress,
     saveProgressImmediate,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     error: mutation.error,
   }
 }

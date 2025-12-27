@@ -11,7 +11,8 @@ import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
 import { TeamSwitcher } from './team-switcher'
 import { sidebarData } from './data/sidebar-data'
-import {useAuth} from "@/context/auth-context";
+import {useAuth} from "@/context/auth-context"
+import type { NavGroup as NavGroupType } from './types'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth()
@@ -20,8 +21,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   // Filter navigation groups based on user role
-  let filteredNavGroups = []
-  
+  let filteredNavGroups: NavGroupType[] = []
+
   if (user) {
     if (isAdmin) {
       // Admin: show all groups, but remove redundant Dashboard from "Other" group

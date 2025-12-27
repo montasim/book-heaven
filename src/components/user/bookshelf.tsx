@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   DropdownMenu,
@@ -21,23 +20,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  BookOpen,
-  Plus,
   MoreHorizontal,
   Edit,
   Trash2,
-  Share2,
   Eye,
   EyeOff,
-  Grid3X3,
-  List,
-  Search,
   Bookmark
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { useBookshelves, useCreateBookshelf, useUpdateBookshelf, useDeleteBookshelf } from '@/hooks/use-bookshelves'
+import { useCreateBookshelf, useUpdateBookshelf } from '@/hooks/use-bookshelves'
 import type { Bookshelf } from '@/hooks/use-bookshelves'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 
@@ -310,8 +303,8 @@ export function CreateBookshelfDialog({ open, onOpenChange, onSuccess }: CreateB
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isLoading || !name.trim()}>
-              {createMutation.isLoading ? 'Creating...' : 'Create Bookshelf'}
+            <Button type="submit" disabled={createMutation.isPending || !name.trim()}>
+              {createMutation.isPending ? 'Creating...' : 'Create Bookshelf'}
             </Button>
           </div>
         </form>
@@ -410,8 +403,8 @@ export function EditBookshelfDialog({ bookshelf, open, onOpenChange, onSuccess }
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateMutation.isLoading || !name.trim()}>
-              {updateMutation.isLoading ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" disabled={updateMutation.isPending || !name.trim()}>
+              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>
