@@ -14,7 +14,7 @@ export default function SignIn() {
     }
 
     return (
-        <Card className='p-6'>
+        <Card className='m-6 p-6'>
             <div className='flex flex-col space-y-2 text-left mb-4'>
                 <h1 className='text-2xl font-semibold tracking-tight'>
                     {authStep === 'email' ? 'Login' : 'Welcome back'}
