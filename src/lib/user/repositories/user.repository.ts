@@ -175,8 +175,10 @@ export async function createUser(data: {
     passwordHash: string
     avatar?: string
     directAvatarUrl?: string
-}) {
-    return prisma.user.create({
+    role?: string
+}, tx?: any) {
+    const db = tx || prisma
+    return db.user.create({
         data,
         include: {
             subscription: true,

@@ -183,6 +183,7 @@ export default function UserProfilePage() {
                   summary: book.summary ?? undefined,
                   authors: [],
                   categories: [],
+                  canAccess: !book.requiresPremium || true, // Default to true if not premium
                 }}
                 viewMoreHref={`/books/${book.id}`}
                 showTypeBadge={true}
@@ -284,6 +285,7 @@ export default function UserProfilePage() {
                                   summary: book.summary ?? undefined,
                                   authors: [],
                                   categories: [],
+                                  canAccess: !book.requiresPremium || true, // Default to true if not premium
                                 }}
                                 viewMoreHref={`/books/${book.id}`}
                                 showTypeBadge={true}

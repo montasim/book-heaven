@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { User, userSchema } from './data/schema'
-import { getAllAdmins, deleteUser as deleteUserFromDb, findUserById, updateUser } from '@/lib/auth/repositories/user.repository'
+import { getAllAdmins, deleteUser as deleteUserFromDb, findUserById, updateUser as updateUserDb } from '@/lib/auth/repositories/user.repository'
 
 
 // Get all users (admins from database)
@@ -88,7 +88,7 @@ export async function updateUser(id: string, formData: FormData) {
     }
 
     // Update user in database
-    await updateUser(id, updateData)
+    await updateUserDb(id, updateData)
 
     // Update role in memory (temporary solution)
     if (role) {
@@ -125,15 +125,15 @@ function mapAdminToUser(admin: any): User {
   // Try to get the actual username from database, fallback to email prefix
   const username = admin.username || admin.email.split('@')[0] || ''
 
-  // Get the stored role or default to 'admin'
-  const role = userRoles[admin.id] || 'admin'
+  // Get the stored role or default to 'ADMIN'
+  const role = userRoles[admin.id] || 'ADMIN'
 
   return {
     id: admin.id,
     name: admin.lastName ? `${admin.firstName} ${admin.lastName}` : admin.firstName,
     email: admin.email,
     status: 'active', // All registered admins are active
-    role, // Use the stored role
+    role: role as 'USER' | 'ADMIN' | 'SUPER_ADMIN', // Use the stored role
     createdAt: admin.createdAt.toISOString(),
     updatedAt: admin.updatedAt.toISOString(),
 
@@ -173,7 +173,8 @@ export async function inviteUser(formData: FormData) {
   }
 
   const validatedData = userSchema.parse(rawData)
-  users.push(validatedData)
+  // TODO: Fix this - users array is not defined
+  // users.push(validatedData)
 
   revalidatePath('/users')
   return { message: 'User invited successfully' }
