@@ -283,7 +283,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }, [fileUrl, currentPage])
+  }, [fileUrl])
 
   // Keyboard navigation
   useEffect(() => {
@@ -323,11 +323,17 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentPage, totalPages, pdfDocument, scale, goToPage, handleZoomChange])
 
+  // Track if initial page has been rendered
+  const hasRenderedInitialPage = useRef(false)
+
   // Load PDF on mount or when fileUrl changes
   useEffect(() => {
     // Prevent reloading the same PDF URL
     if (fileUrl === loadedPdfUrl.current) return
     loadedPdfUrl.current = fileUrl
+
+    // Reset initial page render flag when loading new PDF
+    hasRenderedInitialPage.current = false
 
     loadPDF()
   }, [fileUrl, loadPDF])
@@ -335,6 +341,10 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   // Render initial page when PDF document loads and canvas is available
   useEffect(() => {
     if (!pdfDocument || !canvasRef.current) return
+
+    // Only render once per PDF document
+    if (hasRenderedInitialPage.current) return
+    hasRenderedInitialPage.current = true
 
     const renderInitialPage = async () => {
       try {
@@ -345,7 +355,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     }
 
     renderInitialPage()
-  }, [pdfDocument]) // Only run when pdfDocument is first set
+  }, [pdfDocument, renderPage, currentPage, scale, rotation])
 
   // Fullscreen change listener
   useEffect(() => {
@@ -677,3 +687,5 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     </div>
   )
 })
+
+PDFViewer.displayName = 'PDFViewer'
