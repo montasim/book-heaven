@@ -112,7 +112,7 @@ export function BookshelfContent({ bookshelfId, onAddBooks }: BookshelfContentPr
             <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Bookshelf not found</h3>
             <p className="text-muted-foreground">
-              The bookshelf you're looking for doesn't exist.
+              The bookshelf you&apos;re looking for doesn&apos;t exist.
             </p>
           </div>
         </CardContent>

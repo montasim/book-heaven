@@ -152,7 +152,7 @@ export default function MyRequestsPage() {
           <FileText className="h-16 w-16 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">No requests yet</h3>
           <p className="text-muted-foreground mb-4">
-            You haven't requested any books yet.
+            You haven&apos;t requested any books yet.
           </p>
           <div className="flex gap-3">
             <Button onClick={() => setIsRequestDrawerOpen(true)}>
@@ -303,7 +303,7 @@ export default function MyRequestsPage() {
               {requestToCancel && (
                 <div>
                   Are you sure you want to cancel the request for{' '}
-                  <strong>"{requestToCancel.bookName}"</strong> by {requestToCancel.authorName}?
+                  <strong>&quot;{requestToCancel.bookName}&quot;</strong> by {requestToCancel.authorName}?
                   This action cannot be undone.
                 </div>
               )}

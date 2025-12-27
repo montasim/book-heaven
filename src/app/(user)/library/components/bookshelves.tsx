@@ -49,13 +49,13 @@ export function Bookshelves({ onEdit, onDelete, bookshelves: externalBookshelves
     if (!externalBookshelves) {
       fetchBookshelves()
     }
-  }, [])
+  }, [externalBookshelves])
 
   useEffect(() => {
     if (onRefresh) {
       fetchBookshelves()
     }
-  }, [onRefresh])
+  }, [onRefresh, fetchBookshelves])
 
   if (isLoading) {
     return (
@@ -84,7 +84,7 @@ export function Bookshelves({ onEdit, onDelete, bookshelves: externalBookshelves
               Create your first bookshelf to start organizing your books.
             </p>
             <p className="text-sm text-muted-foreground">
-              Click the "Create Bookshelf" button above to get started.
+              Click the &quot;Create Bookshelf&quot; button above to get started.
             </p>
           </div>
         </CardContent>
