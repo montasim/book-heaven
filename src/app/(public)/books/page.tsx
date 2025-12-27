@@ -626,6 +626,7 @@ function BooksPageContent({
                         ) : moodBooks.length > 0 ? (
                           <BookGrid
                             books={moodBooks}
+                            viewMode={viewMode}
                             viewMoreHref={(book) => `/books/${book.id}`}
                             showTypeBadge={true}
                             showPremiumBadge={true}
@@ -751,6 +752,7 @@ function BooksPageContent({
                       </div>
                       <BookGrid
                           books={continueReadingBooks}
+                          viewMode={viewMode}
                           viewMoreHref={(book) => `/books/${book.id}`}
                           showTypeBadge={true}
                           showPremiumBadge={true}
@@ -781,6 +783,7 @@ function BooksPageContent({
                       </div>
                       <BookGrid
                           books={recentBooks}
+                          viewMode={viewMode}
                           viewMoreHref={(book) => `/books/${book.id}`}
                           showTypeBadge={true}
                           showPremiumBadge={true}
