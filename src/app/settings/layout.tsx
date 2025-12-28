@@ -72,7 +72,7 @@ export default function SettingsLayout({
             </div>
           </Header>
 
-          <main className="px-4 flex flex-col flex-grow overflow-y-auto pt-16 pb-20">
+          <main className="px-4 flex flex-col flex-grow overflow-y-auto pt-16 pb-mobile-nav-safe">
             <div className='space-y-0.5'>
               <h1 className='text-xl font-bold tracking-tight md:text-3xl'>
                 Settings

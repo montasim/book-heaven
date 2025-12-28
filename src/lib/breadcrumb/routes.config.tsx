@@ -263,6 +263,7 @@ export const breadcrumbRoutes: BreadcrumbRoute[] = [
     path: '/settings',
     name: 'Settings',
     icon: Settings,
+    parent: '/',
   },
   {
     path: '/settings/profile',
