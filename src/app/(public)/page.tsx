@@ -41,7 +41,7 @@ export default function LandingPage() {
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Everything You Need</h2>
+            <h2 className="text-xl font-bold mb-4">Everything You Need</h2>
             <p className="text-muted-foreground text-lg">
               Books, quizzes, and community features all in one place
             </p>
@@ -99,7 +99,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-3xl font-bold mb-4">Daily Quiz Challenge</h2>
+                  <h2 className="text-xl font-bold mb-4">Daily Quiz Challenge</h2>
                   <p className="text-muted-foreground text-lg mb-6">
                     Test your knowledge across 30+ categories. Compete on the global leaderboard,
                     build daily streaks, and track your progress!
@@ -138,7 +138,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+          <h2 className="text-xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-muted-foreground text-lg mb-8">
             Join our community of readers and quiz enthusiasts today.
           </p>

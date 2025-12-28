@@ -80,7 +80,7 @@ export default function QuizPage() {
             <Brain className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Quiz Game</h1>
+            <h1 className="text-xl font-bold">Quiz Game</h1>
             <p className="text-muted-foreground">
               Test your knowledge and climb the leaderboard!
             </p>

@@ -2,7 +2,6 @@ import React from "react";
 import { Inter } from 'next/font/google'
 import type { Metadata } from 'next'
 import '../globals.css'
-import { AppQueryClientProvider } from '@/components/providers/query-client-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { PublicHeader } from '@/components/layout/public-header'
@@ -23,24 +22,24 @@ export default function PublicLayout({
   children: React.ReactNode
 }) {
   return (
-    <AppQueryClientProvider>
-      <div className="min-h-screen bg-background">
-        {/* Public Header/Navbar */}
-        <PublicHeader />
+      <>
+          <div className="min-h-screen bg-background">
+              {/* Public Header/Navbar */}
+              <PublicHeader />
 
-        {/* Under Construction Banner */}
-        <UnderConstructionBanner />
+              {/* Under Construction Banner */}
+              <UnderConstructionBanner />
 
-        <div className="relative flex min-h-screen flex-col">
-          <MDXViewerProvider>
-            {children}
-          </MDXViewerProvider>
-        </div>
+              <div className="relative flex min-h-screen flex-col">
+                  <MDXViewerProvider>
+                      {children}
+                  </MDXViewerProvider>
+              </div>
 
-        {/* Mobile Bottom Navigation */}
-        <MobileBottomNav />
-      </div>
-      <Toaster />
-    </AppQueryClientProvider>
+              {/* Mobile Bottom Navigation */}
+              <MobileBottomNav />
+          </div>
+          <Toaster />
+      </>
   )
 }

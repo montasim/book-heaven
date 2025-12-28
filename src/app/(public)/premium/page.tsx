@@ -204,7 +204,7 @@ export default function PremiumPage() {
                 <p className="text-muted-foreground mb-4">{plan.description}</p>
 
                 <div className="flex items-baseline justify-center">
-                  <span className="text-3xl font-bold">
+                  <span className="text-xl font-bold">
                     {getAdjustedPrice(plan).split('/')[0]}
                   </span>
                   <span className="text-muted-foreground ml-1">

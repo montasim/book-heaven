@@ -17,11 +17,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { BookOpen, User, Settings, LogOut, Menu, CreditCard } from 'lucide-react'
+import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown } from 'lucide-react'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
 
@@ -29,18 +32,12 @@ interface UserTopbarProps {
   className?: string
   showSearch?: boolean
   showSidebarToggle?: boolean
-  showMobileMenu?: boolean
-  onMobileMenuToggle?: () => void
-  isMobileMenuOpen?: boolean
 }
 
 export function UserTopbar({
   className,
   showSearch = true,
   showSidebarToggle = false,
-  showMobileMenu = false,
-  onMobileMenuToggle,
-  isMobileMenuOpen,
   ...props
 }: UserTopbarProps) {
   const router = useRouter()
@@ -102,6 +99,74 @@ export function UserTopbar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
+              {/* Navigation Section */}
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <Link href="/books" className="w-full cursor-pointer">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Browse Books
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/quiz" className="w-full cursor-pointer">
+                    <Brain className="mr-2 h-4 w-4" />
+                    Quiz Game
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    <span>Categories</span>
+                    <ChevronDown className="ml-auto h-4 w-4" />
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem asChild>
+                      <Link href="/books?category=science-fiction" className="w-full cursor-pointer">
+                        <div>
+                          <div className="font-medium">Science Fiction</div>
+                          <p className="text-xs text-muted-foreground">Futuristic worlds and technology</p>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/books?category=romance" className="w-full cursor-pointer">
+                        <div>
+                          <div className="font-medium">Romance</div>
+                          <p className="text-xs text-muted-foreground">Love stories and relationships</p>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/books?category=mystery" className="w-full cursor-pointer">
+                        <div>
+                          <div className="font-medium">Mystery</div>
+                          <p className="text-xs text-muted-foreground">Thrilling mysteries and detective stories</p>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/books?category=biography" className="w-full cursor-pointer">
+                        <div>
+                          <div className="font-medium">Biography</div>
+                          <p className="text-xs text-muted-foreground">Real life stories and memoirs</p>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/books" className="w-full cursor-pointer font-medium">
+                        View All Categories
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem asChild>
+                  <Link href="/about" className="w-full cursor-pointer">
+                    About
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
@@ -171,18 +236,6 @@ export function UserTopbar({
           </>
         )}
       </div>
-
-      {/* Mobile Menu Button */}
-      {showMobileMenu && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={onMobileMenuToggle}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      )}
     </div>
   )
 
