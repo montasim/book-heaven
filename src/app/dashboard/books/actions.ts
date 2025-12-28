@@ -66,6 +66,10 @@ const createBookSchema = z.object({
   authorIds: z.array(z.string()).min(1, 'At least one author is required'),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
   categoryIds: z.array(z.string()).optional(),
+  series: z.array(z.object({
+    seriesId: z.string(),
+    order: z.number(),
+  })).optional(),
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
 }).superRefine((data, ctx) => {
@@ -134,6 +138,10 @@ const updateBookSchema = z.object({
   authorIds: z.array(z.string()).min(1, 'At least one author is required'),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
   categoryIds: z.array(z.string()).optional(),
+  series: z.array(z.object({
+    seriesId: z.string(),
+    order: z.number(),
+  })).optional(),
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
 }).superRefine((data, ctx) => {
@@ -300,9 +308,18 @@ export async function getBookById(id: string) {
         id: bookCategory.category.id,
         name: bookCategory.category.name,
       })),
+      series: book.series.map(bookSeries => ({
+        seriesId: bookSeries.series.id,
+        seriesName: bookSeries.series.name,
+        order: bookSeries.order,
+      })),
       authorIds: book.authors.map(bookAuthor => bookAuthor.author.id),
       publicationIds: book.publications.map(bookPublication => bookPublication.publication.id),
       categoryIds: book.categories.map(bookCategory => bookCategory.category.id),
+      series: book.series.map(bookSeries => ({
+        seriesId: bookSeries.series.id,
+        order: bookSeries.order,
+      })),
     }
   } catch (error) {
     console.error('Error fetching book:', error)
@@ -445,6 +462,7 @@ export async function createBook(formData: FormData) {
       authorIds: validatedData.authorIds,
       publicationIds: validatedData.publicationIds,
       categoryIds: validatedData.categoryIds || [],
+      series: validatedData.series || [],
     }
 
     // Create book
@@ -604,6 +622,7 @@ export async function updateBook(id: string, formData: FormData) {
       authorIds: validatedData.authorIds,
       publicationIds: validatedData.publicationIds,
       categoryIds: validatedData.categoryIds || [],
+      series: validatedData.series || [],
     }
 
     // Check if file URL changed
@@ -709,5 +728,32 @@ async function triggerAsyncContentExtraction(bookId: string, timeoutMs: number =
     }
 
     return null
+  }
+}
+
+/**
+ * Get all series for select dropdown
+ */
+export async function getSeriesForSelect() {
+  try {
+    const { prisma } = await import('@/lib/prisma')
+    
+    const series = await prisma.series.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    })
+
+    return series.map(s => ({
+      id: s.id,
+      name: s.name,
+    }))
+  } catch (error) {
+    console.error('Error fetching series:', error)
+    return []
   }
 }

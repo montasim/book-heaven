@@ -82,6 +82,14 @@ export async function getBooks(options: {
             category: true,
           },
         },
+        series: {
+          include: {
+            series: true,
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
         entryBy: {
           select: {
             id: true,
@@ -128,6 +136,14 @@ export async function getBookById(id: string) {
       categories: {
         include: {
           category: true,
+        },
+      },
+      series: {
+        include: {
+          series: true,
+        },
+        orderBy: {
+          order: 'asc',
         },
       },
       entryBy: {
@@ -178,6 +194,7 @@ export async function createBook(data: {
   authorIds: string[]
   publicationIds: string[]
   categoryIds: string[]
+  series?: Array<{ seriesId: string; order: number }>
 }) {
   return await prisma.$transaction(async (tx) => {
     // Validate required fields
@@ -274,6 +291,17 @@ export async function createBook(data: {
       })),
     })
 
+    // Create series relationships if provided
+    if (data.series && data.series.length > 0) {
+      await tx.bookSeries.createMany({
+        data: data.series.map(s => ({
+          bookId: book.id,
+          seriesId: s.seriesId,
+          order: s.order,
+        })),
+      })
+    }
+
     // Return book with relationships
     return getBookById(book.id)
   })
@@ -303,6 +331,7 @@ export async function updateBook(
     authorIds?: string[]
     publicationIds?: string[]
     categoryIds?: string[]
+    series?: Array<{ seriesId: string; order: number }>
   }
 ) {
   return await prisma.$transaction(
@@ -444,6 +473,25 @@ export async function updateBook(
             data: data.categoryIds.map(categoryId => ({
               bookId: id,
               categoryId,
+            })),
+          })
+        }
+      }
+
+      // Update series relationships if provided
+      if (data.series) {
+        // Delete existing relationships
+        await tx.bookSeries.deleteMany({
+          where: { bookId: id },
+        })
+
+        // Create new relationships
+        if (data.series.length > 0) {
+          await tx.bookSeries.createMany({
+            data: data.series.map(s => ({
+              bookId: id,
+              seriesId: s.seriesId,
+              order: s.order,
             })),
           })
         }

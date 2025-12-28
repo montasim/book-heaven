@@ -52,6 +52,12 @@ export const bookSchema = z.object({
     id: z.string(),
     name: z.string(),
   })),
+  series: z.array(z.object({
+    id: z.string(),
+    seriesId: z.string(),
+    seriesName: z.string(),
+    order: z.number(),
+  })).optional(),
 })
 
 export const createBookSchema = z.object({

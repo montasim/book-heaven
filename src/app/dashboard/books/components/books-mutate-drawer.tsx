@@ -38,7 +38,7 @@ import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { Book } from '../data/schema'
-import { createBook, updateBook, getAuthorsForSelect, getPublicationsForSelect, getCategoriesForSelect, getBookTypesForSelect } from '../actions'
+import { createBook, updateBook, getAuthorsForSelect, getPublicationsForSelect, getCategoriesForSelect, getBookTypesForSelect, getSeriesForSelect } from '../actions'
 import { BookType } from '@prisma/client'
 import { MDXEditor } from '@/components/ui/mdx-editor'
 import { ImageUpload } from '@/components/ui/image-upload'
@@ -46,6 +46,7 @@ import { FileUpload } from '@/components/ui/file-upload'
 import { Switch } from '@/components/ui/switch'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
+import { SeriesSelector } from '@/components/books/series-selector'
 
 interface Props {
   open: boolean
@@ -69,6 +70,10 @@ const formSchema = z.object({
   authorIds: z.array(z.string()).min(1, 'At least one author is required.'),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required.'),
   categoryIds: z.array(z.string()).min(1, 'At least one category is required.'),
+  series: z.array(z.object({
+    seriesId: z.string(),
+    order: z.number(),
+  })).optional(),
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
 }).superRefine((data, ctx) => {
@@ -130,6 +135,11 @@ interface Category {
   name: string
 }
 
+interface Series {
+  id: string
+  name: string
+}
+
 interface BookTypeOption {
   value: BookType
   label: string
@@ -141,6 +151,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
   const [authors, setAuthors] = useState<Author[]>([])
   const [publications, setPublications] = useState<Publication[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [series, setSeries] = useState<Series[]>([])
   const [bookTypes, setBookTypes] = useState<BookTypeOption[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -165,6 +176,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       authorIds: [],
       publicationIds: [],
       categoryIds: [],
+      series: [],
       isPublic: false,
       requiresPremium: false,
     },
@@ -188,6 +200,10 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         authorIds: currentRow.authors.map((author: any) => author.id || author.author?.id) || [],
         publicationIds: currentRow.publications.map((pub: any) => pub.id || pub.publication?.id) || [],
         categoryIds: currentRow.categories.map((cat: any) => cat.id || cat.category?.id) || [],
+        series: currentRow.series?.map((s: any) => ({
+          seriesId: s.seriesId,
+          order: s.order,
+        })) || [],
         isPublic: currentRow.isPublic || false,
         requiresPremium: currentRow.requiresPremium || false,
       } : {
@@ -205,6 +221,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         authorIds: [],
         publicationIds: [],
         categoryIds: [],
+        series: [],
         isPublic: false,
         requiresPremium: false,
       } as BookForm;
@@ -225,16 +242,18 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [authorsData, publicationsData, categoriesData, bookTypesData] = await Promise.all([
+        const [authorsData, publicationsData, categoriesData, seriesData, bookTypesData] = await Promise.all([
           getAuthorsForSelect(),
           getPublicationsForSelect(),
           getCategoriesForSelect(),
+          getSeriesForSelect(),
           getBookTypesForSelect(),
         ])
 
         setAuthors(authorsData)
         setPublications(publicationsData)
         setCategories(categoriesData)
+        setSeries(seriesData)
         setBookTypes(bookTypesData)
       } catch (error) {
         console.error('Error fetching form data:', error)
@@ -637,6 +656,27 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='series'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Series (Optional)</FormLabel>
+                  <FormControl>
+                    <SeriesSelector
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      series={series}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Assign this book to one or more series. Use decimal order numbers (1, 1.5, 2) for prequels/interquels.
+                  </p>
                 </FormItem>
               )}
             />
