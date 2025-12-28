@@ -20,7 +20,7 @@ import { BookRequestApproveDrawer } from './components/book-requests-approve-dra
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { StatCard } from '@/components/analytics/stat-card'
+import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 
 interface BookRequest {
   id: string
@@ -207,12 +207,14 @@ function BookRequestsPageContent() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard title="Total Requests" value={statusCounts.all} />
-        <StatCard title="Pending" value={statusCounts[RequestStatus.PENDING]} />
-        <StatCard title="In Progress" value={statusCounts[RequestStatus.IN_PROGRESS]} />
-        <StatCard title="Approved" value={statusCounts[RequestStatus.APPROVED]} />
-      </div>
+      <DashboardSummary
+        summaries={[
+          { title: 'Total Requests', value: statusCounts.all, description: 'All requests' },
+          { title: 'Pending', value: statusCounts[RequestStatus.PENDING], description: 'Awaiting review' },
+          { title: 'In Progress', value: statusCounts[RequestStatus.IN_PROGRESS], description: 'Being processed' },
+          { title: 'Approved', value: statusCounts[RequestStatus.APPROVED], description: 'Approved requests' },
+        ]}
+      />
 
       {/* Filter */}
       <div className="flex items-center gap-4">

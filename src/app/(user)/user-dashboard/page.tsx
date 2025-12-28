@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { StatCard } from '@/components/analytics/stat-card'
+import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import {
   BookOpen,
   Clock,
@@ -32,7 +32,7 @@ export default function UserDashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome to Your Library</h1>
+            <h1 className="text-xl font-bold mb-2">Welcome to Your Library</h1>
             <p className="text-muted-foreground">
               Track your reading journey and discover your next great read.
             </p>
@@ -46,42 +46,36 @@ export default function UserDashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Books Read"
-            value={stats.completedBooks}
-            icon={BookOpen}
-            description="2 this month"
-          />
-
-          <StatCard
-            title="Reading Time"
-            value={`${stats.readingTime}h`}
-            icon={Clock}
-            description="Total time invested"
-          />
-
-          <StatCard
-            title="Currently Reading"
-            value={stats.currentlyReading}
-            icon={TrendingUp}
-            description="Active books"
-          />
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reading Goal</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">67%</div>
-              <p className="text-xs text-muted-foreground">
-                8 of 12 books
-              </p>
-              <Progress value={67} className="mt-2 h-2" />
-            </CardContent>
-          </Card>
-        </div>
+        <DashboardSummary
+          summaries={[
+            {
+              title: 'Books Read',
+              value: stats.completedBooks,
+              description: '2 this month',
+              icon: BookOpen,
+            },
+            {
+              title: 'Reading Time',
+              value: `${stats.readingTime}h`,
+              description: 'Total time invested',
+              icon: Clock,
+            },
+            {
+              title: 'Currently Reading',
+              value: stats.currentlyReading,
+              description: 'Active books',
+              icon: TrendingUp,
+            },
+            {
+              title: 'Reading Goal',
+              value: '67%',
+              description: '8 of 12 books',
+              icon: Target,
+              additionalContent: <Progress value={67} className="h-2" />,
+            },
+          ]}
+          className="mb-8"
+        />
 
         {/* Quick Actions & Reading Progress */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -26,7 +26,7 @@ import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
 import { ViewsOverTimeChart } from '@/components/analytics/views-over-time-chart'
-import { StatCard } from '@/components/analytics/stat-card'
+import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 
 export default function AdminAuthorDetailsPage() {
   const params = useParams()
@@ -93,7 +93,7 @@ export default function AdminAuthorDetailsPage() {
               <AvatarFallback className="text-2xl">{author.name?.[0] || 'A'}</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold">{author.name}</h1>
+              <h1 className="text-xl font-bold">{author.name}</h1>
               {author.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2">{author.description}</p>
               )}
@@ -109,23 +109,28 @@ export default function AdminAuthorDetailsPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Views"
-            value={author.analytics?.totalViews || 0}
-            icon={Eye}
-          />
-          <StatCard
-            title="Books"
-            value={author.analytics?.totalBooks || 0}
-            icon={BookOpen}
-            description={`${author.analytics?.totalPages || 0} total pages`}
-          />
-          <StatCard
-            title="Readers"
-            value={author.analytics?.totalReaders || 0}
-            icon={Users}
-            description={`${author.analytics?.completedReaders || 0} completed`}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <DashboardSummary
+            summaries={[
+              {
+                title: 'Total Views',
+                value: author.analytics?.totalViews || 0,
+                description: 'All time views',
+                icon: Eye,
+              },
+              {
+                title: 'Books',
+                value: author.analytics?.totalBooks || 0,
+                description: `${author.analytics?.totalPages || 0} total pages`,
+                icon: BookOpen,
+              },
+              {
+                title: 'Readers',
+                value: author.analytics?.totalReaders || 0,
+                description: `${author.analytics?.completedReaders || 0} completed`,
+                icon: Users,
+              },
+            ]}
           />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -212,11 +217,11 @@ export default function AdminAuthorDetailsPage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 border rounded-lg">
-                      <p className="text-3xl font-bold">{author.analytics?.totalBooks || 0}</p>
+                      <p className="text-xl font-bold">{author.analytics?.totalBooks || 0}</p>
                       <p className="text-sm text-muted-foreground">Total Books</p>
                     </div>
                     <div className="text-center p-4 border rounded-lg">
-                      <p className="text-3xl font-bold">{author.analytics?.totalPages || 0}</p>
+                      <p className="text-xl font-bold">{author.analytics?.totalPages || 0}</p>
                       <p className="text-sm text-muted-foreground">Total Pages</p>
                     </div>
                   </div>
@@ -253,7 +258,7 @@ export default function AdminAuthorDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold">{author.analytics?.totalReaders || 0}</p>
                     <p className="text-xs text-muted-foreground">Total Readers</p>
@@ -398,7 +403,7 @@ function ReadersTab({ authorId }: { authorId: string }) {
     <div className="space-y-4">
       {/* Reader Stats */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Readers</CardTitle>

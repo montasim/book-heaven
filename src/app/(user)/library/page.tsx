@@ -18,6 +18,7 @@ import {
     ChevronUp,
     ChevronDown,
 } from 'lucide-react'
+import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { BookList } from './book-list'
 import { Bookshelves } from './components/bookshelves'
 import { PDFReaderModal } from '@/components/reader/pdf-reader-modal'
@@ -408,49 +409,37 @@ function LibraryPageContent() {
             </div>
 
             {showSummary && (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Books Read</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.completedBooks}</div>
-                  <p className="text-xs text-muted-foreground">{stats.completedThisMonth > 0 ? `${stats.completedThisMonth} this month` : 'Start reading to track'}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reading Time</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.readingTimeHours}h</div>
-                  <p className="text-xs text-muted-foreground">{stats.totalPagesRead > 0 ? `${stats.totalPagesRead} pages read` : 'Start reading to track'}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Currently Reading</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.currentlyReading}</div>
-                  <p className="text-xs text-muted-foreground">{stats.currentlyReading > 0 ? 'Books in progress' : 'No books started'}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Progress</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{books.length > 0 ? Math.round((stats.completedBooks / books.length) * 100) : 0}%</div>
-                  <p className="text-xs text-muted-foreground">{stats.completedBooks} of {books.length} books completed</p>
-                  <Progress value={books.length > 0 ? (stats.completedBooks / books.length) * 100 : 0} className="mt-2 h-2" />
-                </CardContent>
-              </Card>
-            </div>
+              <DashboardSummary
+                summaries={[
+                  {
+                    title: 'Books Read',
+                    value: stats.completedBooks,
+                    description: stats.completedThisMonth > 0 ? `${stats.completedThisMonth} this month` : 'Start reading to track',
+                    icon: BookOpen,
+                  },
+                  {
+                    title: 'Reading Time',
+                    value: `${stats.readingTimeHours}h`,
+                    description: stats.totalPagesRead > 0 ? `${stats.totalPagesRead} pages read` : 'Start reading to track',
+                    icon: Clock,
+                  },
+                  {
+                    title: 'Currently Reading',
+                    value: stats.currentlyReading,
+                    description: stats.currentlyReading > 0 ? 'Books in progress' : 'No books started',
+                    icon: TrendingUp,
+                  },
+                  {
+                    title: 'Total Progress',
+                    value: books.length > 0 ? `${Math.round((stats.completedBooks / books.length) * 100)}%` : '0%',
+                    description: `${stats.completedBooks} of ${books.length} books completed`,
+                    icon: Target,
+                    additionalContent: (
+                      <Progress value={books.length > 0 ? (stats.completedBooks / books.length) * 100 : 0} className="h-2" />
+                    ),
+                  },
+                ]}
+              />
             )}
 
             {/* Filter Toolbar */}

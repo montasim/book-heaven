@@ -31,7 +31,7 @@ import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
 import { ViewsOverTimeChart } from '@/components/analytics/views-over-time-chart'
-import { StatCard } from '@/components/analytics/stat-card'
+import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { BooksMutateDrawer } from '../components/books-mutate-drawer'
 import {
   Dialog,
@@ -262,7 +262,7 @@ export default function AdminBookDetailsPage() {
               />
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold">{book.name}</h1>
+              <h1 className="text-xl font-bold">{book.name}</h1>
               <div className="flex items-center gap-2">
                 <BookTypeBadge type={book.type} />
                 {book.isPublic && <Badge variant="secondary">Public</Badge>}
@@ -289,29 +289,34 @@ export default function AdminBookDetailsPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Views"
-            value={book.analytics?.totalViews || 0}
-            icon={Eye}
-          />
-          <StatCard
-            title="Readers"
-            value={book.analytics?.totalReaders || 0}
-            icon={Users}
-            description={`${book.analytics?.currentlyReading || 0} currently reading`}
-          />
-          <StatCard
-            title="Chat Messages"
-            value={book.analytics?.totalChatMessages || 0}
-            icon={MessageSquare}
-          />
-          <StatCard
-            title="Avg Progress"
-            value={`${Math.round(book.analytics?.avgProgress || 0)}%`}
-            icon={TrendingUp}
-          />
-        </div>
+        <DashboardSummary
+          summaries={[
+            {
+              title: 'Total Views',
+              value: book.analytics?.totalViews || 0,
+              description: 'All time views',
+              icon: Eye,
+            },
+            {
+              title: 'Readers',
+              value: book.analytics?.totalReaders || 0,
+              description: `${book.analytics?.currentlyReading || 0} currently reading`,
+              icon: Users,
+            },
+            {
+              title: 'Chat Messages',
+              value: book.analytics?.totalChatMessages || 0,
+              description: 'Total messages',
+              icon: MessageSquare,
+            },
+            {
+              title: 'Avg Progress',
+              value: `${Math.round(book.analytics?.avgProgress || 0)}%`,
+              description: 'Average reader progress',
+              icon: TrendingUp,
+            },
+          ]}
+        />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -671,20 +676,25 @@ function ChatHistoryTab({ bookId }: { bookId: string }) {
   return (
     <div className="space-y-4">
       {/* Chat Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Conversations"
-          value={stats?.totalConversations || 0}
-        />
-        <StatCard
-          title="Total Messages"
-          value={stats?.totalMessages || 0}
-        />
-        <StatCard
-          title="Unique Users"
-          value={stats?.uniqueUsers || 0}
-        />
-      </div>
+      <DashboardSummary
+        summaries={[
+          {
+            title: 'Total Conversations',
+            value: stats?.totalConversations || 0,
+            description: 'All chat sessions',
+          },
+          {
+            title: 'Total Messages',
+            value: stats?.totalMessages || 0,
+            description: 'Messages exchanged',
+          },
+          {
+            title: 'Unique Users',
+            value: stats?.uniqueUsers || 0,
+            description: 'Distinct users',
+          },
+        ]}
+      />
 
       {/* Sessions List */}
       <Card>
