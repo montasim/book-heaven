@@ -1,16 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ReactNode } from 'react'
 
 interface StatCardProps {
   title: string
   value: string | number
-  icon?: LucideIcon
+  icon?: LucideIcon | ((props: { className?: string }) => ReactNode)
   description?: string
   className?: string
+  /** Optional additional content to render below the description (e.g., progress bars, charts) */
+  additionalContent?: ReactNode
 }
 
-export function StatCard({ title, value, icon: Icon, description, className }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, description, className, additionalContent }: StatCardProps) {
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -21,6 +24,9 @@ export function StatCard({ title, value, icon: Icon, description, className }: S
         <div className="text-2xl font-bold">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
+        )}
+        {additionalContent && (
+          <div className="mt-2">{additionalContent}</div>
         )}
       </CardContent>
     </Card>
