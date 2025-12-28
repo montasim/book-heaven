@@ -48,7 +48,7 @@ export async function generateBookSummary(
     : 'Unknown Author';
 
   // Multi-language aware system prompt
-  const systemPrompt = `You are an expert book summarizer for a library application called Haseeb.
+  const systemPrompt = `You are an expert book summarizer for a library application called Book Heaven.
 
 TASK: Create a concise summary of the book "${options.bookName}" by ${authorsText}.
 

@@ -75,14 +75,8 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    // Handle root route - redirect based on existing sessions
-    if (pathname === '/') {
-        if (sessionValidation.valid) {
-            return NextResponse.redirect(new URL('/dashboard', request.url))
-        } else {
-            return NextResponse.redirect(new URL('/auth/sign-in', request.url))
-        }
-    }
+    // Root route (/) is now a public landing page - no redirect needed
+    // Users can navigate to dashboard or auth from the landing page
 
     // Clean up invalid sessions
     if (userSession && !sessionValidation.valid) {

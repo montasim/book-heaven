@@ -149,7 +149,7 @@ export async function chatWithZhipuAI(request: ChatRequest): Promise<ChatRespons
   const authors = request.authors.join(', ');
   const categories = request.categories.join(', ');
 
-  const systemPrompt = `You are a knowledgeable AI assistant for a library application called Haseeb.
+  const systemPrompt = `You are a knowledgeable AI assistant for a library application called Book Heaven.
 
 Your task is to answer questions about the book "${request.bookName}" by ${authors} (${categories}).
 
@@ -282,7 +282,7 @@ export async function parseVoiceBookRequest(voiceText: string): Promise<BookRequ
 
   const token = await generateZhipuToken(apiKey)
 
-  const systemPrompt = `You are a library assistant for an app called Haseeb. Your goal is to extract book request details from user voice transcripts.
+  const systemPrompt = `You are a library assistant for an app called Book Heaven. Your goal is to extract book request details from user voice transcripts.
 
 Extract the following fields in JSON format:
 - bookName: (string, required) The title of the book
@@ -390,7 +390,7 @@ Rules:
 //     const categoryNames = categories.map(c => c.name).join(", ");
 //     const accountNames = accounts.map(a => a.name).join(", ");
 //
-//     const systemPrompt = `You are a financial assistant for an app called Haseeb. Your goal is to extract transaction details from user voice transcripts.
+//     const systemPrompt = `You are a financial assistant for an app called Book Heaven. Your goal is to extract transaction details from user voice transcripts.
 // Extract the following fields in JSON format:
 // - amount: (number)
 // - category: (string, match one of these if possible: ${categoryNames})

@@ -116,9 +116,9 @@ export function SeriesSelector({ value = [], onChange, series, disabled = false 
       )}
 
       {!disabled && (
-        <div className="flex items-center gap-2 p-3 border rounded-lg border-dashed">
+        <div className="space-y-2 p-3 border rounded-lg border-dashed">
           <Select value={newSeriesId} onValueChange={setNewSeriesId}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select series" />
             </SelectTrigger>
             <SelectContent>
@@ -130,25 +130,26 @@ export function SeriesSelector({ value = [], onChange, series, disabled = false 
             </SelectContent>
           </Select>
 
-          <Input
-            type="number"
-            step="0.1"
-            min="0.1"
-            placeholder="Order (e.g., 1, 1.5, 2)"
-            value={newOrder}
-            onChange={(e) => setNewOrder(e.target.value)}
-            className="w-48"
-          />
-
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleAddSeries}
-            disabled={!newSeriesId || !newOrder}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              step="0.1"
+              min="0.1"
+              placeholder="Order (e.g., 1, 1.5, 2)"
+              value={newOrder}
+              onChange={(e) => setNewOrder(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleAddSeries}
+              disabled={!newSeriesId || !newOrder}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

@@ -8,8 +8,26 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn Admin',
-  description: 'Admin dashboard built with shadcn/ui',
+  title: {
+    default: 'Book Heaven - AI-Powered Digital Library',
+    template: '%s | Book Heaven'
+  },
+  description: 'Discover, read, and interact with books using advanced AI. Chat with books, get mood-based recommendations, take quizzes, and join a community of passionate readers.',
+  keywords: ['digital library', 'AI chat', 'ebooks', 'audiobooks', 'reading', 'book recommendations', 'online library'],
+  authors: [{ name: 'Book Heaven' }],
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    title: 'Book Heaven - AI-Powered Digital Library',
+    description: 'Discover, read, and interact with books using advanced AI technology.',
+    siteName: 'Book Heaven',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Book Heaven - AI-Powered Digital Library',
+    description: 'Discover, read, and interact with books using advanced AI technology.',
+  },
 }
 
 export default function RootLayout({
