@@ -94,6 +94,26 @@ model Category {
   @@map("categories")
 }
 
+model Series {
+  id             String       @id @default(uuid())
+  name           String       @unique
+  description    String?
+  image          String?
+  directImageUrl String?
+  entryDate      DateTime     @default(now())
+  entryById      String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  books          BookSeries[]
+  entryBy        User         @relation("UserSeries", fields: [entryById], references: [id])
+
+  // Analytics
+  views          SeriesView[]
+
+  @@map("series")
+}
+
 // Mood configuration for mood-based book recommendations
 model Mood {
   id           String               @id @default(uuid())
@@ -152,6 +172,7 @@ model Book {
   authors             BookAuthor[]
   categories          BookCategory[]
   publications        BookPublication[]
+  series              BookSeries[]
   entryBy             User              @relation("UserBooks", fields: [entryById], references: [id])
   bookshelves         BookshelfItem[]
   progressHistory     ProgressHistory[]
@@ -220,6 +241,21 @@ model BookCategory {
 
   @@unique([bookId, categoryId])
   @@map("book_categories")
+}
+
+model BookSeries {
+  id        String   @id @default(uuid())
+  bookId    String
+  seriesId  String
+  order     Float    // Position in series (can have decimals like 1.5, 2.5 for prequels/interquels)
+  createdAt DateTime @default(now())
+
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, seriesId])
+  @@index([seriesId, order])
+  @@map("book_series")
 }
 
 model BookQuestion {
@@ -328,6 +364,24 @@ model CategoryView {
   @@map("category_views")
 }
 
+model SeriesView {
+  id          String    @id @default(uuid())
+  seriesId    String
+  userId      String?   // Nullable for anonymous visits
+  sessionId   String?   // For anonymous tracking
+  visitedAt   DateTime  @default(now())
+  ip          String?   // Optional IP tracking
+  userAgent   String?   // Browser info
+  referrer    String?   // Where they came from
+
+  series      Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([seriesId, visitedAt])
+  @@index([userId, visitedAt])
+  @@map("series_views")
+}
+
 model BookRequest {
   id            String        @id @default(uuid())
   bookName      String
@@ -386,6 +440,7 @@ model User {
   books               Book[]            @relation("UserBooks")
   bookshelves         Bookshelf[]
   categorizedBooks    Category[]        @relation("UserCategories")
+  series              Series[]          @relation("UserSeries")
   progressHistory     ProgressHistory[]
   publishedBooks      Publication[]     @relation("UserPublications")
   readingProgress     ReadingProgress[]
@@ -406,6 +461,7 @@ model User {
   authorViews         AuthorView[]
   publicationViews    PublicationView[]
   categoryViews       CategoryView[]
+  seriesViews         SeriesView[]
 
   @@map("users")
 }
