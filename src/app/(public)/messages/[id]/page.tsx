@@ -146,7 +146,10 @@ function ConversationViewPageContent() {
         onNewMessage: (message) => {
             setConversation(prev => prev ? {
                 ...prev,
-                messages: [...prev.messages, message],
+                // Avoid duplicate messages by checking if message ID already exists
+                messages: prev.messages.some(m => m.id === message.id)
+                    ? prev.messages
+                    : [...prev.messages, message],
                 updatedAt: new Date(),
             } : null)
         },
@@ -169,10 +172,12 @@ function ConversationViewPageContent() {
         }
     })
 
-    // Initial conversation fetch with polling for new messages
+    // Store poll interval in ref so it can be managed across effects
+    const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+    // Initial conversation fetch
     useEffect(() => {
         let isMounted = true
-        let pollInterval: NodeJS.Timeout | null = null
 
         const fetchConversation = async (isPoll = false) => {
             if (!isMounted) return
@@ -187,14 +192,7 @@ function ConversationViewPageContent() {
                 const result: ConversationResponse = await response.json()
 
                 if (isMounted && result.success) {
-                    // For initial fetch, always set. For polls, check if there are new messages
-                    const shouldUpdate = isPoll
-                        ? result.data.messages.length > (conversation?.messages?.length || 0)
-                        : true
-
-                    if (shouldUpdate) {
-                        setConversation(result.data)
-                    }
+                    setConversation(result.data)
 
                     // Mark messages as read via WebSocket or fallback to HTTP
                     if (wsConnected) {
@@ -203,11 +201,6 @@ function ConversationViewPageContent() {
                         await fetch(`/api/user/conversations/${conversationId}/read`, {
                             method: 'POST',
                         })
-                    }
-
-                    // Start polling only after successful initial load
-                    if (!isPoll && !pollInterval) {
-                        pollInterval = setInterval(() => fetchConversation(true), 3000) // Poll every 3 seconds
                     }
                 } else if (isMounted && !isPoll) {
                     setError(result.message || 'Failed to load conversation')
@@ -227,11 +220,52 @@ function ConversationViewPageContent() {
 
         return () => {
             isMounted = false
-            if (pollInterval) {
-                clearInterval(pollInterval)
+        }
+    }, [conversationId])
+
+    // Polling fallback: only poll when WebSocket is NOT connected
+    useEffect(() => {
+        // If WebSocket is connected, clear any existing polling
+        if (wsConnected) {
+            if (pollIntervalRef.current) {
+                console.log('[Messages] WebSocket connected, disabling polling')
+                clearInterval(pollIntervalRef.current)
+                pollIntervalRef.current = null
+            }
+            return
+        }
+
+        // If WebSocket is NOT connected and no polling is active, start polling
+        if (!wsConnected && !pollIntervalRef.current) {
+            console.log('[Messages] WebSocket disconnected, enabling polling fallback (5s)')
+            pollIntervalRef.current = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/user/conversations/${conversationId}`)
+                    const result: ConversationResponse = await response.json()
+
+                    if (result.success) {
+                        // Only update if there are new messages
+                        if (result.data.messages.length > (conversation?.messages?.length || 0)) {
+                            setConversation(result.data)
+                            // Mark as read via HTTP fallback
+                            await fetch(`/api/user/conversations/${conversationId}/read`, {
+                                method: 'POST',
+                            })
+                        }
+                    }
+                } catch (err) {
+                    console.error('[Messages] Polling error:', err)
+                }
+            }, 5000)
+        }
+
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current)
+                pollIntervalRef.current = null
             }
         }
-    }, [conversationId, wsConnected, wsMarkAsRead])
+    }, [wsConnected, conversationId, conversation?.messages?.length])
 
     useEffect(() => {
         // Scroll to bottom when messages change

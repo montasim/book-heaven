@@ -45,7 +45,8 @@ interface WebSocketContextType {
   typingUsers: TypingUser[]
 
   // Methods
-  sendMessage: (conversationId: string, content: string) => Promise<void>
+  // Note: sendMessage is now handled via HTTP API to ensure persistence
+  // The HTTP API triggers a webhook broadcast to this Socket.io server
   markAsRead: (conversationId: string, messageIds?: string[]) => void
   joinConversation: (conversationId: string) => void
   leaveConversation: (conversationId: string) => void
@@ -90,6 +91,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     if (!user?.id) return
 
     const socketUrl = process.env.NEXT_PUBLIC_WS_URL || ''
+      console.log('NEXT_PUBLIC_WS_URL', process.env.NEXT_PUBLIC_WS_URL)
 
     // If no WebSocket URL is configured, don't connect (HTTP-only mode)
     if (!socketUrl) {
@@ -141,32 +143,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       socketInstance.disconnect()
     }
   }, [user?.id]) // Reconnect when user changes
-
-  // Send message
-  const sendMessage = useCallback(async (conversationId: string, content: string) => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL
-
-    // Check if WebSocket is configured
-    if (!wsUrl) {
-      throw new Error('WebSocket not configured')
-    }
-
-    if (!socket?.connected) {
-      throw new Error('Not connected to server')
-    }
-
-    return new Promise<void>((resolve, reject) => {
-      socket.emit('send_message', { conversationId, content }, (response: any) => {
-        if (response?.error) {
-          reject(new Error(response.error))
-        } else {
-          resolve()
-        }
-      })
-
-      setTimeout(() => reject(new Error('Send message timeout')), 5000)
-    })
-  }, [socket])
 
   // Mark messages as read
   const markAsRead = useCallback((conversationId: string, messageIds?: string[]) => {
@@ -258,7 +234,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     isConnected,
     onlineStatus,
     typingUsers,
-    sendMessage,
     markAsRead,
     joinConversation,
     leaveConversation,

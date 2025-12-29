@@ -111,12 +111,6 @@ export function useConversationSocket({
     ws.sendTypingStop(conversationId)
   }, [ws, conversationId, ws.sendTypingStop])
 
-  // Send message
-  const sendMessage = useCallback(async (content: string) => {
-    await ws.sendMessage(conversationId, content)
-    sendTypingStop()
-  }, [ws.sendMessage, conversationId, sendTypingStop])
-
   // Mark as read
   const markAsRead = useCallback(() => {
     ws.markAsRead(conversationId)
@@ -126,7 +120,6 @@ export function useConversationSocket({
     isConnected: ws.isConnected,
     isTyping,
     isOtherUserOnline,
-    sendMessage,
     markAsRead,
     sendTypingStart,
     sendTypingStop

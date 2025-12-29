@@ -8,6 +8,60 @@ import { getConversationWithMessages } from '@/lib/marketplace/repositories'
 import { notifyNewMessage } from '@/lib/notifications/notifications.repository'
 
 // ============================================================================
+// SOCKET.IO WEBHOOK HELPER
+// ============================================================================
+
+/**
+ * Broadcast new message to Socket.io server
+ * This triggers real-time delivery to connected clients
+ */
+async function broadcastNewMessage(
+    conversationId: string,
+    message: any,
+    senderId: string
+): Promise<void> {
+    const wsUrl = process.env.WEBSOCKET_SERVER_URL || process.env.NEXT_PUBLIC_WS_URL
+
+    // Only broadcast if WebSocket URL is configured
+    if (!wsUrl) {
+        console.log('[WebSocket] No WebSocket URL configured, skipping broadcast')
+        return
+    }
+
+    const apiKey = process.env.WEBSOCKET_API_KEY
+    if (!apiKey) {
+        console.log('[WebSocket] No WEBSOCKET_API_KEY configured, skipping broadcast')
+        return
+    }
+
+    try {
+        const response = await fetch(`${wsUrl}/api/broadcast-message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                conversationId,
+                message,
+                senderId,
+            }),
+            // Don't wait for this to complete - fire and forget
+            signal: AbortSignal.timeout(3000),
+        })
+
+        if (!response.ok) {
+            console.error('[WebSocket] Broadcast failed:', await response.text())
+        } else {
+            console.log('[WebSocket] Successfully broadcasted message to conversation:', conversationId)
+        }
+    } catch (error) {
+        // Log but don't fail the request - this is an enhancement, not critical
+        console.error('[WebSocket] Broadcast error:', error)
+    }
+}
+
+// ============================================================================
 // VALIDATION SCHEMAS
 // ============================================================================
 
@@ -54,6 +108,12 @@ export async function POST(
             conversationId: id,
             senderId: session.userId,
             content,
+        })
+
+        // Broadcast to Socket.io server for real-time delivery
+        // This is non-blocking and won't affect the response
+        broadcastNewMessage(id, message, session.userId).catch(err => {
+            console.error('[WebSocket] Background broadcast failed:', err)
         })
 
         // Get conversation details to notify the recipient
