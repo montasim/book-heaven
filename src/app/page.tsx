@@ -21,7 +21,7 @@ async function getFeaturedBooks() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const response = await fetch(`${baseUrl}/api/public/books?limit=6&sortBy=createdAt&sortOrder=desc`, {
-      cache: 'no-store',
+      next: { revalidate: 300 }, // Cache for 5 minutes
     })
 
     if (!response.ok) {
