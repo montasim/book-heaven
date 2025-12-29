@@ -38,6 +38,17 @@ interface UserOnlineStatus {
   }
 }
 
+interface Offer {
+  id: string
+  sellPostId: string
+  buyerId: string
+  price: number
+  message?: string
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COUNTERED' | 'WITHDRAWN'
+  createdAt: Date
+  updatedAt: Date
+}
+
 interface WebSocketContextType {
   socket: Socket | null
   isConnected: boolean
@@ -58,6 +69,8 @@ interface WebSocketContextType {
   onMessageRead: (callback: (data: { conversationId: string; messageIds: string[]; readBy: string }) => void) => () => void
   onUserTyping: (callback: (data: { conversationId: string; userId: string; isTyping: boolean }) => void) => () => void
   onUserStatusChange: (callback: (data: { userId: string; status: 'ONLINE' | 'AWAY' | 'OFFLINE'; lastSeenAt: Date }) => void) => () => void
+  onNewOffer: (callback: (data: { sellPostId: string; offer: Offer; sellerId: string }) => void) => () => void
+  onOfferUpdated: (callback: (data: { offerId: string; status: string; sellPostId: string; offer: Offer }) => void) => () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined)
@@ -229,6 +242,22 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     return () => socket.off('user_status_change', handler)
   }, [socket])
 
+  const onNewOffer = useCallback((callback: (data: { sellPostId: string; offer: Offer; sellerId: string }) => void) => {
+    if (!socket) return () => {}
+
+    const handler = callback
+    socket.on('new_offer', handler)
+    return () => socket.off('new_offer', handler)
+  }, [socket])
+
+  const onOfferUpdated = useCallback((callback: (data: { offerId: string; status: string; sellPostId: string; offer: Offer }) => void) => {
+    if (!socket) return () => {}
+
+    const handler = callback
+    socket.on('offer_updated', handler)
+    return () => socket.off('offer_updated', handler)
+  }, [socket])
+
   const value: WebSocketContextType = {
     socket,
     isConnected,
@@ -242,7 +271,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     onNewMessage,
     onMessageRead,
     onUserTyping,
-    onUserStatusChange
+    onUserStatusChange,
+    onNewOffer,
+    onOfferUpdated
   }
 
   return (

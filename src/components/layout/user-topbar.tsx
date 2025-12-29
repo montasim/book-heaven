@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ import {
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, ShoppingBag, MessageSquare } from 'lucide-react'
+import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, ShoppingBag, MessageSquare, Folder } from 'lucide-react'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
 import { useCategories } from '@/hooks/use-categories'
@@ -43,6 +43,7 @@ export function UserTopbar({
   ...props
 }: UserTopbarProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, logout, isLoading } = useAuth()
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
@@ -114,13 +115,13 @@ export function UserTopbar({
               {/* Navigation Section */}
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                  <Link href="/books" className="w-full cursor-pointer">
+                  <Link href="/books" className="w-full cursor-pointer lg:hidden">
                     <BookOpen className="mr-2 h-4 w-4" />
                     Browse Books
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/marketplace" className="w-full cursor-pointer">
+                  <Link href="/marketplace" className="w-full cursor-pointer lg:hidden">
                     <ShoppingBag className="mr-2 h-4 w-4" />
                     Marketplace
                   </Link>
@@ -132,13 +133,13 @@ export function UserTopbar({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/quiz" className="w-full cursor-pointer">
+                  <Link href="/quiz" className="w-full cursor-pointer lg:hidden">
                     <Brain className="mr-2 h-4 w-4" />
                     Quiz Game
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger className="lg:hidden">
                     <BookOpen className="mr-2 h-4 w-4" />
                     <span>Categories</span>
                     <ChevronDown className="ml-auto h-4 w-4" />
@@ -273,7 +274,7 @@ export function UserTopbar({
     <>
       <header
         className={cn(
-          'flex items-center gap-3 sm:gap-4 bg-background p-4 h-16',
+          'flex items-center gap-3 sm:gap-4 bg-background p-4 h-16 relative',
           className
         )}
         {...props}
@@ -290,6 +291,108 @@ export function UserTopbar({
               <h1 className="text-lg font-bold hidden sm:block">Book Library</h1>
             </Link>
           </div>
+        )}
+
+        {/* Desktop Navigation Links */}
+        {!showSidebarToggle && user && (
+          <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            <Link
+              href="/books"
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                pathname?.startsWith('/books')
+                  ? "text-primary bg-accent"
+                  : "text-muted-foreground hover:text-primary hover:bg-accent"
+              )}
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Books</span>
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                    pathname?.startsWith('/categories')
+                      ? "text-primary bg-accent"
+                      : "text-muted-foreground hover:text-primary hover:bg-accent"
+                  )}
+                >
+                  <Folder className="h-4 w-4" />
+                  <span>Categories</span>
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-96">
+                {categoriesLoading ? (
+                  <div className="p-4">
+                    <div className="grid grid-cols-3 gap-2">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="space-y-1">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-3 w-2/3" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : categories.length > 0 ? (
+                  <div className="p-2">
+                    <div className="grid grid-cols-3 gap-1 mb-2">
+                      {categories.slice(0, 10).map((category) => (
+                        <DropdownMenuItem key={category.id} asChild className="p-2">
+                          <Link
+                            href={`/books?category=${encodeURIComponent(category.name.toLowerCase())}`}
+                            className="w-full cursor-pointer"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <div className="font-medium text-sm">{category.name}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {category.bookCount} {category.bookCount === 1 ? 'book' : 'books'}
+                              </p>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/categories" className="w-full cursor-pointer font-medium justify-center">
+                        View All Categories
+                      </Link>
+                    </DropdownMenuItem>
+                  </div>
+                ) : (
+                  <DropdownMenuItem disabled>
+                    <p className="text-xs text-muted-foreground">No categories available</p>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link
+              href="/marketplace"
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                pathname?.startsWith('/marketplace')
+                  ? "text-primary bg-accent"
+                  : "text-muted-foreground hover:text-primary hover:bg-accent"
+              )}
+            >
+              <ShoppingBag className="h-4 w-4" />
+              <span>Marketplace</span>
+            </Link>
+            <Link
+              href="/quiz"
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                pathname?.startsWith('/quiz')
+                  ? "text-primary bg-accent"
+                  : "text-muted-foreground hover:text-primary hover:bg-accent"
+              )}
+            >
+              <Brain className="h-4 w-4" />
+              <span>Quiz</span>
+            </Link>
+          </nav>
         )}
 
         <div className="flex-1" />

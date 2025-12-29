@@ -28,6 +28,8 @@ import { SellPostGrid } from '@/components/marketplace'
 import { BreadcrumbList } from '@/components/breadcrumb/breadcrumb'
 import { BookCondition, SellPostStatus } from '@prisma/client'
 import { formatPrice, formatDistanceToNow, getInitials } from '@/lib/utils'
+import { useMarketplaceSocket } from '@/hooks/use-marketplace-socket'
+import { playNotificationSound, showBrowserNotification } from '@/lib/sounds'
 
 // ============================================================================
 // TYPES
@@ -69,6 +71,7 @@ interface SellPostDetail {
         id: string
         offeredPrice: number
         status: string
+        message?: string | null
         buyer: {
             id: string
             name: string
@@ -174,9 +177,26 @@ function SellPostDetailContent() {
     const [offerDialogOpen, setOfferDialogOpen] = useState(false)
     const [messageText, setMessageText] = useState('')
     const [isSendingMessage, setIsSendingMessage] = useState(false)
+    const [offers, setOffers] = useState<SellPostDetail['offers']>([])
 
     const isOwnPost = user?.id === post?.seller.id
     const isAuthenticated = !!user
+
+    // Fetch offers without full page refresh
+    const fetchOffers = useCallback(async () => {
+        if (!post) return
+
+        try {
+            const response = await fetch(`/api/user/sell-posts/${id}/offers`)
+            const result = await response.json()
+
+            if (result.success) {
+                setOffers(result.data)
+            }
+        } catch (err) {
+            console.error('Failed to fetch offers:', err)
+        }
+    }, [id, post])
 
     const fetchPost = useCallback(async () => {
         setIsLoading(true)
@@ -189,6 +209,7 @@ function SellPostDetailContent() {
             if (result.success && result.data.post) {
                 setPost(result.data.post)
                 setRelatedPosts(result.data.relatedPosts || [])
+                setOffers(result.data.post.offers || [])
 
                 // Pre-fill offer with list price
                 if (result.data.post.negotiable) {
@@ -238,6 +259,47 @@ function SellPostDetailContent() {
             clearInterval(refreshInterval)
         }
     }, [fetchPost, post, isLoading])
+
+    // Real-time socket updates for offers and messages
+    useMarketplaceSocket({
+        sellPostId: id,
+        sellerId: post?.seller.id || '',
+        onNewOffer: useCallback((data: { sellPostId: string; offer: any; sellerId: string }) => {
+            // Seller receives new offer notification with sound
+            playNotificationSound('offer')
+            showBrowserNotification('New Offer Received!', {
+                body: `Someone made an offer on ${post?.title || 'your listing'}`,
+                tag: `offer-${data.offer.id}`
+            })
+            // Fetch offers without full page refresh
+            fetchOffers()
+        }, [post?.title, fetchOffers]),
+        onOfferUpdated: useCallback((data: { offerId: string; status: string; sellPostId: string; offer: any }) => {
+            // Buyer receives offer update notification with sound
+            playNotificationSound('offer')
+            const statusMessages: Record<string, string> = {
+                'ACCEPTED': 'Your offer was accepted!',
+                'REJECTED': 'Your offer was rejected',
+                'COUNTERED': 'You received a counter offer',
+            }
+            showBrowserNotification('Offer Update', {
+                body: statusMessages[data.status] || `Your offer status: ${data.status}`,
+                tag: `offer-${data.offerId}`
+            })
+            // Refresh post data to show updated status
+            fetchPost()
+        }, [fetchPost]),
+        onNewMessage: useCallback((message: any) => {
+            // Both buyer and seller receive message notification with sound
+            playNotificationSound('message')
+            showBrowserNotification('New Message', {
+                body: typeof message.content === 'string'
+                    ? message.content.slice(0, 100)
+                    : 'You received a new message',
+                tag: `message-${message.id}`
+            })
+        }, [])
+    })
 
     const handleMakeOffer = async () => {
         if (!isAuthenticated) {
@@ -636,6 +698,68 @@ function SellPostDetailContent() {
                                 )}
                             </CardContent>
                         </Card>
+
+                        {/* Offers Section - Only visible to seller */}
+                        {isOwnPost && offers && offers.length > 0 && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center justify-between">
+                                        <span className="flex items-center gap-2">
+                                            <MessageSquare className="h-5 w-5" />
+                                            Offers ({offers.length})
+                                        </span>
+                                        <Badge variant="outline" className="text-xs">
+                                            Live Updates
+                                        </Badge>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    {offers.map((offer) => {
+                                        const buyerName = offer.buyer.firstName && offer.buyer.lastName
+                                            ? `${offer.buyer.firstName} ${offer.buyer.lastName}`
+                                            : offer.buyer.name
+                                        const buyerInitials = getInitials(offer.buyer.firstName, offer.buyer.lastName, offer.buyer.name)
+
+                                        const statusColors: Record<string, string> = {
+                                            PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                                            ACCEPTED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                                            REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                                            COUNTERED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                                            WITHDRAWN: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+                                        }
+
+                                        return (
+                                            <div
+                                                key={offer.id}
+                                                className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                                                onClick={() => router.push(`/messages?offer=${offer.id}`)}
+                                            >
+                                                <Avatar className="h-10 w-10">
+                                                    <AvatarImage src={offer.buyer.avatar || offer.buyer.directAvatarUrl} />
+                                                    <AvatarFallback>{buyerInitials}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <p className="font-medium truncate">{buyerName}</p>
+                                                        <Badge className={`text-xs ${statusColors[offer.status] || statusColors.PENDING}`}>
+                                                            {offer.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className="text-lg font-semibold text-primary">
+                                                        {formatPrice(offer.offeredPrice)}
+                                                    </p>
+                                                    {offer.message && (
+                                                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                                            {offer.message}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </CardContent>
+                            </Card>
+                        )}
 
                         {/* Action Card */}
                         {!isOwnPost && !isSold && (

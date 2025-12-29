@@ -102,9 +102,37 @@ export async function POST(
 
         const offer = await createOffer(offerData)
 
-        // Notify the seller about the new offer
+        // Broadcast new offer to socket server (for real-time notification)
         const sellPost = await getSellPostById(id)
         if (sellPost) {
+            // Broadcast to socket server for real-time delivery
+            const socketUrl = process.env.WEBSOCKET_SERVER_URL || process.env.NEXT_PUBLIC_WS_URL
+            const apiKey = process.env.WEBSOCKET_API_KEY
+            if (socketUrl && apiKey) {
+                try {
+                    await fetch(`${socketUrl}/api/broadcast-new-offer`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            sellPostId: id,
+                            offer: {
+                                ...offer,
+                                createdAt: offer.createdAt.toISOString(),
+                                updatedAt: offer.updatedAt.toISOString()
+                            },
+                            sellerId: sellPost.sellerId
+                        }),
+                        signal: AbortSignal.timeout(3000),
+                    }).catch(err => console.error('Socket broadcast failed:', err))
+                } catch (err) {
+                    console.error('Socket broadcast error:', err)
+                }
+            }
+
+            // Notify the seller about the new offer (database notification)
             const buyerName = session.firstName && session.lastName
                 ? `${session.firstName} ${session.lastName}`
                 : session.name || 'Someone'
