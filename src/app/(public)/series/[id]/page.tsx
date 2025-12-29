@@ -8,7 +8,7 @@ import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, LibraryBig, ArrowLeft, Lock, Eye } from 'lucide-react'
+import { Loader2, LibraryBig, ArrowLeft, Lock, Eye, Home, List } from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { useAuth } from '@/context/auth-context'
@@ -45,16 +45,59 @@ export default function SeriesDetailPage() {
 
   if (error || !data?.success) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Series not found</h2>
-          <p className="text-muted-foreground mb-4">
-            The series you&apos;re looking for doesn&apos;t exist.
-          </p>
-          <Button onClick={() => router.push('/series')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Series
-          </Button>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="container mx-auto px-4 py-16">
+          <Card className="max-w-2xl mx-auto border-2">
+            <CardContent className="p-12 text-center space-y-6">
+              {/* Icon */}
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted">
+                <List className="h-10 w-10 text-muted-foreground" />
+              </div>
+
+              {/* Heading */}
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold">Series Not Found</h1>
+                <p className="text-muted-foreground text-lg">
+                  We couldn&apos;t find the series you&apos;re looking for
+                </p>
+              </div>
+
+              {/* Helpful suggestions */}
+              <div className="text-left space-y-3 max-w-md mx-auto">
+                <p className="text-sm font-medium">This might have happened because:</p>
+                <ul className="text-sm text-muted-foreground space-y-2 ml-4">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>The series ID might be incorrect or mistyped</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>The series has been removed from our library</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>The series might be temporarily unavailable</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <Button asChild size="lg" className="w-full sm:w-auto">
+                  <Link href="/series">
+                    <LibraryBig className="h-4 w-4 mr-2" />
+                    Browse All Series
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+                  <Link href="/">
+                    <Home className="h-4 w-4 mr-2" />
+                    Go to Homepage
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
