@@ -5,6 +5,7 @@ import { saveChatMessage, getNextMessageIndex } from '@/lib/lms/repositories/boo
 import { getSession } from '@/lib/auth/session';
 import { findUserById } from '@/lib/user/repositories/user.repository';
 import { randomBytes } from 'node:crypto';
+import { chatMessageSchema, validateRequest } from '@/lib/validation';
 
 interface RouteContext {
   params: Promise<{
@@ -23,11 +24,22 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     const body = await request.json();
 
+    // Validate and sanitize input
+    const validationResult = await validateRequest(chatMessageSchema, body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: validationResult.error },
+        { status: 400 }
+      );
+    }
+
     const {
       message,
       conversationHistory = [],
-      generatePrefilled = false
-    } = body;
+      sessionId
+    } = validationResult.data;
+
+    const generatePrefilled = body.generatePrefilled === true;
 
     console.log('[Chat API] Request body:', { message, generatePrefilled, historyLength: conversationHistory.length });
 
@@ -42,8 +54,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     }
 
     // Generate or retrieve session ID for grouping messages
-    let sessionId = body.sessionId;
-    if (!sessionId) {
+    let finalSessionId = sessionId;
+    if (!finalSessionId) {
       // Check if there's a recent session (within 30 minutes or today)
       const lastChat = conversationHistory.length > 0 ? conversationHistory[0] : null;
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -51,7 +63,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       today.setHours(0, 0, 0, 0);
 
       // If no recent session, create new one
-      sessionId = randomBytes(16).toString('hex');
+      finalSessionId = randomBytes(16).toString('hex');
     }
 
     // Fetch book details from public API
@@ -127,11 +139,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     // Save user message to database
     try {
-      const messageIndex = await getNextMessageIndex(bookId, sessionId);
+      const messageIndex = await getNextMessageIndex(bookId, finalSessionId);
       await saveChatMessage({
         bookId,
         userId: user.id,
-        sessionId,
+        sessionId: finalSessionId,
         role: 'user',
         content: userMessage,
         messageIndex,
@@ -171,11 +183,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     // Save assistant response to database
     try {
-      const messageIndex = await getNextMessageIndex(bookId, sessionId);
+      const messageIndex = await getNextMessageIndex(bookId, finalSessionId);
       await saveChatMessage({
         bookId,
         userId: user.id,
-        sessionId,
+        sessionId: finalSessionId,
         role: 'assistant',
         content: result.response,
         messageIndex,
@@ -188,7 +200,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({
       response: result.response,
       conversationHistory: messages,
-      sessionId,
+      sessionId: finalSessionId,
       usage: result.usage
     });
 
