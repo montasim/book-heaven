@@ -288,7 +288,7 @@ export function UserTopbar({
           <div className="flex items-center space-x-2">
             <Link href="/" className="flex items-center space-x-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              <h1 className="text-lg font-bold hidden sm:block">Book Library</h1>
+              <h1 className="text-lg font-bold hidden sm:block">Book Heaven</h1>
             </Link>
           </div>
         )}

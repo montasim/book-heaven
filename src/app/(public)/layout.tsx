@@ -11,9 +11,9 @@ import { MDXViewerProvider } from 'mdx-craft'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Your Book Library - Discover, Read, and Share Books',
-  description: 'Discover amazing books-old, track your reading progress, and share your favorite reads with our comprehensive book management platform.',
-  keywords: ['books', 'reading', 'library', 'ebooks', 'audiobooks', 'book discovery'],
+  title: 'Book Heaven - Discover, Read, and Share Books',
+  description: 'Discover amazing books, track your reading progress, and share your favorite reads with our comprehensive book management platform.',
+  keywords: ['books', 'reading', 'library', 'ebooks', 'audiobooks', 'book discovery', 'book heaven'],
 }
 
 export default function PublicLayout({
