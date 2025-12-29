@@ -1,12 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import useSWR from 'swr'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Brain, Loader2 } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Brain } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
-import { useRouter } from 'next/navigation'
 import { QuizSetup } from '@/components/quiz/quiz-setup'
 import { QuizGame } from '@/components/quiz/quiz-game'
 import { QuizResults } from '@/components/quiz/quiz-results'
@@ -35,25 +32,10 @@ interface QuizData {
 }
 
 export default function QuizPage() {
-  const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user } = useAuth()
   const [quizState, setQuizState] = useState<QuizState>('setup')
   const [quizConfig, setQuizConfig] = useState<QuizConfig | null>(null)
   const [quizData, setQuizData] = useState<QuizData | null>(null)
-
-  // Redirect if not authenticated
-  if (!authLoading && !user) {
-    router.push('/login')
-    return null
-  }
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
 
   const handleStartQuiz = (config: QuizConfig, data: QuizData) => {
     setQuizConfig(config)
@@ -72,32 +54,26 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-3 bg-primary/10 rounded-lg">
-            <Brain className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Quiz Game</h1>
-            <p className="text-muted-foreground">
-              Test your knowledge and climb the leaderboard!
-            </p>
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto p-4 pb-24 lg:pb-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Brain className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Quiz Game</h1>
+              <p className="text-muted-foreground">
+                Test your knowledge and climb the leaderboard!
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Quiz Game Tabs */}
-      <Tabs defaultValue="play" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="play">Play Quiz</TabsTrigger>
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="stats">My Stats</TabsTrigger>
-        </TabsList>
-
-        {/* Play Quiz Tab */}
-        <TabsContent value="play">
+        {/* Two Column Layout */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Play Quiz Card */}
           <Card>
             <CardContent className="p-6">
               {quizState === 'setup' && (
@@ -120,18 +96,17 @@ export default function QuizPage() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Leaderboard Tab */}
-        <TabsContent value="leaderboard">
-          <QuizLeaderboard />
-        </TabsContent>
+          {/* Leaderboard & Stats Column */}
+          <div className="space-y-6">
+            {/* Leaderboard */}
+            <QuizLeaderboard />
 
-        {/* Stats Tab */}
-        <TabsContent value="stats">
-          <QuizStats />
-        </TabsContent>
-      </Tabs>
+            {/* My Stats */}
+            {user && <QuizStats />}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
