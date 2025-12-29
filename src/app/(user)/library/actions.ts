@@ -7,6 +7,8 @@ import { z } from 'zod'
 import { uploadFile, deleteFile } from '@/lib/google-drive'
 import { config } from '@/config'
 import { RequestStatus } from '@prisma/client'
+import { logActivity } from '@/lib/activity/logger'
+import { ActivityAction, ActivityResourceType } from '@prisma/client'
 
 const bookSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -106,6 +108,23 @@ export async function createBook(formData: FormData) {
         }
       }
     })
+
+    // Log book creation to library (non-blocking)
+    logActivity({
+        userId: session.userId,
+        userRole: session.role as any,
+        action: ActivityAction.BOOK_CREATED,
+        resourceType: ActivityResourceType.BOOK,
+        resourceId: book.id,
+        resourceName: name,
+        description: `Added book "${name}" to library`,
+        metadata: {
+            type,
+            isPublic,
+            source: 'library',
+        },
+        endpoint: '/library/actions',
+    }).catch(console.error)
 
     // If this is from a book request, update the request status to APPROVED
     if (requestId) {
@@ -398,7 +417,7 @@ export async function createBookshelf(formData: FormData) {
             directImageUrl = uploadResult.directUrl
         }
 
-        await prisma.bookshelf.create({
+        const newBookshelf = await prisma.bookshelf.create({
             data: {
                 name,
                 description,
@@ -408,6 +427,21 @@ export async function createBookshelf(formData: FormData) {
                 userId: session.userId,
             }
         })
+
+        // Log bookshelf creation (non-blocking)
+        logActivity({
+            userId: session.userId,
+            userRole: session.role as any,
+            action: ActivityAction.BOOKSHELF_CREATED,
+            resourceType: ActivityResourceType.BOOKSHELF,
+            resourceId: newBookshelf.id,
+            resourceName: name,
+            description: `Created bookshelf "${name}"`,
+            metadata: {
+                isPublic,
+            },
+            endpoint: '/library/actions',
+        }).catch(console.error)
 
         revalidatePath('/library')
         return { success: true, message: 'Bookshelf created successfully' }
@@ -765,6 +799,27 @@ export async function addBookToBookshelf(bookshelfId: string, bookId: string) {
         bookId
       }
     })
+
+    // Log book addition to bookshelf (non-blocking)
+    const book = await prisma.book.findUnique({
+      where: { id: bookId },
+      select: { name: true }
+    })
+
+    logActivity({
+        userId: session.userId,
+        userRole: session.role as any,
+        action: ActivityAction.BOOK_ADDED_TO_BOOKSHELF,
+        resourceType: ActivityResourceType.BOOKSHELF,
+        resourceId: bookshelfId,
+        resourceName: book?.name || bookId,
+        description: `Added "${book?.name || 'book'}" to bookshelf`,
+        metadata: {
+            bookId,
+            bookshelfId,
+        },
+        endpoint: '/library/actions',
+    }).catch(console.error)
 
     revalidatePath('/library')
     revalidatePath('/books')
