@@ -23,6 +23,7 @@ import {
     Star,
     Shield,
     Loader2,
+    Home,
 } from 'lucide-react'
 import { SellPostGrid } from '@/components/marketplace'
 import { BreadcrumbList } from '@/components/breadcrumb/breadcrumb'
@@ -411,21 +412,60 @@ function SellPostDetailContent() {
     // Error state
     if (error || !post) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Card className="max-w-md">
-                    <CardContent className="p-6 text-center">
-                        <ShoppingBag className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h2 className="text-lg font-semibold mb-2">Listing Not Found</h2>
-                        <p className="text-muted-foreground mb-4">
-                            {error || 'This listing may have been removed or is no longer available.'}
-                        </p>
-                        <div className="flex gap-2 justify-center">
-                            <Link href="/marketplace">
-                                <Button>Browse Marketplace</Button>
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="container mx-auto px-4 py-16">
+                    <Card className="max-w-2xl mx-auto border-2">
+                        <CardContent className="p-12 text-center space-y-6">
+                            {/* Icon */}
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted">
+                                <ShoppingBag className="h-10 w-10 text-muted-foreground" />
+                            </div>
+
+                            {/* Heading */}
+                            <div className="space-y-2">
+                                <h1 className="text-3xl font-bold">Listing Not Found</h1>
+                                <p className="text-muted-foreground text-lg">
+                                    We couldn&apos;t find the listing you&apos;re looking for
+                                </p>
+                            </div>
+
+                            {/* Helpful suggestions */}
+                            <div className="text-left space-y-3 max-w-md mx-auto">
+                                <p className="text-sm font-medium">This might have happened because:</p>
+                                <ul className="text-sm text-muted-foreground space-y-2 ml-4">
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-primary mt-0.5">•</span>
+                                        <span>The listing ID might be incorrect or mistyped</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-primary mt-0.5">•</span>
+                                        <span>The listing has been removed by the seller</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="text-primary mt-0.5">•</span>
+                                        <span>The listing might have been sold or is no longer available</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                                <Button asChild size="lg" className="w-full sm:w-auto">
+                                    <Link href="/marketplace">
+                                        <ShoppingBag className="h-4 w-4 mr-2" />
+                                        Browse Marketplace
+                                    </Link>
+                                </Button>
+                                <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+                                    <Link href="/">
+                                        <Home className="h-4 w-4 mr-2" />
+                                        Go to Homepage
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         )
     }
