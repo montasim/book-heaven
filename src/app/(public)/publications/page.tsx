@@ -8,15 +8,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, LibraryBig, Search, ArrowUpDown } from 'lucide-react'
+import { Loader2, Building2, Search, ArrowUpDown } from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 
-interface Series {
+interface Publication {
   id: string
   name: string
   description: string | null
   image: string | null
+  entryDate: string
   bookCount: number
   viewCount?: number
   totalReaders?: number
@@ -27,7 +28,6 @@ interface Series {
     type: string
     requiresPremium: boolean
     readersCount: number
-    seriesOrder: number
   }>
 }
 
@@ -45,7 +45,7 @@ const SORT_OPTIONS = [
   { value: 'popularity-asc', label: 'Popularity (Low to High)' },
 ]
 
-export default function SeriesPage() {
+export default function PublicationsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortBy>('name')
@@ -61,12 +61,12 @@ export default function SeriesPage() {
 
   const fetcher = async (url: string) => {
     const res = await fetch(url)
-    if (!res.ok) throw new Error('Failed to fetch series')
+    if (!res.ok) throw new Error('Failed to fetch publications')
     return res.json()
   }
 
   const { data, isLoading, error } = useSWR(
-    `/api/public/series?search=${encodeURIComponent(debouncedSearch)}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+    `/api/public/publications?search=${encodeURIComponent(debouncedSearch)}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
     fetcher
   )
 
@@ -88,14 +88,14 @@ export default function SeriesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Failed to load series</h2>
+          <h2 className="text-2xl font-bold mb-4">Failed to load publications</h2>
           <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
       </div>
     )
   }
 
-  const series = data.data.series
+  const publications = data.data.publications
 
   return (
     <div className="min-h-screen">
@@ -105,17 +105,17 @@ export default function SeriesPage() {
           <NavigationBreadcrumb
             items={[
               { label: 'Home', href: '/' },
-              { label: 'Series' }
+              { label: 'Publications' }
             ]}
           />
           <div className="flex items-center justify-between mt-4">
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-2">
-                <LibraryBig className="h-8 w-8" />
-                Book Series
+                <Building2 className="h-8 w-8" />
+                Publications
               </h1>
               <p className="text-muted-foreground mt-2">
-                Explore book series and reading orders
+                Browse books by publication
               </p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function SeriesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search series..."
+                placeholder="Search publications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -152,43 +152,43 @@ export default function SeriesPage() {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
-        {series.length === 0 ? (
+        {publications.length === 0 ? (
           <div className="text-center py-12">
-            <LibraryBig className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No series found</h3>
+            <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No publications found</h3>
             <p className="text-muted-foreground">
-              {debouncedSearch ? 'Try a different search term' : 'No series available yet'}
+              {debouncedSearch ? 'Try a different search term' : 'No publications available yet'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {series.map((seriesItem: Series) => (
-              <Card key={seriesItem.id} className="group hover:shadow-lg transition-shadow">
+            {publications.map((publication: Publication) => (
+              <Card key={publication.id} className="group hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="group-hover:text-primary transition-colors">
-                        {seriesItem.name}
+                        {publication.name}
                       </CardTitle>
                       <CardDescription className="mt-1">
-                        {seriesItem.bookCount} book{seriesItem.bookCount !== 1 ? 's' : ''}
-                        {seriesItem.totalReaders !== undefined && ` · ${seriesItem.totalReaders.toLocaleString()} readers`}
+                        {publication.bookCount} book{publication.bookCount !== 1 ? 's' : ''}
+                        {publication.totalReaders !== undefined && ` · ${publication.totalReaders.toLocaleString()} readers`}
                       </CardDescription>
                     </div>
                   </div>
-                  {seriesItem.description && (
+                  {publication.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                      {seriesItem.description}
+                      {publication.description}
                     </p>
                   )}
                 </CardHeader>
 
                 <CardContent>
-                  {seriesItem.books.length > 0 && (
+                  {publication.books.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">Books in this series:</p>
+                      <p className="text-xs font-medium text-muted-foreground">Popular books:</p>
                       <div className="flex gap-2 overflow-x-auto pb-2">
-                        {seriesItem.books.slice(0, 5).map((book) => (
+                        {publication.books.slice(0, 5).map((book) => (
                           <Link key={book.id} href={`/books/${book.id}`} className="flex-shrink-0">
                             <div className="relative w-16 h-24 rounded border overflow-hidden hover:border-primary transition-colors">
                               {book.image ? (
@@ -202,16 +202,16 @@ export default function SeriesPage() {
                               ) : (
                                 <div className="w-full h-full bg-muted flex items-center justify-center">
                                   <span className="text-xs text-muted-foreground text-center px-1">
-                                    #{book.seriesOrder}
+                                    {book.type}
                                   </span>
                                 </div>
                               )}
                             </div>
                           </Link>
                         ))}
-                        {seriesItem.books.length > 5 && (
+                        {publication.books.length > 5 && (
                           <div className="flex-shrink-0 w-16 h-24 rounded border flex items-center justify-center bg-muted">
-                            <span className="text-xs text-muted-foreground">+{seriesItem.books.length - 5}</span>
+                            <span className="text-xs text-muted-foreground">+{publication.books.length - 5}</span>
                           </div>
                         )}
                       </div>
@@ -220,9 +220,9 @@ export default function SeriesPage() {
                 </CardContent>
 
                 <CardFooter>
-                  <Link href={`/series/${seriesItem.id}`} className="w-full">
+                  <Link href={`/publications/${publication.id}`} className="w-full">
                     <Button variant="outline" className="w-full">
-                      View Series
+                      View Publication
                     </Button>
                   </Link>
                 </CardFooter>

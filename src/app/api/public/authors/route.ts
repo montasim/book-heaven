@@ -17,7 +17,7 @@ const AuthorsQuerySchema = z.object({
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).max(100).default(20),
     search: z.string().optional(),
-    sortBy: z.enum(['name', 'bookCount', 'entryDate']).default('name'),
+    sortBy: z.enum(['name', 'bookCount', 'entryDate', 'views', 'popularity']).default('name'),
     sortOrder: z.enum(['asc', 'desc']).default('asc'),
     minBooks: z.coerce.number().min(0).default(1),
 })
@@ -69,7 +69,131 @@ export async function GET(request: NextRequest) {
             ]
         }
 
-        // Build sort conditions
+        // For views and popularity sorting, we need to fetch all data and sort manually
+        if (sortBy === 'views' || sortBy === 'popularity') {
+            const [authors, total] = await Promise.all([
+                prisma.author.findMany({
+                    where,
+                    include: {
+                        books: {
+                            where: {
+                                book: {
+                                    isPublic: true
+                                }
+                            },
+                            include: {
+                                book: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        image: true,
+                                        type: true,
+                                        requiresPremium: true,
+                                        _count: {
+                                            select: {
+                                                readingProgress: true,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        _count: {
+                            select: {
+                                books: {
+                                    where: {
+                                        book: {
+                                            isPublic: true
+                                        }
+                                    }
+                                },
+                                views: true
+                            }
+                        }
+                    },
+                }),
+                prisma.author.count({ where })
+            ])
+
+            // Calculate metrics and sort
+            const authorsWithMetrics = authors.map(author => {
+                const totalReaders = author.books.reduce((sum, ba) => {
+                    return sum + (ba.book._count.readingProgress || 0)
+                }, 0)
+
+                return {
+                    ...author,
+                    viewCount: author._count.views,
+                    totalReaders
+                }
+            })
+
+            // Sort by the requested field
+            authorsWithMetrics.sort((a, b) => {
+                const aValue = sortBy === 'views' ? a.viewCount : a.totalReaders
+                const bValue = sortBy === 'views' ? b.viewCount : b.totalReaders
+                return sortOrder === 'asc' ? aValue - bValue : bValue - aValue
+            })
+
+            // Filter by minimum book count
+            const filteredAuthors = authorsWithMetrics.filter(a => a._count.books >= minBooks)
+
+            // Apply pagination after sorting
+            const paginatedAuthors = filteredAuthors.slice(skip, skip + limit)
+
+            // Transform authors data
+            const transformedAuthors = paginatedAuthors.map(author => ({
+                id: author.id,
+                name: author.name,
+                description: author.description,
+                image: author.image,
+                entryDate: author.entryDate,
+                bookCount: author._count.books,
+                viewCount: author.viewCount,
+                totalReaders: author.totalReaders,
+                books: author.books
+                    .map(ba => ba.book)
+                    .sort((a, b) => b._count.readingProgress - a._count.readingProgress)
+                    .slice(0, 6)
+                    .map(book => ({
+                        id: book.id,
+                        name: book.name,
+                        type: book.type,
+                        image: book.image,
+                        requiresPremium: book.requiresPremium,
+                        readersCount: book._count.readingProgress,
+                    }))
+            }))
+
+            // Calculate pagination info
+            const totalPages = Math.ceil(filteredAuthors.length / limit)
+            const hasNextPage = page < totalPages
+            const hasPreviousPage = page > 1
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    authors: transformedAuthors,
+                    pagination: {
+                        currentPage: page,
+                        totalPages,
+                        totalAuthors: filteredAuthors.length,
+                        limit,
+                        hasNextPage,
+                        hasPreviousPage,
+                    },
+                    filters: {
+                        search: validatedQuery.search || null,
+                        minBooks: validatedQuery.minBooks,
+                        sortBy,
+                        sortOrder,
+                    }
+                },
+                message: 'Authors retrieved successfully'
+            })
+        }
+
+        // Build sort conditions for standard fields
         let orderBy: any
         switch (sortBy) {
             case 'name':
@@ -121,7 +245,8 @@ export async function GET(request: NextRequest) {
                                         isPublic: true
                                     }
                                 }
-                            }
+                            },
+                            views: true
                         }
                     }
                 },
@@ -136,26 +261,34 @@ export async function GET(request: NextRequest) {
         const filteredAuthors = authors.filter(author => author._count.books >= minBooks)
 
         // Transform authors data
-        const transformedAuthors = filteredAuthors.map(author => ({
-            id: author.id,
-            name: author.name,
-            description: author.description,
-            image: author.image,
-            entryDate: author.entryDate,
-            bookCount: author._count.books,
-            books: author.books
-                .map(ba => ba.book)
-                .sort((a, b) => b._count.readingProgress - a._count.readingProgress) // Sort by popularity
-                .slice(0, 6) // Limit to 6 most popular books-old
-                .map(book => ({
-                    id: book.id,
-                    name: book.name,
-                    type: book.type,
-                    image: book.image,
-                    requiresPremium: book.requiresPremium,
-                    readersCount: book._count.readingProgress,
-                }))
-        }))
+        const transformedAuthors = filteredAuthors.map(author => {
+            const totalReaders = author.books.reduce((sum, ba) => {
+                return sum + (ba.book._count.readingProgress || 0)
+            }, 0)
+
+            return {
+                id: author.id,
+                name: author.name,
+                description: author.description,
+                image: author.image,
+                entryDate: author.entryDate,
+                bookCount: author._count.books,
+                viewCount: author._count.views,
+                totalReaders,
+                books: author.books
+                    .map(ba => ba.book)
+                    .sort((a, b) => b._count.readingProgress - a._count.readingProgress)
+                    .slice(0, 6)
+                    .map(book => ({
+                        id: book.id,
+                        name: book.name,
+                        type: book.type,
+                        image: book.image,
+                        requiresPremium: book.requiresPremium,
+                        readersCount: book._count.readingProgress,
+                    }))
+            }
+        })
 
         // Calculate pagination info
         const totalPages = Math.ceil(total / limit)
@@ -178,6 +311,8 @@ export async function GET(request: NextRequest) {
                 filters: {
                     search: validatedQuery.search || null,
                     minBooks: validatedQuery.minBooks,
+                    sortBy,
+                    sortOrder,
                 }
             },
             message: 'Authors retrieved successfully'

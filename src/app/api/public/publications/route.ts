@@ -1,8 +1,8 @@
 /**
- * Public Categories API Route
+ * Public Publications API Route
  *
- * Provides public access to categories information
- * Only returns categories that have at least one public book
+ * Provides public access to publications information
+ * Only returns publications that have at least one public book
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma'
 // REQUEST VALIDATION & CONFIGURATION
 // ============================================================================
 
-const CategoriesQuerySchema = z.object({
+const PublicationsQuerySchema = z.object({
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).max(100).default(20),
     search: z.string().optional(),
@@ -27,9 +27,9 @@ const CategoriesQuerySchema = z.object({
 // ============================================================================
 
 /**
- * GET /api/public/categories
+ * GET /api/public/publications
  *
- * Get public categories with pagination and search
+ * Get public publications with pagination and search
  */
 export async function GET(request: NextRequest) {
     try {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         const queryParams = Object.fromEntries(searchParams.entries())
 
         // Validate query parameters
-        const validatedQuery = CategoriesQuerySchema.parse(queryParams)
+        const validatedQuery = PublicationsQuerySchema.parse(queryParams)
 
         const {
             page,
@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
 
         // For views and popularity sorting, we need to fetch all data and sort manually
         if (sortBy === 'views' || sortBy === 'popularity') {
-            const [categories, total] = await Promise.all([
-                prisma.category.findMany({
+            const [publications, total] = await Promise.all([
+                prisma.publication.findMany({
                     where,
                     include: {
                         books: {
@@ -112,47 +112,47 @@ export async function GET(request: NextRequest) {
                         }
                     },
                 }),
-                prisma.category.count({ where })
+                prisma.publication.count({ where })
             ])
 
             // Calculate metrics and sort
-            const categoriesWithMetrics = categories.map(category => {
-                const totalReaders = category.books.reduce((sum, bc) => {
-                    return sum + (bc.book._count.readingProgress || 0)
+            const publicationsWithMetrics = publications.map(publication => {
+                const totalReaders = publication.books.reduce((sum, bp) => {
+                    return sum + (bp.book._count.readingProgress || 0)
                 }, 0)
 
                 return {
-                    ...category,
-                    viewCount: category._count.views,
+                    ...publication,
+                    viewCount: publication._count.views,
                     totalReaders
                 }
             })
 
             // Sort by the requested field
-            categoriesWithMetrics.sort((a, b) => {
+            publicationsWithMetrics.sort((a, b) => {
                 const aValue = sortBy === 'views' ? a.viewCount : a.totalReaders
                 const bValue = sortBy === 'views' ? b.viewCount : b.totalReaders
                 return sortOrder === 'asc' ? aValue - bValue : bValue - aValue
             })
 
             // Filter by minimum book count
-            const filteredCategories = categoriesWithMetrics.filter(c => c._count.books >= minBooks)
+            const filteredPublications = publicationsWithMetrics.filter(p => p._count.books >= minBooks)
 
             // Apply pagination after sorting
-            const paginatedCategories = filteredCategories.slice(skip, skip + limit)
+            const paginatedPublications = filteredPublications.slice(skip, skip + limit)
 
-            // Transform categories data
-            const transformedCategories = paginatedCategories.map(category => ({
-                id: category.id,
-                name: category.name,
-                description: category.description,
-                image: category.image,
-                entryDate: category.entryDate,
-                bookCount: category._count.books,
-                viewCount: category.viewCount,
-                totalReaders: category.totalReaders,
-                books: category.books
-                    .map(bc => bc.book)
+            // Transform publications data
+            const transformedPublications = paginatedPublications.map(publication => ({
+                id: publication.id,
+                name: publication.name,
+                description: publication.description,
+                image: publication.image,
+                entryDate: publication.entryDate,
+                bookCount: publication._count.books,
+                viewCount: publication.viewCount,
+                totalReaders: publication.totalReaders,
+                books: publication.books
+                    .map(bp => bp.book)
                     .sort((a, b) => b._count.readingProgress - a._count.readingProgress)
                     .slice(0, 6)
                     .map(book => ({
@@ -166,18 +166,18 @@ export async function GET(request: NextRequest) {
             }))
 
             // Calculate pagination info
-            const totalPages = Math.ceil(filteredCategories.length / limit)
+            const totalPages = Math.ceil(filteredPublications.length / limit)
             const hasNextPage = page < totalPages
             const hasPreviousPage = page > 1
 
             return NextResponse.json({
                 success: true,
                 data: {
-                    categories: transformedCategories,
+                    publications: transformedPublications,
                     pagination: {
                         currentPage: page,
                         totalPages,
-                        totalCategories: filteredCategories.length,
+                        totalPublications: filteredPublications.length,
                         limit,
                         hasNextPage,
                         hasPreviousPage,
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
                         sortOrder,
                     }
                 },
-                message: 'Categories retrieved successfully'
+                message: 'Publications retrieved successfully'
             })
         }
 
@@ -210,8 +210,8 @@ export async function GET(request: NextRequest) {
         }
 
         // Execute queries in parallel
-        const [categories, total] = await Promise.all([
-            prisma.category.findMany({
+        const [publications, total] = await Promise.all([
+            prisma.publication.findMany({
                 where,
                 include: {
                     books: {
@@ -254,29 +254,29 @@ export async function GET(request: NextRequest) {
                 take: limit,
                 orderBy,
             }),
-            prisma.category.count({ where })
+            prisma.publication.count({ where })
         ])
 
-        // Filter categories by minimum book count
-        const filteredCategories = categories.filter(category => category._count.books >= minBooks)
+        // Filter publications by minimum book count
+        const filteredPublications = publications.filter(publication => publication._count.books >= minBooks)
 
-        // Transform categories data
-        const transformedCategories = filteredCategories.map(category => {
-            const totalReaders = category.books.reduce((sum, bc) => {
-                return sum + (bc.book._count.readingProgress || 0)
+        // Transform publications data
+        const transformedPublications = filteredPublications.map(publication => {
+            const totalReaders = publication.books.reduce((sum, bp) => {
+                return sum + (bp.book._count.readingProgress || 0)
             }, 0)
 
             return {
-                id: category.id,
-                name: category.name,
-                description: category.description,
-                image: category.image,
-                entryDate: category.entryDate,
-                bookCount: category._count.books,
-                viewCount: category._count.views,
+                id: publication.id,
+                name: publication.name,
+                description: publication.description,
+                image: publication.image,
+                entryDate: publication.entryDate,
+                bookCount: publication._count.books,
+                viewCount: publication._count.views,
                 totalReaders,
-                books: category.books
-                    .map(bc => bc.book)
+                books: publication.books
+                    .map(bp => bp.book)
                     .sort((a, b) => b._count.readingProgress - a._count.readingProgress)
                     .slice(0, 6)
                     .map(book => ({
@@ -299,11 +299,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             success: true,
             data: {
-                categories: transformedCategories,
+                publications: transformedPublications,
                 pagination: {
                     currentPage: page,
                     totalPages,
-                    totalCategories: total,
+                    totalPublications: total,
                     limit,
                     hasNextPage,
                     hasPreviousPage,
@@ -315,11 +315,11 @@ export async function GET(request: NextRequest) {
                     sortOrder,
                 }
             },
-            message: 'Categories retrieved successfully'
+            message: 'Publications retrieved successfully'
         })
 
     } catch (error) {
-        console.error('Get categories error:', error)
+        console.error('Get publications error:', error)
 
         if (error instanceof z.ZodError) {
             return NextResponse.json({
@@ -331,8 +331,8 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             success: false,
-            error: 'Failed to retrieve categories',
-            message: 'An error occurred while fetching categories'
+            error: 'Failed to retrieve publications',
+            message: 'An error occurred while fetching publications'
         }, { status: 500 })
     }
 }
