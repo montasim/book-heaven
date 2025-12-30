@@ -1,14 +1,15 @@
 /**
  * Resend Invite Endpoint
- * 
+ *
  * POST /api/auth/invite/resend
- * 
+ *
  * Allows a user with an expired or used invite token to request a new one.
- * 
+ *
  * Security:
  * - Requires a valid (or previously valid) token to identify the user
  * - Rate limiting should ideally be applied (skipping for now based on user flow focus)
  * - Checks if user is already registered to prevent abuse
+ * - Token validation with format checking
  */
 
 import { NextRequest } from 'next/server'
@@ -21,13 +22,44 @@ import { findInviteByToken, createInvite } from '@/lib/auth/repositories/invite.
 import { adminExists } from '@/lib/auth/repositories/user.repository'
 import { sendInvitationEmail } from '@/lib/auth/email'
 
+// Token validation regex (UUID format or similar secure token format)
+const TOKEN_REGEX = /^[a-zA-Z0-9_-]{20,}$/
+
+function validateToken(token: string): boolean {
+    if (!token || typeof token !== 'string') {
+        return false
+    }
+    if (token.length > 255) {
+        return false
+    }
+    // Check for common injection patterns
+    const dangerousPatterns = [
+        /<script/i,
+        /javascript:/i,
+        /on\w+\s*=/i,
+        /\.\./,
+        /\/\//,
+    ]
+    for (const pattern of dangerousPatterns) {
+        if (pattern.test(token)) {
+            return false
+        }
+    }
+    return TOKEN_REGEX.test(token.trim())
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await parseRequestBody(request)
         const { token } = body
 
+        // Validate token
         if (!token) {
             return errorResponse('Token is required', 400)
+        }
+
+        if (!validateToken(token)) {
+            return errorResponse('Invalid token format', 400)
         }
 
         // 1. Find the invite (even if used)
