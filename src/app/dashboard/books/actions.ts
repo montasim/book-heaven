@@ -7,6 +7,7 @@ import { uploadFile, deleteFile } from '@/lib/google-drive'
 import { config } from '@/config'
 import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
+import { validateRequest, sanitizeUserContent } from '@/lib/validation'
 
 // Repository imports
 import {
@@ -65,13 +66,13 @@ const bookSchema = z.object({
 })
 
 const createBookSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, 'Name is required').transform((val) => sanitizeUserContent(val, 500)),
   image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.string().optional().nullable(),
   fileUrl: z.union([z.string(), z.any()]).optional().nullable(),
-  summary: z.string().optional(),
+  summary: z.string().optional().transform((val) => val ? sanitizeUserContent(val, 5000) : val),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
   numberOfCopies: z.string().optional(),
@@ -137,13 +138,13 @@ const createBookSchema = z.object({
 });
 
 const updateBookSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, 'Name is required').transform((val) => sanitizeUserContent(val, 500)),
   image: z.union([z.string(), z.any()]).optional(),
   type: z.enum(['HARD_COPY', 'EBOOK', 'AUDIO']),
   bindingType: z.enum(['HARDCOVER', 'PAPERBACK']).optional().nullable(),
   pageNumber: z.string().optional().nullable(),
   fileUrl: z.union([z.string(), z.any()]).optional().nullable(),
-  summary: z.string().optional(),
+  summary: z.string().optional().transform((val) => val ? sanitizeUserContent(val, 5000) : val),
   buyingPrice: z.string().optional(),
   sellingPrice: z.string().optional(),
   numberOfCopies: z.string().optional(),

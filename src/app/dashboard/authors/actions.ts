@@ -7,6 +7,7 @@ import { uploadFile, deleteFile } from '@/lib/google-drive'
 import { config } from '@/config'
 import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
+import { sanitizeUserContent } from '@/lib/validation'
 
 // Repository imports
 import {
@@ -34,8 +35,8 @@ const authorSchema = z.object({
 })
 
 const createAuthorSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
+  name: z.string().min(1, 'Name is required').transform((val) => sanitizeUserContent(val, 200)),
+  description: z.string().optional().transform((val) => val ? sanitizeUserContent(val, 5000) : val),
   image: z.union([z.string(), z.any()]).optional(),
 }).superRefine((data, ctx) => {
   // Validate image format (PNG only)
@@ -49,8 +50,8 @@ const createAuthorSchema = z.object({
 });
 
 const updateAuthorSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
+  name: z.string().min(1, 'Name is required').transform((val) => sanitizeUserContent(val, 200)),
+  description: z.string().optional().transform((val) => val ? sanitizeUserContent(val, 5000) : val),
   image: z.union([z.string(), z.any()]).optional(),
 }).superRefine((data, ctx) => {
   // Validate image format (PNG only)
