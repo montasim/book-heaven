@@ -9,9 +9,10 @@ import { incrementFaqViews, submitFaqFeedback } from '@/lib/support/support.repo
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { helpful } = body
 
@@ -22,7 +23,7 @@ export async function POST(
       )
     }
 
-    await submitFaqFeedback(params.id, helpful)
+    await submitFaqFeedback(id, helpful)
 
     return NextResponse.json({
       success: true,
@@ -43,10 +44,11 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await incrementFaqViews(params.id)
+    const { id } = await params
+    await incrementFaqViews(id)
 
     return NextResponse.json({
       success: true,

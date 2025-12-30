@@ -24,11 +24,21 @@ const consoleFormat = winston.format.combine(
   })
 )
 
-// Create logger
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: logFormat,
-  transports: [
+// Check if we're in a serverless environment (read-only filesystem)
+const isServerless = !!process.env.AWS_LAMBDA_FUNCTION_VERSION ||
+                     !!process.env.VERCEL ||
+                     !!process.env.NETLIFY
+
+// Create transports array
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: consoleFormat,
+  })
+]
+
+// Only add file transports in non-serverless environments
+if (!isServerless) {
+  transports.push(
     // Error log file
     new DailyRotateFile({
       filename: `${logDir}/error-%DATE%.log`,
@@ -44,16 +54,16 @@ export const logger = winston.createLogger({
       datePattern: 'YYYY-MM-DD',
       maxSize: '20m',
       maxFiles: '14d',
-    }),
-  ],
-})
-
-// Add console transport in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: consoleFormat,
-  }))
+    })
+  )
 }
+
+// Create logger
+export const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: logFormat,
+  transports,
+})
 
 // Export convenience methods
 export const log = {
