@@ -134,7 +134,7 @@ function NoticesPageContent() {
           </div>
         </div>
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <Card key={i}>
                 <CardHeader>
@@ -158,7 +158,7 @@ function NoticesPageContent() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-4">
             {validNotices.map((notice) => {
               const isExpanded = expandedNoticeId === notice.id
               return (

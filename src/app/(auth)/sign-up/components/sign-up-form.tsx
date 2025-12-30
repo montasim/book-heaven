@@ -338,7 +338,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
     // Show success state after resend
     if (resendSuccessful) {
       return (
-        <div className={cn('grid gap-6', className)} {...props}>
+        <div className={cn('grid gap-4', className)} {...props}>
           <div className='mb-2 flex flex-col space-y-2 text-left'>
             <h1 className='text-lg font-semibold tracking-tight'>
               Invitation Sent
@@ -372,7 +372,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
     // Show resend option
     return (
-      <div className={cn('grid gap-6', className)} {...props}>
+      <div className={cn('grid gap-4', className)} {...props}>
         <div className='mb-2 flex flex-col space-y-2 text-left'>
           <h1 className='text-lg font-semibold tracking-tight'>
             Create an account
@@ -423,7 +423,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   // Render Step 1: Email Input
   if (step === 'email') {
     return (
-      <div className={cn('grid gap-6', className)} {...props}>
+      <div className={cn('grid gap-4', className)} {...props}>
         <Header />
         <Form {...emailForm}>
           <form onSubmit={emailForm.handleSubmit(onEmailSubmit)}>
@@ -454,7 +454,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   // Render Step 2: OTP Verification
   if (step === 'otp') {
     return (
-      <div className={cn('grid gap-6', className)} {...props}>
+      <div className={cn('grid gap-4', className)} {...props}>
         <Header />
         <div className='mb-4'>
           <p className='text-sm text-muted-foreground'>
@@ -462,7 +462,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           </p>
         </div>
 
-        <Card className={cn('border-2', otpError ? 'border-red-500' : 'border-indigo-500')}>
+        <Card className={cn('border-2', otpError ? 'border-red-500' : '')}>
           <CardContent className='pt-6 space-y-4'>
             <div className='flex justify-center'>
               <OtpInput
@@ -506,7 +506,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
   // Render Step 3: Account Details
   return (
-    <div className={cn('grid gap-6', className)} {...props}>
+    <div className={cn('grid gap-4', className)} {...props}>
       <Header />
       <Form {...detailsForm}>
         <form onSubmit={detailsForm.handleSubmit(onDetailsSubmit)} key="details-form">
@@ -567,7 +567,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 // Wrapper component with Suspense boundary for useSearchParams
 function SignUpFormWithSearchParams(props: SignUpFormProps) {
   return (
-    <Suspense fallback={<div className="grid gap-6">Loading...</div>}>
+    <Suspense fallback={<div className="grid gap-4">Loading...</div>}>
       <SignUpForm {...props} />
     </Suspense>
   )

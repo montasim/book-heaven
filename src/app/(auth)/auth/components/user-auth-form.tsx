@@ -181,7 +181,7 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
   // Render Step 1: Email Input
   if (step === 'email') {
     return (
-      <div className={cn('grid gap-6', className)}>
+      <div className={cn('grid gap-4', className)}>
         <Form {...emailForm}>
           <form onSubmit={emailForm.handleSubmit(onEmailSubmit)}>
             <div className='grid gap-2'>
@@ -240,7 +240,7 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
 
   // Render Step 2: Password Input
   return (
-    <div className={cn('grid gap-6', className)}>
+    <div className={cn('grid gap-4', className)}>
       <div className='mb-4 sr-only'>
         <p className='text-sm text-muted-foreground'>
           Welcome back, <strong>{email}</strong>

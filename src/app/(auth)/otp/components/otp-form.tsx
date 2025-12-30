@@ -53,7 +53,7 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
   }
 
   return (
-    <div className={cn('grid gap-6', className)} {...props}>
+    <div className={cn('grid gap-4', className)} {...props}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid gap-2'>
@@ -65,18 +65,21 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
                   <FormControl>
                     <PinInput
                       {...field}
-                      className='flex h-10 justify-between'
+                      className='flex h-10 flex-row items-center gap-2'
                       onComplete={() => setDisabledBtn(false)}
                       onIncomplete={() => setDisabledBtn(true)}
                     >
                       {Array.from({ length: 7 }, (_, i) => {
                         if (i === 3)
-                          return <Separator key={i} orientation='vertical' />
+                          return <Separator key={i} orientation='vertical' className='h-8' />
                         return (
                           <PinInputField
                             key={i}
                             component={Input}
-                            className={`${form.getFieldState('otp').invalid ? 'border-red-500' : ''}`}
+                            className={cn(
+                              'w-10 h-10 text-center p-0',
+                              form.getFieldState('otp').invalid && 'border-destructive focus:border-destructive'
+                            )}
                           />
                         )
                       })}

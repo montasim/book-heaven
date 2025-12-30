@@ -296,15 +296,15 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
   // Render Step 2: OTP Verification
   if (step === 'otp') {
     return (
-      <div className={cn('grid gap-6', className)} {...props}>
+      <div className={cn('grid gap-4', className)} {...props}>
         <div>
           <p className='text-sm text-muted-foreground'>
             We sent a 6-digit code to <strong>{email}</strong>
           </p>
         </div>
 
-        <Card className={cn('border-2', otpError ? 'border-red-500' : 'border-indigo-500')}>
-          <CardContent className='pt-6 space-y-4'>
+        <Card className={cn('border-0', otpError ? 'border-2 border-red-500' : '')}>
+          <CardContent className='p-4 space-y-4'>
             <div className='flex justify-center'>
               <OtpInput
                 length={6}
@@ -347,7 +347,7 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
 
   // Render Step 3: New Password
   return (
-    <div className={cn('grid gap-6', className)} {...props}>
+    <div className={cn('grid gap-4', className)} {...props}>
       <Form {...passwordForm}>
         <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}>
           <div className='grid gap-2'>
@@ -390,7 +390,7 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
 // Wrapper component with Suspense boundary for useSearchParams
 function ForgotFormWithSearchParams(props: ForgotFormProps) {
   return (
-    <Suspense fallback={<div className="grid gap-6">Loading...</div>}>
+    <Suspense fallback={<div className="grid gap-4">Loading...</div>}>
       <ForgotForm {...props} />
     </Suspense>
   )

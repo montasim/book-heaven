@@ -135,7 +135,7 @@ export const OtpInput = forwardRef<HTMLInputElement, OtpInputProps>(
     }, [otp, ref, length])
 
     return (
-      <div className={cn('flex items-center gap-2', className)}>
+      <div className={cn('flex flex-wrap items-center justify-center gap-1.5 sm:gap-2', className)}>
         {Array.from({ length }).map((_, index) => (
           <div key={index} className="relative">
             <input
@@ -152,18 +152,18 @@ export const OtpInput = forwardRef<HTMLInputElement, OtpInputProps>(
               onBlur={() => handleBlur(index)}
               disabled={disabled}
               className={cn(
-                'w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold',
-                'border-2 rounded-lg',
+                'w-9 h-12 sm:w-10 sm:h-14 text-center text-xl font-bold',
+                'bg-muted rounded-lg',
                 'transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-offset-2',
                 // Disabled state
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 // Error state
                 error
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                  : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500',
+                  ? 'ring-2 ring-red-500 focus:ring-red-500'
+                  : '',
                 // Focus state
-                isFocused[index] && !error && 'border-indigo-500',
+                isFocused[index] && !error && '',
                 // Autofill background
                 'autofill:bg-transparent'
               )}
@@ -235,7 +235,7 @@ export function ResendButton({ onResend, isResending, cooldown = 60 }: ResendBut
           onClick={handleResend}
           disabled={isResending}
           className={cn(
-            'text-sm font-medium text-indigo-600 hover:text-indigo-700',
+            'text-sm font-medium',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'focus:outline-none focus:underline'
           )}

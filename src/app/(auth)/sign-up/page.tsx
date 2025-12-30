@@ -8,7 +8,7 @@ import SignUpForm from './components/sign-up-form'
 export default function SignUp() {
     return (
         <AuthLayout>
-            <Card className='m-6 p-6'>
+            <Card className='m-4 p-4'>
                 <SignUpForm />
                 <p className='mt-4 px-8 text-center text-sm text-muted-foreground'>
                     By creating an account, you agree to our{' '}

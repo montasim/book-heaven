@@ -329,12 +329,12 @@ export function ProfileFormClient({ defaultValues }: ProfileFormClientProps) {
                   )}
 
                   {showOtpInput && (
-                    <Card className={cn('border-2', otpError ? 'border-red-500' : 'border-indigo-500')}>
+                    <Card className={cn('border-2', otpError ? 'border-red-500' : '')}>
                       <CardContent className='pt-6 space-y-4'>
                         <div className='space-y-2'>
                           <h3 className='font-semibold text-center'>Enter verification code</h3>
                           <p className='text-sm text-muted-foreground text-center'>
-                            We've sent a 6-digit code to <span className='font-medium text-foreground'>{email}</span>
+                            We&lsquo;ve sent a 6-digit code to <span className='font-medium text-foreground'>{email}</span>
                           </p>
                         </div>
 

@@ -390,7 +390,7 @@ export default async function HomePage() {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center gap-6 pt-6 text-sm text-white/80">
+              <div className="flex items-center justify-center gap-4 pt-4 text-sm text-white/80">
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4" />
                   <span>No credit card required</span>

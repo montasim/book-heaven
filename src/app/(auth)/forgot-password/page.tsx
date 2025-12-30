@@ -8,7 +8,7 @@ import ForgotForm from './components/forgot-password-form'
 export default function ForgotPassword() {
   return (
     <AuthLayout>
-      <Card className='m-6 p-6'>
+      <Card className='m-4 p-4'>
         <div className='mb-2 flex flex-col space-y-2 text-left'>
           <h1 className='text-md font-semibold tracking-tight'>
             Forgot Password
@@ -19,7 +19,7 @@ export default function ForgotPassword() {
           </p>
         </div>
         <ForgotForm />
-        <p className='mt-4 px-8 text-center text-sm text-muted-foreground'>
+        <p className='mt-4 text-center text-sm text-muted-foreground'>
           Don&apos;t have an account?{' '}
           <Link
             href='/sign-up'
