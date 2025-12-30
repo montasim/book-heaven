@@ -7,6 +7,7 @@
 import { prisma } from '@/lib/prisma'
 import { ACHIEVEMENTS, getAchievementByCode } from './definitions'
 import type { AchievementCheckResult, UserStats } from './types'
+import { sendAchievementUnlockedNotificationEmail } from '@/lib/auth/email'
 
 /**
  * Seed achievements into database
@@ -303,6 +304,21 @@ export async function checkAndUnlockAchievements(
       })
 
       unlocked.push(achievement.code)
+
+      // Send achievement unlocked email notification (non-blocking)
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true }
+      })
+
+      if (user) {
+        sendAchievementUnlockedNotificationEmail(
+          user.email,
+          achievement.name,
+          achievement.description,
+          achievement.icon
+        ).catch(console.error)
+      }
     } else {
       // Update progress
       progress[achievement.code] = currentValue

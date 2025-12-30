@@ -478,6 +478,412 @@ Need help? Contact us at ${SUPPORT_EMAIL}
   }
 }
 
+/**
+ * Generate login notification email HTML
+ * Notifies user when they login to their account
+ */
+function getLoginNotificationEmailTemplate(email: string, loginTime: Date, ipAddress?: string, location?: string): {
+  subject: string
+  html: string
+  text: string
+} {
+  const formattedTime = loginTime.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  })
+
+  const content = `
+        <!-- Header -->
+        <h2 style="color: #0f172a; margin: 0 0 16px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; text-align: center;">
+          New Login Detected 🔐
+        </h2>
+
+        <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 16px 0; text-align: center;">
+          We detected a new login to your ${APP_NAME} account.
+        </p>
+
+        <!-- Login Details -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 32px 0;">
+          <p style="margin: 0 0 16px 0; color: #1e3a5f; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; text-align: center;">
+            Login Details
+          </p>
+          <div style="display: table; width: 100%; border-collapse: collapse;">
+            <div style="display: table-row; border-bottom: 1px solid #e2e8f0;">
+              <div style="display: table-cell; padding: 12px 0; color: #64748b; font-size: 14px; font-weight: 500;">Email:</div>
+              <div style="display: table-cell; padding: 12px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</div>
+            </div>
+            <div style="display: table-row; border-bottom: 1px solid #e2e8f0;">
+              <div style="display: table-cell; padding: 12px 0; color: #64748b; font-size: 14px; font-weight: 500;">Time:</div>
+              <div style="display: table-cell; padding: 12px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formattedTime}</div>
+            </div>
+            ${ipAddress ? `
+            <div style="display: table-row; border-bottom: 1px solid #e2e8f0;">
+              <div style="display: table-cell; padding: 12px 0; color: #64748b; font-size: 14px; font-weight: 500;">IP Address:</div>
+              <div style="display: table-cell; padding: 12px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${ipAddress}</div>
+            </div>
+            ` : ''}
+            ${location ? `
+            <div style="display: table-row;">
+              <div style="display: table-cell; padding: 12px 0; color: #64748b; font-size: 14px; font-weight: 500;">Location:</div>
+              <div style="display: table-cell; padding: 12px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${location}</div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="warning-box">
+          <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+            <strong>🔒 Security Notice:</strong><br />
+            If this was you, you can safely ignore this email. If you didn't login to your account, please secure your account immediately.
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin-top: 32px;">
+          <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px 0;">
+            If this wasn't you, take action:
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="${BASE_URL}/forgot-password?email=${encodeURIComponent(email)}" class="button button-danger" style="min-width: 160px;">Reset Password</a>
+            <a href="${BASE_URL}/settings" class="button button-secondary" style="min-width: 160px;">Account Settings</a>
+          </div>
+        </div>
+      `
+
+  return {
+    subject: `New login to your ${APP_NAME} account`,
+    html: emailTemplateWrapper(content, 'New Login Detected'),
+    text: `
+${APP_NAME} - New Login Detected
+
+We detected a new login to your ${APP_NAME} account.
+
+Email: ${email}
+Time: ${formattedTime}
+${ipAddress ? `IP Address: ${ipAddress}` : ''}
+${location ? `Location: ${location}` : ''}
+
+If this was you, you can safely ignore this email.
+
+If you didn't login to your account, please reset your password immediately: ${BASE_URL}/forgot-password
+
+Need help? Contact us at ${SUPPORT_EMAIL}
+
+© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    `.trim(),
+  }
+}
+
+/**
+ * Generate book upload notification email HTML
+ * Notifies user when they successfully upload a new book
+ */
+function getBookUploadNotificationTemplate(email: string, bookTitle: string, bookId: string): {
+  subject: string
+  html: string
+  text: string
+} {
+  const content = `
+        <!-- Header -->
+        <h2 style="color: #0f172a; margin: 0 0 16px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; text-align: center;">
+          Book Uploaded Successfully! 📚
+        </h2>
+
+        <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 16px 0; text-align: center;">
+          Great news! Your book has been successfully uploaded to ${APP_NAME}.
+        </p>
+
+        <!-- Book Details -->
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px dashed #86efac; border-radius: 16px; padding: 32px 24px; margin: 32px 0; text-align: center;">
+          <p style="margin: 0 0 16px 0; color: #065f46; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">
+            Your New Book
+          </p>
+          <p style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 700; line-height: 1.4;">
+            "${bookTitle}"
+          </p>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
+            <strong>📝 Next Steps:</strong><br />
+            Your book is currently in <strong>draft status</strong>. You can edit the details, cover image, and make it public when you're ready.
+          </p>
+        </div>
+
+        <!-- Action Button -->
+        <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px 0;">
+            Manage your book or make it public:
+          </p>
+          <a href="${BASE_URL}/dashboard/books/${bookId}" class="button">Manage Book</a>
+        </div>
+      `
+
+  return {
+    subject: `Book uploaded successfully - ${bookTitle}`,
+    html: emailTemplateWrapper(content, 'Book Upload Successful'),
+    text: `
+${APP_NAME} - Book Uploaded Successfully
+
+Your book has been successfully uploaded!
+
+Book Title: "${bookTitle}"
+
+Your book is currently in draft status. You can edit the details and make it public when you're ready.
+
+Manage your book here: ${BASE_URL}/dashboard/books/${bookId}
+
+Need help? Contact us at ${SUPPORT_EMAIL}
+
+© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    `.trim(),
+  }
+}
+
+/**
+ * Generate book published notification email HTML
+ * Notifies user when they make a book public
+ */
+function getBookPublishedNotificationTemplate(email: string, bookTitle: string, bookId: string): {
+  subject: string
+  html: string
+  text: string
+} {
+  const content = `
+        <!-- Header -->
+        <h2 style="color: #0f172a; margin: 0 0 16px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; text-align: center;">
+          Book is Now Live! 🎉
+        </h2>
+
+        <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 16px 0; text-align: center;">
+          Congratulations! Your book is now published and visible to all users on ${APP_NAME}.
+        </p>
+
+        <!-- Book Details -->
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px dashed #fbbf24; border-radius: 16px; padding: 32px 24px; margin: 32px 0; text-align: center;">
+          <p style="margin: 0 0 8px 0; color: #92400e; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">
+            Now Live on ${APP_NAME}
+          </p>
+          <p style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 700; line-height: 1.4;">
+            "${bookTitle}"
+          </p>
+          <p style="margin: 16px 0 0 0; color: #78350f; font-size: 14px;">
+            ✨ Your book is now discoverable by all users
+          </p>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
+            <strong>💡 Pro Tip:</strong><br />
+            Share your book link on social media to increase visibility and engage with readers who are interested in your content!
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px 0;">
+            View your book or manage settings:
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="${BASE_URL}/books/${bookId}" class="button" style="min-width: 160px;">View Book</a>
+            <a href="${BASE_URL}/dashboard/books/${bookId}" class="button button-secondary" style="min-width: 160px;">Manage Book</a>
+          </div>
+        </div>
+      `
+
+  return {
+    subject: `Your book is now live - ${bookTitle}`,
+    html: emailTemplateWrapper(content, 'Book Published Successfully'),
+    text: `
+${APP_NAME} - Book Published Successfully
+
+Congratulations! Your book is now published and live on ${APP_NAME}.
+
+Book Title: "${bookTitle}"
+
+Your book is now discoverable by all users. Share it to increase visibility!
+
+View your book: ${BASE_URL}/books/${bookId}
+Manage your book: ${BASE_URL}/dashboard/books/${bookId}
+
+Need help? Contact us at ${SUPPORT_EMAIL}
+
+© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    `.trim(),
+  }
+}
+
+/**
+ * Generate achievement unlocked notification email HTML
+ * Notifies user when they earn an achievement
+ */
+function getAchievementUnlockedNotificationTemplate(
+  email: string,
+  achievementTitle: string,
+  achievementDescription: string,
+  badgeIcon?: string
+): {
+  subject: string
+  html: string
+  text: string
+} {
+  const content = `
+        <!-- Header -->
+        <h2 style="color: #0f172a; margin: 0 0 16px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; text-align: center;">
+          Achievement Unlocked! 🏆
+        </h2>
+
+        <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 16px 0; text-align: center;">
+          Congratulations! You've earned a new achievement on ${APP_NAME}.
+        </p>
+
+        <!-- Achievement Badge -->
+        <div style="background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border: 2px dashed #facc15; border-radius: 16px; padding: 32px 24px; margin: 32px 0; text-align: center;">
+          <div style="display: inline-block; background: #fff; border-radius: 50%; width: 80px; height: 80px; line-height: 80px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <span style="font-size: 40px;">🏆</span>
+          </div>
+          <p style="margin: 0 0 8px 0; color: #854d0e; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">
+            Achievement Unlocked
+          </p>
+          <p style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 700; line-height: 1.4;">
+            "${achievementTitle}"
+          </p>
+          <p style="margin: 12px 0 0 0; color: #713f12; font-size: 14px; line-height: 1.6;">
+            ${achievementDescription}
+          </p>
+        </div>
+
+        <!-- Encouragement -->
+        <div class="info-box">
+          <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
+            <strong>🌟 Keep Going!</strong><br />
+            You're making great progress! Continue exploring ${APP_NAME} to unlock more achievements and reach new milestones.
+          </p>
+        </div>
+
+        <!-- Action Button -->
+        <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px 0;">
+            View all your achievements:
+          </p>
+          <a href="${BASE_URL}/achievements" class="button">View Achievements</a>
+        </div>
+      `
+
+  return {
+    subject: `Achievement Unlocked: ${achievementTitle}`,
+    html: emailTemplateWrapper(content, 'New Achievement Earned'),
+    text: `
+${APP_NAME} - Achievement Unlocked!
+
+Congratulations! You've earned a new achievement.
+
+Achievement: "${achievementTitle}"
+${achievementDescription}
+
+Keep going to unlock more achievements!
+
+View all your achievements: ${BASE_URL}/achievements
+
+Need help? Contact us at ${SUPPORT_EMAIL}
+
+© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    `.trim(),
+  }
+}
+
+/**
+ * Generate password changed notification email HTML
+ * Notifies user when their password is successfully changed
+ */
+function getPasswordChangedNotificationTemplate(email: string, changedAt: Date): {
+  subject: string
+  html: string
+  text: string
+} {
+  const formattedTime = changedAt.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  })
+
+  const content = `
+        <!-- Header -->
+        <h2 style="color: #0f172a; margin: 0 0 16px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; text-align: center;">
+          Password Changed Successfully ✅
+        </h2>
+
+        <p style="color: #475569; font-size: 16px; line-height: 1.7; margin: 0 0 16px 0; text-align: center;">
+          Your ${APP_NAME} account password has been successfully changed.
+        </p>
+
+        <!-- Change Details -->
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px dashed #86efac; border-radius: 16px; padding: 32px 24px; margin: 32px 0; text-align: center;">
+          <p style="margin: 0 0 16px 0; color: #065f46; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">
+            Change Details
+          </p>
+          <div style="display: table; width: 100%; max-width: 300px; margin: 0 auto; border-collapse: collapse;">
+            <div style="display: table-row; border-bottom: 1px solid #86efac;">
+              <div style="display: table-cell; padding: 12px 0; color: #047857; font-size: 14px; font-weight: 500;">Email:</div>
+              <div style="display: table-cell; padding: 12px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</div>
+            </div>
+            <div style="display: table-row;">
+              <div style="display: table-cell; padding: 12px 0; color: #047857; font-size: 14px; font-weight: 500;">Time:</div>
+              <div style="display: table-cell; padding: 12px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formattedTime}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="warning-box">
+          <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+            <strong>🔒 Security Notice:</strong><br />
+            If you didn't make this change, please contact our support team immediately. Your account security is important to us.
+          </p>
+        </div>
+
+        <!-- Action Button -->
+        <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+          <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px 0;">
+            Need to manage your account settings?
+          </p>
+          <a href="${BASE_URL}/settings/account" class="button">Account Settings</a>
+        </div>
+      `
+
+  return {
+    subject: `Password changed successfully - ${APP_NAME}`,
+    html: emailTemplateWrapper(content, 'Password Changed'),
+    text: `
+${APP_NAME} - Password Changed Successfully
+
+Your ${APP_NAME} account password has been successfully changed.
+
+Email: ${email}
+Time: ${formattedTime}
+
+If you didn't make this change, please contact us immediately.
+
+Manage your account: ${BASE_URL}/settings/account
+Need help? Contact us at ${SUPPORT_EMAIL}
+
+© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.
+    `.trim(),
+  }
+}
+
 // ============================================================================
 // EMAIL SENDING FUNCTIONS
 // ============================================================================
@@ -616,6 +1022,189 @@ export async function sendInvitationEmail(
   } catch (error) {
     console.error('Email sending error:', error)
     throw new Error('Failed to send invitation email')
+  }
+}
+
+/**
+ * Send login notification email
+ * Sends a notification when user logs in
+ */
+export async function sendLoginNotificationEmail(
+  email: string,
+  loginTime: Date,
+  ipAddress?: string,
+  location?: string
+): Promise<boolean> {
+  const { subject, html, text } = getLoginNotificationEmailTemplate(email, loginTime, ipAddress, location)
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject,
+      html,
+      text,
+    })
+
+    if (error) {
+      console.error('Failed to send login notification email:', {
+        email,
+        error: error.message,
+      })
+      // Don't throw error for non-critical notifications
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Email sending error:', error)
+    // Don't throw error for non-critical notifications
+    return false
+  }
+}
+
+/**
+ * Send book upload notification email
+ * Notifies user when they successfully upload a book
+ */
+export async function sendBookUploadNotificationEmail(
+  email: string,
+  bookTitle: string,
+  bookId: string
+): Promise<boolean> {
+  const { subject, html, text } = getBookUploadNotificationTemplate(email, bookTitle, bookId)
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject,
+      html,
+      text,
+    })
+
+    if (error) {
+      console.error('Failed to send book upload notification email:', {
+        email,
+        error: error.message,
+      })
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Email sending error:', error)
+    return false
+  }
+}
+
+/**
+ * Send book published notification email
+ * Notifies user when they make a book public
+ */
+export async function sendBookPublishedNotificationEmail(
+  email: string,
+  bookTitle: string,
+  bookId: string
+): Promise<boolean> {
+  const { subject, html, text } = getBookPublishedNotificationTemplate(email, bookTitle, bookId)
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject,
+      html,
+      text,
+    })
+
+    if (error) {
+      console.error('Failed to send book published notification email:', {
+        email,
+        error: error.message,
+      })
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Email sending error:', error)
+    return false
+  }
+}
+
+/**
+ * Send achievement unlocked notification email
+ * Notifies user when they earn an achievement
+ */
+export async function sendAchievementUnlockedNotificationEmail(
+  email: string,
+  achievementTitle: string,
+  achievementDescription: string,
+  badgeIcon?: string
+): Promise<boolean> {
+  const { subject, html, text } = getAchievementUnlockedNotificationTemplate(
+    email,
+    achievementTitle,
+    achievementDescription,
+    badgeIcon
+  )
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject,
+      html,
+      text,
+    })
+
+    if (error) {
+      console.error('Failed to send achievement notification email:', {
+        email,
+        error: error.message,
+      })
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Email sending error:', error)
+    return false
+  }
+}
+
+/**
+ * Send password changed notification email
+ * Notifies user when their password is successfully changed
+ */
+export async function sendPasswordChangedNotificationEmail(
+  email: string,
+  changedAt: Date
+): Promise<boolean> {
+  const { subject, html, text } = getPasswordChangedNotificationTemplate(email, changedAt)
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject,
+      html,
+      text,
+    })
+
+    if (error) {
+      console.error('Failed to send password changed notification email:', {
+        email,
+        error: error.message,
+      })
+      throw new Error('Failed to send password changed notification')
+    }
+
+    return true
+  } catch (error) {
+    console.error('Email sending error:', error)
+    throw new Error('Failed to send password changed notification')
   }
 }
 

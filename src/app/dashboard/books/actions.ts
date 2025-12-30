@@ -8,6 +8,7 @@ import { config } from '@/config'
 import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
 import { validateRequest, sanitizeUserContent } from '@/lib/validation'
+import { sendBookUploadNotificationEmail, sendBookPublishedNotificationEmail } from '@/lib/auth/email'
 
 // Repository imports
 import {
@@ -527,6 +528,9 @@ export async function createBook(formData: FormData) {
       endpoint: '/dashboard/books/actions',
     }).catch(console.error)
 
+    // Send book upload notification email (non-blocking)
+    sendBookUploadNotificationEmail(session.email, processedData.name, createdBook.id).catch(console.error)
+
     // Trigger content extraction for ebooks/audiobooks (wait for completion)
     if ((processedData.type === 'EBOOK' || processedData.type === 'AUDIO') && processedData.fileUrl && createdBook) {
       console.log('[Book Actions] Waiting for content extraction...')
@@ -674,6 +678,9 @@ export async function updateBook(id: string, formData: FormData) {
     // Check if file URL changed
     const fileChanged = existingBook.fileUrl !== fileUrl
 
+    // Check if book is being made public (was false, now true)
+    const beingMadePublic = !existingBook.isPublic && processedData.isPublic
+
     // Update book
     await updateBookInDb(id, processedData)
 
@@ -689,9 +696,15 @@ export async function updateBook(id: string, formData: FormData) {
       metadata: {
         type: processedData.type,
         fileChanged,
+        madePublic: beingMadePublic,
       },
       endpoint: '/dashboard/books/actions',
     }).catch(console.error)
+
+    // Send book published notification email if book was made public (non-blocking)
+    if (beingMadePublic) {
+      sendBookPublishedNotificationEmail(session.email, processedData.name, id).catch(console.error)
+    }
 
     // Clear content cache and trigger re-extraction if file changed
     if (fileChanged && (processedData.type === 'EBOOK' || processedData.type === 'AUDIO') && processedData.fileUrl) {

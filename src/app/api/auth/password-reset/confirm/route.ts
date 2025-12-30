@@ -36,6 +36,7 @@ import {
 } from '@/lib/auth/request-utils'
 import { AuthIntent } from '@/lib/auth/types'
 import { prisma } from '@/lib/prisma'
+import { sendPasswordChangedNotificationEmail } from '@/lib/auth/email'
 
 export async function POST(request: NextRequest) {
     try {
@@ -114,6 +115,9 @@ export async function POST(request: NextRequest) {
                 },
             })
         })
+
+        // Send password changed notification email (non-blocking)
+        sendPasswordChangedNotificationEmail(email, new Date()).catch(console.error)
 
         // Return success response
         const response = {

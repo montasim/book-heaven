@@ -34,6 +34,7 @@ import {
 import { LoginResponse } from '@/lib/auth/types'
 import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
+import { sendLoginNotificationEmail } from '@/lib/auth/email'
 
 export async function POST(request: NextRequest) {
     try {
@@ -132,6 +133,9 @@ export async function POST(request: NextRequest) {
             description: `User logged in as ${user.role}`,
             endpoint: '/api/auth/login',
         }).catch(console.error)
+
+        // Send login notification email (non-blocking)
+        sendLoginNotificationEmail(user.email, new Date(), clientIp).catch(console.error)
 
         // Return success response with user data including role
         const response: LoginResponse = {
