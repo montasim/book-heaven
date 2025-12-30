@@ -1,0 +1,108 @@
+'use server'
+
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth/session'
+import { getTicketById, updateTicket, addResponse } from '@/lib/support/support.repository'
+import { TicketStatus, isAdmin } from '@/lib/auth/validation'
+
+/**
+ * GET /api/admin/support-tickets/:id
+ * Get a single ticket (admin only)
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await requireAuth()
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    if (!isAdmin(session.role)) {
+      return NextResponse.json(
+        { success: false, message: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const ticket = await getTicketById(params.id)
+
+    if (!ticket) {
+      return NextResponse.json(
+        { success: false, message: 'Ticket not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: { ticket },
+    })
+  } catch (error: any) {
+    console.error('Get ticket error:', error)
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch ticket' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * PATCH /api/admin/support-tickets/:id
+ * Update ticket status, assignment, or resolution (admin only)
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await requireAuth()
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    if (!isAdmin(session.role)) {
+      return NextResponse.json(
+        { success: false, message: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const body = await request.json()
+    const { status, assignedToId, resolution } = body
+
+    const validStatuses: TicketStatus[] = ['OPEN', 'IN_PROGRESS', 'WAITING_FOR_USER', 'RESOLVED', 'CLOSED']
+
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid status value' },
+        { status: 400 }
+      )
+    }
+
+    const ticket = await updateTicket(params.id, {
+      status,
+      assignedToId,
+      resolution,
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Ticket updated successfully',
+      data: { ticket },
+    })
+  } catch (error: any) {
+    console.error('Update ticket error:', error)
+    return NextResponse.json(
+      { success: false, message: 'Failed to update ticket' },
+      { status: 500 }
+    )
+  }
+}

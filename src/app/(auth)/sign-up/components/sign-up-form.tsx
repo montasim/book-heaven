@@ -319,7 +319,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
         description: 'Account created successfully',
       })
 
-      router.push('/dashboard')
+      router.push('/books')
       router.refresh()
     } catch (error) {
       console.error('Create account error:', error)
