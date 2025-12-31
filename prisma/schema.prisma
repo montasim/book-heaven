@@ -210,6 +210,9 @@ model Book {
   // Reviews relationship
   reviews                      BookReview[]
 
+  // Lending relations
+  loans                        BookLoan[]
+
   @@map("books")
 }
 
@@ -296,6 +299,38 @@ model BookReview {
   @@index([bookId])
   @@index([userId])
   @@map("book_reviews")
+}
+
+model BookLoan {
+  id              String       @id @default(uuid())
+  bookId          String
+  userId          String       // User who borrowed the book
+  lentById        String       // Admin who lent the book
+  loanDate        DateTime     @default(now())
+  dueDate         DateTime
+  returnDate      DateTime?
+  status          LoanStatus   @default(ACTIVE)
+  notes           String?      @db.Text
+  reminderSent    Boolean      @default(false) // Track if reminder email was sent
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  book            Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user            User         @relation("UserBorrowedLoans", fields: [userId], references: [id], onDelete: Cascade)
+  lentBy          User         @relation("AdminLentLoans", fields: [lentById], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([userId])
+  @@index([lentById])
+  @@index([status, dueDate])
+  @@map("book_loans")
+}
+
+enum LoanStatus {
+  ACTIVE       // Book is currently borrowed
+  RETURNED     // Book has been returned
+  OVERDUE      // Book is overdue
+  CANCELLED    // Loan was cancelled
 }
 
 model BookView {
@@ -488,6 +523,10 @@ model User {
   categoryViews       CategoryView[]
   seriesViews         SeriesView[]
   bookReviews         BookReview[]        @relation("UserBookReviews")
+
+  // Book lending relations
+  borrowedLoans       BookLoan[]         @relation("UserBorrowedLoans")   // Books user has borrowed
+  lentLoans           BookLoan[]         @relation("AdminLentLoans")      // Books admin has lent
 
   // Marketplace relations
   sellPosts              BookSellPost[]              @relation("UserSellPosts")
