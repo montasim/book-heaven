@@ -15,7 +15,11 @@
 
 import { Resend } from 'resend'
 import { config } from '@/config'
-import { marked } from 'marked'
+import { markdownToHtml, generateUnsubscribeUrl } from '@/lib/utils/markdown'
+
+// Re-export utility functions from the markdown module
+// These are safe to use in both client and server components
+export { markdownToHtml, generateUnsubscribeUrl }
 
 // ============================================================================
 // RESEND CLIENT INITIALIZATION
@@ -1213,20 +1217,6 @@ export async function sendPasswordChangedNotificationEmail(
 // ============================================================================
 
 /**
- * Convert Markdown to HTML
- * Uses the marked library for conversion
- */
-export function markdownToHtml(markdown: string): string {
-  // Configure marked options for safe HTML
-  marked.setOptions({
-    breaks: true, // Convert \n to <br>
-    gfm: true, // Enable GitHub Flavored Markdown
-  })
-
-  return marked(markdown) as string
-}
-
-/**
  * Replace template variables in content
  * Replaces {{userName}}, {{firstName}}, {{email}}, {{unsubscribeUrl}}
  */
@@ -1371,9 +1361,5 @@ export async function sendCampaignEmailFromMarkdown(
   return sendCampaignEmail(to, subject, previewText, htmlContent, variables)
 }
 
-/**
- * Generate unsubscribe URL for a campaign
- */
-export function generateUnsubscribeUrl(campaignId: string, userId: string): string {
-  return `${BASE_URL}/api/campaigns/unsubscribe?campaign=${campaignId}&user=${userId}`
-}
+// generateUnsubscribeUrl is now exported from '@/lib/utils/markdown'
+// and re-exported here for backward compatibility

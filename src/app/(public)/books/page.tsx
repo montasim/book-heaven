@@ -656,16 +656,23 @@ function BooksPageContent({
             {!isLoading && !error && (
               <>
                 {books.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No books found</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Try adjusting your filters or search terms
-                    </p>
-                    <Button onClick={clearFilters}>
-                      Clear Filters
-                    </Button>
-                  </div>
+                  <Card>
+                    <CardContent className="pt-12 pb-12">
+                      <div className="text-center">
+                        <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No books found</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Try adjusting your filters or search terms to find what you&apos;re looking for.
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-6">
+                          You can also browse our collection by clearing all filters.
+                        </p>
+                        <Button onClick={clearFilters}>
+                          Clear Filters
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <BookGrid
                     books={books}

@@ -70,7 +70,7 @@ export function CampaignStatsDialog() {
         <DialogHeader>
           <DialogTitle>Campaign Statistics</DialogTitle>
           <DialogDescription>
-            Performance metrics for <strong>"{campaign.name}"</strong>
+            Performance metrics for <strong>&quot;{campaign.name}&quot;</strong>
           </DialogDescription>
         </DialogHeader>
 

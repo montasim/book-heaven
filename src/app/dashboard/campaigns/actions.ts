@@ -660,7 +660,16 @@ export async function testRunCampaignWithContent(
   previewText: string,
   markdownContent: string
 ) {
-  const session = await requireAuth()
+  console.log('[Test Run] Starting test run with content:', { subject, hasContent: !!markdownContent })
+
+  let session
+  try {
+    session = await requireAuth()
+    console.log('[Test Run] Session authenticated:', session.userId)
+  } catch (error) {
+    console.error('[Test Run] Auth failed:', error)
+    throw new Error('Authentication failed. Please log in again.')
+  }
 
   try {
     // Get current user
@@ -675,15 +684,19 @@ export async function testRunCampaignWithContent(
     })
 
     if (!user) {
+      console.error('[Test Run] User not found:', session.userId)
       throw new Error('User not found')
     }
 
+    console.log('[Test Run] User found:', user.email)
+
     // Generate a temporary ID for unsubscribe URL
     const tempCampaignId = 'test-campaign'
-
-    // Send test email to current user
     const unsubscribeUrl = generateUnsubscribeUrl(tempCampaignId, user.id)
 
+    console.log('[Test Run] Sending email...')
+
+    // Send test email to current user
     const result = await sendCampaignEmailFromMarkdown(
       user.email,
       `[TEST] ${subject}`,
@@ -699,17 +712,21 @@ export async function testRunCampaignWithContent(
       }
     )
 
+    console.log('[Test Run] Email send result:', result)
+
     if (!result.success) {
+      console.error('[Test Run] Email send failed:', result.error)
       throw new Error(result.error || 'Failed to send test email')
     }
 
+    console.log('[Test Run] Test email sent successfully')
     return {
       success: true,
       message: `Test email sent successfully to ${user.email}`,
     }
-  } catch (error) {
-    console.error('Error running test campaign with custom content:', error)
-    throw error || new Error('Failed to send test email')
+  } catch (error: any) {
+    console.error('[Test Run] Error:', error)
+    throw new Error(error?.message || 'Failed to send test email')
   }
 }
 

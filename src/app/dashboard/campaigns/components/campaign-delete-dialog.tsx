@@ -57,7 +57,7 @@ export function CampaignDeleteDialog() {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this campaign?</AlertDialogTitle>
           <AlertDialogDescription>
-            You are about to delete the campaign <strong>"{campaign?.name}"</strong>. <br />
+            You are about to delete the campaign <strong>&quot;{campaign?.name}&quot;</strong>. <br />
             This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>

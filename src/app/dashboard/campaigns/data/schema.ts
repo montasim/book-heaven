@@ -49,7 +49,7 @@ export const campaignSchema = z.object({
 
   // Recipients
   targetAllUsers: z.boolean().default(true),
-  targetRole: userRoleSchema.optional(),
+  targetRole: userRoleSchema.nullish(),
   recipientCount: z.number().default(0),
 
   // Status tracking
@@ -59,8 +59,8 @@ export const campaignSchema = z.object({
 
   // Recurring settings
   isRecurring: z.boolean().default(false),
-  recurrenceFrequency: recurrenceFrequencySchema.optional(),
-  recurrenceCron: z.string().optional(),
+  recurrenceFrequency: recurrenceFrequencySchema.nullish(),
+  recurrenceCron: z.string().nullish(),
   recurrenceEndDate: z.string().nullable().optional(),
   nextRunAt: z.string().nullable().optional(),
 
@@ -91,15 +91,15 @@ export const createCampaignSchema = z.object({
 
   // Recipients
   targetAllUsers: z.boolean().default(true),
-  targetRole: userRoleSchema.optional(),
+  targetRole: userRoleSchema.nullish(),
 
   // Scheduling
   scheduledAt: z.string().optional(),
 
   // Recurring settings
   isRecurring: z.boolean().default(false),
-  recurrenceFrequency: recurrenceFrequencySchema.optional(),
-  recurrenceCron: z.string().optional(),
+  recurrenceFrequency: recurrenceFrequencySchema.nullish(),
+  recurrenceCron: z.string().nullish(),
   recurrenceEndDate: z.string().optional(),
 })
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>
@@ -132,7 +132,7 @@ export type CampaignStats = z.infer<typeof campaignStatsSchema>
 // Schema for recipient count preview
 export const recipientCountSchema = z.object({
   targetAllUsers: z.boolean(),
-  targetRole: userRoleSchema.optional(),
+  targetRole: userRoleSchema.nullish(),
 })
 export type RecipientCountInput = z.infer<typeof recipientCountSchema>
 

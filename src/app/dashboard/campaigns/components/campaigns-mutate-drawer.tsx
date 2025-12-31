@@ -102,7 +102,7 @@ export function CampaignsMutateDrawer({
   useEffect(() => {
     const updateRecipientCount = async () => {
       const targetAllUsers = form.watch('targetAllUsers')
-      const targetRole = form.watch('targetRole')
+      const targetRole = form.watch('targetRole') || undefined
       const count = await getRecipientCount(targetAllUsers, targetRole)
       setRecipientCount(count)
     }
@@ -289,7 +289,7 @@ export function CampaignsMutateDrawer({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Recurrence Frequency</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select frequency" />
@@ -340,7 +340,7 @@ export function CampaignsMutateDrawer({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Target Role</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select user role" />
@@ -405,7 +405,7 @@ export function CampaignsMutateDrawer({
                       />
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Leave empty to send immediately when you click "Send"
+                      Leave empty to send immediately when you click &quot;Send&quot;
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

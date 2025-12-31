@@ -373,7 +373,7 @@ function CreateSellPostPageContent() {
                                                 />
                                             </FormControl>
                                             <FormDescription className="text-xs">
-                                                Suggest where you'd prefer to meet for the exchange
+                                                Suggest where you&apos;d prefer to meet for the exchange
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
