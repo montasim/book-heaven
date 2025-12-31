@@ -273,7 +273,7 @@ export function RequestBookDrawer({ open, onOpenChange, onSuccess }: Props) {
                       ✓ Voice captured successfully
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      <span className="italic">"{voiceTranscript}"</span>
+                      <span className="italic">&ldquo;{voiceTranscript}&rdquo;</span>
                     </p>
                   </div>
                 )}

@@ -28,6 +28,7 @@ import { BookChatModal } from '@/components/books/book-chat-modal'
 import { BookDetailsSkeleton } from '@/components/books/book-details-skeleton'
 import { BookReviewForm } from '@/components/books/book-review-form'
 import { BookReviewsList } from '@/components/books/book-reviews-list'
+import { LendBookDialog } from '@/components/books/lend-book-dialog'
 import {
     BookOpen,
     LibraryBig,
@@ -130,6 +131,9 @@ export default function BookDetailsPage() {
   const [editingReview, setEditingReview] = useState<{ id: string; rating: number; comment: string | null } | null>(null)
   const [reviewsKey, setReviewsKey] = useState(0) // For refreshing reviews list
 
+  // Lend book state
+  const [isLendDialogOpen, setIsLendDialogOpen] = useState(false)
+
   // Get user for auth
   const { user } = useAuth()
 
@@ -162,7 +166,7 @@ export default function BookDetailsPage() {
       // Close modal if book doesn't meet requirements
       const shouldClose = book.type !== 'EBOOK' || !book.canAccess || book.requiresPremium
       if (shouldClose) {
-        setIsReaderModalOpen(false)
+          setIsReaderModalOpen(false)
       }
     }
   }, [book, shouldAutoOpenReader])
@@ -496,6 +500,19 @@ export default function BookDetailsPage() {
                     </>
                   )}
                 </Button>
+
+                {/* Lend Book Button - Admin only for hard copy books */}
+                {user && user.role !== 'USER' && book.type === 'HARD_COPY' && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={() => setIsLendDialogOpen(true)}
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Lend Book
+                  </Button>
+                )}
 
                 {/* Chat with AI Button - Mobile only */}
                 {book.canAccess && (
@@ -1232,6 +1249,16 @@ export default function BookDetailsPage() {
           open={isChatModalOpen}
           onOpenChange={setIsChatModalOpen}
           book={book}
+        />
+      )}
+
+      {/* Lend Book Dialog - Admin only */}
+      {book && (
+        <LendBookDialog
+          open={isLendDialogOpen}
+          onOpenChange={setIsLendDialogOpen}
+          bookId={bookId}
+          bookName={book.name}
         />
       )}
 

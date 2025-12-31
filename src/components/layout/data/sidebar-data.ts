@@ -34,6 +34,7 @@ import {
   IconStar,
   IconHistory,
   IconTrophy,
+  IconHandStop,
 } from '@tabler/icons-react'
 import { AudioWaveform, BookOpen as BookOpenIcon, Brain, Command, GalleryVerticalEnd } from 'lucide-react'
 import { type SidebarData } from '../types'
@@ -140,6 +141,11 @@ export const sidebarData: SidebarData = {
           url: '/dashboard/book-requests',
           icon: IconBooks,
         },
+        {
+          title: 'Loans',
+          url: '/dashboard/loans',
+          icon: IconHandStop,
+        },
       ],
     },
     {
@@ -229,6 +235,11 @@ export const sidebarData: SidebarData = {
           title: 'Library',
           url: '/library',
           icon: IconBookmark,
+        },
+        {
+          title: 'My Borrowed Books',
+          url: '/profile/loans',
+          icon: IconHandStop,
         },
         {
           title: 'Activity',
