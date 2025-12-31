@@ -74,14 +74,16 @@ export type UpdateAuthorData = z.infer<typeof updateAuthorSchema>
 // ============================================================================
 
 /**
- * Get all authors
+ * Get paginated authors
  */
-export async function getAuthors() {
+export async function getAuthors(options?: { page?: number; pageSize?: number }) {
+  const { page = 1, pageSize: defaultPageSize = 10 } = options || {}
+
   try {
-    const result = await getAuthorsFromDb()
+    const result = await getAuthorsFromDb({ page, limit: defaultPageSize })
 
     // Transform data for UI
-    return result.authors.map(author => {
+    const authors = result.authors.map(author => {
       // Handle entryBy - check if it exists and has required properties
       let entryByName = 'Unknown'
       if (author.entryBy && typeof author.entryBy === 'object') {
@@ -102,9 +104,22 @@ export async function getAuthors() {
         bookCount: author._count.books,
       }
     })
+
+    return {
+      authors,
+      pagination: result.pagination
+    }
   } catch (error) {
     console.error('Error fetching authors:', error)
-    return []
+    return {
+      authors: [],
+      pagination: {
+        total: 0,
+        pages: 0,
+        current: 1,
+        limit: defaultPageSize
+      }
+    }
   }
 }
 

@@ -12,6 +12,7 @@ import { DataTable } from '@/components/data-table/data-table'
 import { columns } from './components/columns'
 import { MoodsMutateDrawer } from './components/moods-mutate-drawer'
 import { MoodsDeleteDialog } from './components/moods-delete-dialog'
+import { EmptyStateCard } from '@/components/ui/empty-state-card'
 
 export default function MoodsPage() {
   const [moods, setMoods] = useState<Mood[]>([])
@@ -71,7 +72,14 @@ export default function MoodsPage() {
       </HeaderContainer>
 
       <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
-        <DataTable data={moods} columns={columns} />
+        {moods.length === 0 ? (
+          <EmptyStateCard
+            title='No moods found'
+            description='There are no moods in the system yet. Create your first mood to get started.'
+          />
+        ) : (
+          <DataTable data={moods} columns={columns} />
+        )}
       </div>
 
       <MoodsMutateDrawer

@@ -12,6 +12,7 @@ import { DataTable } from '@/components/data-table/data-table'
 import { columns } from './components/columns'
 import { BooksMutateDrawer } from './components/books-mutate-drawer'
 import { BooksDeleteDialog } from './components/books-delete-dialog'
+import { EmptyStateCard } from '@/components/ui/empty-state-card'
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([])
@@ -107,13 +108,20 @@ export default function BooksPage() {
       </HeaderContainer>
 
       <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
-        <DataTable
-          data={books}
-          columns={columns}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-          totalCount={totalCount}
-        />
+        {books.length === 0 ? (
+          <EmptyStateCard
+            title='No books found'
+            description='There are no books in the system yet. Create your first book to get started.'
+          />
+        ) : (
+          <DataTable
+            data={books}
+            columns={columns}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+            totalCount={totalCount}
+          />
+        )}
       </div>
 
       <BooksMutateDrawer

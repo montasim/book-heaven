@@ -74,14 +74,16 @@ export type UpdatePublicationData = z.infer<typeof updatePublicationSchema>
 // ============================================================================
 
 /**
- * Get all publications
+ * Get paginated publications
  */
-export async function getPublications() {
+export async function getPublications(options?: { page?: number; pageSize?: number }) {
+  const { page = 1, pageSize: defaultPageSize = 10 } = options || {}
+
   try {
-    const result = await getPublicationsFromDb()
+    const result = await getPublicationsFromDb({ page, limit: defaultPageSize })
 
     // Transform data for UI
-    return result.publications.map(publication => {
+    const publications = result.publications.map(publication => {
       // Handle entryBy - check if it exists and has required properties
       let entryByName = 'Unknown'
       if (publication.entryBy && typeof publication.entryBy === 'object') {
@@ -102,9 +104,22 @@ export async function getPublications() {
         bookCount: publication._count.books,
       }
     })
+
+    return {
+      publications,
+      pagination: result.pagination
+    }
   } catch (error) {
     console.error('Error fetching publications:', error)
-    return []
+    return {
+      publications: [],
+      pagination: {
+        total: 0,
+        pages: 0,
+        current: 1,
+        limit: defaultPageSize
+      }
+    }
   }
 }
 

@@ -59,34 +59,42 @@ export type Series = {
 // ============================================================================
 
 /**
- * Get all series
+ * Get paginated series
  */
-export async function getSeries() {
+export async function getSeries(options?: { page?: number; pageSize?: number }) {
+  const { page = 1, pageSize: defaultPageSize = 10 } = options || {}
+
   try {
     const session = await requireAuth()
+    const skip = (page - 1) * defaultPageSize
 
-    const series = await prisma.series.findMany({
-      include: {
-        entryBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    const [series, total] = await Promise.all([
+      prisma.series.findMany({
+        include: {
+          entryBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          _count: {
+            select: {
+              books: true,
+            },
           },
         },
-        _count: {
-          select: {
-            books: true,
-          },
+        orderBy: {
+          name: 'asc',
         },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    })
+        skip,
+        take: defaultPageSize,
+      }),
+      prisma.series.count()
+    ])
 
-    return series.map(s => ({
+    const transformedSeries = series.map(s => ({
       id: s.id,
       name: s.name,
       description: s.description,
@@ -99,9 +107,27 @@ export async function getSeries() {
       _count: s._count,
       entryBy: s.entryBy,
     }))
+
+    return {
+      series: transformedSeries,
+      pagination: {
+        total,
+        pages: Math.ceil(total / defaultPageSize),
+        current: page,
+        limit: defaultPageSize
+      }
+    }
   } catch (error) {
     console.error('Error fetching series:', error)
-    throw error || new Error('Failed to fetch series')
+    return {
+      series: [],
+      pagination: {
+        total: 0,
+        pages: 0,
+        current: 1,
+        limit: defaultPageSize
+      }
+    }
   }
 }
 

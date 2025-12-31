@@ -75,14 +75,16 @@ export type UpdateCategoryData = z.infer<typeof updateCategorySchema>
 // ============================================================================
 
 /**
- * Get all categories
+ * Get paginated categories
  */
-export async function getCategories() {
+export async function getCategories(options?: { page?: number; pageSize?: number }) {
+  const { page = 1, pageSize: defaultPageSize = 10 } = options || {}
+
   try {
-    const result = await getCategoriesFromDb()
+    const result = await getCategoriesFromDb({ page, limit: defaultPageSize })
 
     // Transform data for UI
-    return result.categories.map(category => {
+    const categories = result.categories.map(category => {
       // Handle entryBy - check if it exists and has required properties
       let entryByName = 'Unknown'
       if (category.entryBy && typeof category.entryBy === 'object') {
@@ -103,9 +105,22 @@ export async function getCategories() {
         bookCount: category._count.books,
       }
     })
+
+    return {
+      categories,
+      pagination: result.pagination
+    }
   } catch (error) {
     console.error('Error fetching categories:', error)
-    return []
+    return {
+      categories: [],
+      pagination: {
+        total: 0,
+        pages: 0,
+        current: 1,
+        limit: defaultPageSize
+      }
+    }
   }
 }
 

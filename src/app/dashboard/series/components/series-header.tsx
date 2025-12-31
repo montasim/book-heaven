@@ -12,10 +12,10 @@ export function SeriesHeader() {
   const canCreate = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN'
 
   return (
-    <div className="flex items-center justify-between">
+    <>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Series</h1>
-        <p className="text-muted-foreground mt-1">
+        <h2 className='text-2xl font-bold tracking-tight'>Series List</h2>
+        <p className='text-muted-foreground'>
           Manage book series and reading orders
         </p>
       </div>
@@ -25,6 +25,6 @@ export function SeriesHeader() {
           Add Series
         </Button>
       )}
-    </div>
+    </>
   )
 }
