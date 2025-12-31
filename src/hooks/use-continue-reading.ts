@@ -9,9 +9,12 @@ const fetcher = async (url: string) => {
   return res.json()
 }
 
-export function useContinueReading(limit: number = 10) {
+export function useContinueReading(limit: number = 10, isAuthenticated: boolean = false) {
+  // Only fetch when user is authenticated
+  const shouldFetch = isAuthenticated ? `/api/user/continue-reading?limit=${limit}` : null
+
   const { data, error, isLoading, mutate } = useSWR(
-    `/api/user/continue-reading?limit=${limit}`,
+    shouldFetch,
     fetcher,
     {
       revalidateOnFocus: false,

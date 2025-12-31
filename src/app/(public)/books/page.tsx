@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { MultiSelect } from '@/components/ui/multi-select'
 import { BookGrid } from '@/components/books/book-grid'
 import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
+import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { SearchBar } from '@/components/books/search-bar'
 import { MoodSelector } from '@/components/books/mood-selector'
 import { useBooks } from '@/hooks/use-books'
@@ -69,11 +70,11 @@ function BooksPageContent({
   const { data: booksData, isLoading, error, refetch } = useBooks(filters)
 
   // Fetch continue reading books (only for authenticated users)
-  const { data: continueReadingData } = useContinueReading(8)
+  const { data: continueReadingData } = useContinueReading(8, !!user)
   const continueReadingBooks = user ? continueReadingData?.books || [] : []
 
   // Fetch recently visited books (only for authenticated users)
-  const { data: recentVisitsData } = useRecentVisits(8)
+  const { data: recentVisitsData } = useRecentVisits(8, !!user)
   const recentBooks = user ? recentVisitsData?.books || [] : []
 
   // Fetch mood-based recommendations
@@ -584,7 +585,7 @@ function BooksPageContent({
 
             {/* Mood-Based Recommendations Section */}
             {(!user || user.showMoodRecommendations !== false) && (
-            <div className="mt-4 md:mt-0 lg:mt-0 mb-4">
+            <div className="mt-4 md:mt-0 lg:mt-0 mb-6">
               <Card>
                 <CardHeader className="cursor-pointer py-3 sm:py-6 px-4 sm:px-6" onClick={() => setShowMoodPicker(!showMoodPicker)}>
                   <div className="flex items-center justify-between">
@@ -640,9 +641,10 @@ function BooksPageContent({
                             showProgressActions={true}
                           />
                         ) : (
-                          <div className="text-center py-8">
-                            <p className="text-muted-foreground">No books found for this mood. Try another mood!</p>
-                          </div>
+                          <EmptyStateCard
+                            title='No books found for this mood'
+                            description='Try selecting another mood to see different book recommendations.'
+                          />
                         )}
                       </div>
                     )}
