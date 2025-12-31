@@ -68,6 +68,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const loadedPdfUrl = useRef<string | null>(null)
+  const [autoScale, setAutoScale] = useState<number | null>(null)
 
   // Use external scale/rotation if provided, otherwise use internal state
   const scale = externalScale ?? internalScale
@@ -142,14 +143,48 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     }
   }, [directFileUrl, fileUrl, initialPage, loadPDFJS, onPageChange, onProgressChange])  
 
+  // Calculate optimal scale to fit container
+  const calculateOptimalScale = useCallback(async (page: any, rotation: number) => {
+    if (!containerRef.current || !canvasRef.current) return null
+
+    const viewport = page.getViewport({ scale: 1, rotation })
+    const container = containerRef.current
+
+    // Get container dimensions
+    const containerWidth = container.clientWidth - 32 // Account for padding
+    const containerHeight = container.clientHeight - 32
+
+    // Calculate scales to fit width and height
+    const scaleX = containerWidth / viewport.width
+    const scaleY = containerHeight / viewport.height
+
+    // Use the smaller scale to fit both dimensions
+    const optimalScale = Math.min(scaleX, scaleY, 3) // Cap at max 3x
+
+    return optimalScale
+  }, [])
+
   // Render specific page
   const renderPage = useCallback(async (pdf: any, pageNumber: number, currentScale: number, currentRotation: number) => {
     if (!canvasRef.current) return
 
     try {
       const page = await pdf.getPage(pageNumber)
+
+      // Calculate auto-scale if not manually set
+      const calculatedScale = autoScale ?? await calculateOptimalScale(page, currentRotation)
+      if (calculatedScale && !autoScale) {
+        setAutoScale(calculatedScale)
+        // Notify parent of the auto-calculated scale
+        if (externalScale !== undefined && onScaleChange) {
+          onScaleChange(calculatedScale)
+        }
+      }
+
+      const finalScale = calculatedScale || currentScale
+
       const viewport = page.getViewport({
-        scale: currentScale,
+        scale: finalScale,
         rotation: currentRotation
       })
 
@@ -174,7 +209,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
       console.error('Error rendering page:', err)
       throw err
     }
-  }, [onProgressChange])
+  }, [onProgressChange, calculateOptimalScale, autoScale, externalScale, onScaleChange])
 
   // Navigate to specific page
   const goToPage = useCallback(async (pageNumber: number) => {
@@ -199,6 +234,9 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   // Change zoom level
   const handleZoomChange = useCallback(async (newScale: number[]) => {
     const targetScale = newScale[0]
+
+    // Reset auto-scale when user manually zooms
+    setAutoScale(null)
 
     // Update internal state or notify parent
     if (externalScale !== undefined) {
@@ -346,6 +384,35 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
 
+  // Recalculate scale on window resize
+  useEffect(() => {
+    if (!pdfDocument || !currentPage) return
+
+    const handleResize = async () => {
+      // Recalculate and re-render with new scale
+      setAutoScale(null) // Reset to trigger recalculation
+      const page = await pdfDocument.getPage(currentPage)
+      const newScale = await calculateOptimalScale(page, rotation)
+      if (newScale) {
+        setAutoScale(newScale)
+        // Don't update internal/external scale, let auto-scale handle it
+        await renderPage(pdfDocument, currentPage, newScale, rotation)
+      }
+    }
+
+    let timeoutId: NodeJS.Timeout
+    const delayedHandleResize = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(handleResize, 250) // Debounce resize
+    }
+
+    window.addEventListener('resize', delayedHandleResize)
+    return () => {
+      window.removeEventListener('resize', delayedHandleResize)
+      clearTimeout(timeoutId)
+    }
+  }, [pdfDocument, currentPage, rotation, calculateOptimalScale, renderPage])
+
   if (error) {
     return (
       <div className={cn("flex flex-col items-center justify-center p-8 text-center", className)}>
@@ -449,13 +516,13 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleZoomChange([Math.max(0.5, scale - 0.2)])}
+                onClick={() => handleZoomChange([Math.max(0.5, (autoScale ?? scale) - 0.2)])}
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <div className="w-24 lg:w-32">
                 <Slider
-                  value={[scale]}
+                  value={[autoScale ?? scale]}
                   onValueChange={handleZoomChange}
                   min={0.5}
                   max={3}
@@ -466,12 +533,12 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleZoomChange([Math.min(3, scale + 0.2)])}
+                onClick={() => handleZoomChange([Math.min(3, (autoScale ?? scale) + 0.2)])}
               >
                 <ZoomIn className="h-4 w-4" />
               </Button>
               <span className="text-sm text-muted-foreground min-w-[3rem]">
-                {Math.round(scale * 100)}%
+                {Math.round((autoScale ?? scale) * 100)}%
               </span>
             </div>
 
@@ -536,13 +603,13 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleZoomChange([Math.max(0.5, scale - 0.2)])}
+                  onClick={() => handleZoomChange([Math.max(0.5, (autoScale ?? scale) - 0.2)])}
                 >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
                 <div className="flex-1 max-w-[120px]">
                   <Slider
-                    value={[scale]}
+                    value={[autoScale ?? scale]}
                     onValueChange={handleZoomChange}
                     min={0.5}
                     max={3}
@@ -553,12 +620,12 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleZoomChange([Math.min(3, scale + 0.2)])}
+                  onClick={() => handleZoomChange([Math.min(3, (autoScale ?? scale) + 0.2)])}
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>
                 <span className="text-sm text-muted-foreground min-w-[3.5rem]">
-                  {Math.round(scale * 100)}%
+                  {Math.round((autoScale ?? scale) * 100)}%
                 </span>
               </div>
             </div>
@@ -607,7 +674,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
       </div>
 
       {/* PDF Canvas Container */}
-      <div className="flex-1 overflow-auto bg-neutral-100 dark:bg-neutral-900 min-h-0 mx-2 sm:mx-4 md:mx-8 mt-3 sm:mt-4 md:mt-6 rounded-lg relative">
+      <div className="flex-1 overflow-auto bg-neutral-100 dark:bg-neutral-900 min-h-0 mx-1 sm:mx-2 md:mx-3 lg:mx-4 mt-2 sm:mt-3 md:mt-4 rounded-lg relative">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -621,7 +688,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
             )}
           </div>
         ) : (
-          <div className="flex items-start justify-center min-h-full pt-2 pb-16 sm:py-4 md:py-6 px-2 sm:px-4 md:px-6 relative">
+          <div className="flex items-start justify-center min-h-full py-2 sm:py-3 md:py-4 px-1 sm:px-2 md:px-3 lg:px-4 relative">
             <canvas
               ref={canvasRef}
               className="max-w-full h-auto shadow-lg rounded-md border-2 border-border"
@@ -631,7 +698,7 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
             />
 
             {/* Mobile touch zones for page navigation */}
-            <div className="sm:hidden absolute inset-0 flex pointer-events-auto pt-2 pb-16 px-2 sm:px-4 md:px-6">
+            <div className="sm:hidden absolute inset-0 flex pointer-events-auto py-2 px-1 sm:px-2 md:px-3">
               {/* Left touch zone - previous page */}
               <button
                 onClick={() => goToPage(Math.max(1, currentPage - 1))}
