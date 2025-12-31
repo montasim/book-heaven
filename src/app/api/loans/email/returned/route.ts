@@ -1,16 +1,19 @@
 /**
  * Book Returned Email Notification API Route
  *
- * Sends email when a book is returned
+ * Sends email when a book is returned using the existing email system
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserDisplayName } from '@/lib/utils/user'
+import { Resend } from 'resend'
+import { config } from '@/config'
 
-const FROM_EMAIL = process.env.RESEND_API_KEY ? 'onboarding@resend.dev' : 'onboarding@resend.dev'
+const resend = new Resend(config.resendApiKey)
+const FROM_EMAIL = config.fromEmail || 'onboarding@resend.dev'
 const APP_NAME = 'Book Heaven'
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+const BASE_URL = config.baseUrl || 'http://localhost:3000'
 
 function emailTemplateWrapper(content: string, previewText?: string): string {
   return `
@@ -71,7 +74,7 @@ function getBookReturnedEmailTemplate(
       </p>
     </div>
 
-    <div style="background: #eff6ff; border-left: 4px solid #1e3a5f; padding: 20px; margin: 24px 0; border-radius: 8px;">
+    <div class="info-box">
       <p style="margin: 0 0 8px 0; color: #1e40af; font-size: 14px; font-weight: 600;">
         📅 Return Date:
       </p>
@@ -102,7 +105,7 @@ function getBookReturnedEmailTemplate(
 }
 
 /**
- * Send book returned email
+ * Send book returned email using existing system
  * POST /api/loans/email/returned
  */
 export async function POST(request: NextRequest) {
@@ -142,9 +145,6 @@ export async function POST(request: NextRequest) {
       month: 'long',
       day: 'numeric'
     })
-
-    const { Resend } = await import('resend')
-    const resend = new Resend(process.env.RESEND_API_KEY)
 
     // Send email to user
     const userEmailTemplate = getBookReturnedEmailTemplate(

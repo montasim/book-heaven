@@ -11,10 +11,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserDisplayName } from '@/lib/utils/user'
+import { Resend } from 'resend'
+import { config } from '@/config'
 
-const FROM_EMAIL = process.env.RESEND_API_KEY ? 'onboarding@resend.dev' : 'onboarding@resend.dev'
+const resend = new Resend(config.resendApiKey)
+const FROM_EMAIL = config.fromEmail || 'onboarding@resend.dev'
 const APP_NAME = 'Book Heaven'
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+const BASE_URL = config.baseUrl || 'http://localhost:3000'
 
 // Verify cron secret to prevent unauthorized access
 const CRON_SECRET = process.env.CRON_SECRET || 'your-secret-key'
@@ -200,9 +203,6 @@ export async function GET(request: NextRequest) {
         remindersSent: 0
       })
     }
-
-    const { Resend } = await import('resend')
-    const resend = new Resend(process.env.RESEND_API_KEY)
 
     const dueDateStr = tomorrow.toLocaleDateString('en-US', {
       weekday: 'long',
