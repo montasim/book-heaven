@@ -41,6 +41,14 @@ import {
 } from 'lucide-react'
 import { NoticeTicker } from '@/components/notices/notice-ticker'
 
+// Type for category
+interface Category {
+  id: string
+  name: string
+  description: string | null
+  image: string | null
+}
+
 // Helper function to derive filters from searchParams
 function deriveFiltersFromSearchParams(searchParams: ReturnType<typeof useSearchParams>) {
   return {
@@ -116,19 +124,38 @@ function BooksPageContent({
   const books = booksData?.books || []
   const pagination = booksData?.pagination
 
-  // Category options for MultiSelect
-  const CATEGORY_OPTIONS = [
-    { value: 'science-fiction', label: 'Science Fiction' },
-    { value: 'romance', label: 'Romance' },
-    { value: 'mystery', label: 'Mystery' },
-    { value: 'biography', label: 'Biography' },
-    { value: 'self-help', label: 'Self-Help' },
-    { value: 'business', label: 'Business' },
-    { value: 'fantasy', label: 'Fantasy' },
-    { value: 'thriller', label: 'Thriller' },
-    { value: 'history', label: 'History' },
-    { value: 'cooking', label: 'Cooking' }
-  ]
+  // State for dynamic categories
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true)
+      try {
+        const response = await fetch('/api/categories')
+        const data = await response.json()
+
+        if (data.success) {
+          setCategories(data.data.categories)
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err)
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  // Category options for MultiSelect - derived from dynamic data
+  const CATEGORY_OPTIONS = useMemo(() => {
+    return categories.map(cat => ({
+      value: cat.id,
+      label: cat.name
+    }))
+  }, [categories])
 
   // Sync filters to URL parameters
   useEffect(() => {
