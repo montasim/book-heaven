@@ -3,7 +3,7 @@
 import { Plus, RefreshCw, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBooksContext } from '../context/books-context'
-import { BulkImportDialog } from './bulk-import-dialog'
+import { BulkImportDrawer } from './bulk-import-drawer'
 import { useState } from 'react'
 
 export function BooksHeader() {
@@ -36,7 +36,7 @@ export function BooksHeader() {
               </Button>
           </div>
 
-          <BulkImportDialog
+          <BulkImportDrawer
               open={bulkImportOpen}
               onOpenChange={setBulkImportOpen}
               onSuccess={refreshBooks}
