@@ -1,0 +1,11 @@
+name,type,authors,publication,categories,series,seriesOrder,summary,buyingPrice,sellingPrice,numberOfCopies,bindingType,pageNumber,isPublic,requiresPremium
+"The Great Adventure","HARD_COPY","John Smith","Adventure Press","Fantasy,Adventure","The Great Series",1,"An epic tale of courage and discovery that follows a young hero on their journey to save the kingdom.",12.50,19.99,10,"HARDCOVER",350,true,false
+"Mystery of the Lost City","EBOOK","Jane Doe","Mystery House","Crime,Mystery","","",8.00,14.99,1,"",280,true,false
+"Cooking for Beginners","HARD_COPY","Chef Antonio","Culinary Books","Cooking,Education","","",15.00,24.99,5,"PAPERBACK",200,true,false
+"Space Exploration","AUDIO","Dr. Robert Brown","Science Publishers","Science,Education","Space Series",1,"Learn about the mysteries of the universe in this comprehensive audio guide.",20.00,29.99,3,"",,true,false
+"Poetry Collection 2024","HARD_COPY","Emily White","Poetry Press","Literature,Poetry","","",10.00,16.99,8,"PAPERBACK",150,true,false
+"Advanced Mathematics","EBOOK","Prof. Alan Turing","Academic Press","Education,Mathematics","Math Series",3,"Advanced mathematical concepts explained in simple terms.",25.00,39.99,1,"",450,false,true
+"The Ancient World","HARD_COPY","Sarah Johnson","History Books","History,Education","History of Civilization",2,"Explore ancient civilizations and their contributions to modern society.",18.00,28.99,6,"HARDCOVER",400,true,false
+"Fitness Guide","AUDIO","Mike Fitness","Health Publishers","Health,Exercise","","",12.00,19.99,2,"",,true,false
+"Children's Stories","HARD_COPY","Mary Poppins","Kids Books","Children,Education","Kids Collection",1.5,"A collection of heartwarming stories for children aged 5-10.",8.50,14.99,12,"PAPERBACK",120,true,false
+"Digital Marketing","EBOOK","Tom Marketing","Business Press","Business,Marketing","Business Skills",1,"Master the art of digital marketing with this comprehensive guide.",22.00,34.99,1,"",320,false,false

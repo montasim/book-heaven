@@ -1,11 +1,14 @@
 'use client'
 
-import { Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBooksContext } from '../context/books-context'
+import { BulkImportDialog } from './bulk-import-dialog'
+import { useState } from 'react'
 
 export function BooksHeader() {
   const { setOpen, refreshBooks } = useBooksContext()
+  const [bulkImportOpen, setBulkImportOpen] = useState(false)
 
   const handleAddBook = () => {
     setOpen('create')
@@ -23,11 +26,21 @@ export function BooksHeader() {
               <Button className='space-x-1' onClick={handleAddBook}>
                   <span>Add Book</span> <Plus size={18} />
               </Button>
+              <Button className='space-x-1' onClick={() => setBulkImportOpen(true)} variant='outline'>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Bulk Import
+              </Button>
               <Button className='space-x-1' onClick={refreshBooks} variant='outline'>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
               </Button>
           </div>
+
+          <BulkImportDialog
+              open={bulkImportOpen}
+              onOpenChange={setBulkImportOpen}
+              onSuccess={refreshBooks}
+          />
       </>
   )
 }
