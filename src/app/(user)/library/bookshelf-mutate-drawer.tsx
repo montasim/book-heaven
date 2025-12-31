@@ -125,8 +125,8 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
             })
 
             // Fetch all books
-            const books = await getBooks()
-            setAllBooks(books)
+            const result = await getBooks()
+            setAllBooks(result.books)
             setSelectedBooks(new Set(bookshelfBookIds))
           } catch (error) {
             console.error('Error fetching bookshelf:', error)
@@ -145,13 +145,13 @@ export function BookshelfMutateDrawer({ open, onOpenChange, onSuccess, bookshelf
           // Fetch books in this bookshelf
           setBooksLoading(true)
           try {
-            const books = await getBooks()
+            const result = await getBooks()
             const bookshelfData = await getBookshelfById(bookshelf.id)
 
             // Get the IDs of books that are in this bookshelf
             const bookshelfBookIds = bookshelfData?.books.map((b: any) => b.book.id) || []
 
-            setAllBooks(books)
+            setAllBooks(result.books)
             setSelectedBooks(new Set(bookshelfBookIds))
           } catch (error) {
             console.error('Error fetching books:', error)

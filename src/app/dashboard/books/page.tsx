@@ -3,7 +3,7 @@
 import { deleteBook, getBooks } from './actions'
 import { HeaderContainer } from '@/components/ui/header-container'
 import { BooksHeader } from './components/books-header'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Book } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
 import BooksContextProvider, { BooksDialogType } from './context/books-context'
@@ -15,27 +15,63 @@ import { BooksDeleteDialog } from './components/books-delete-dialog'
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([])
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const [totalCount, setTotalCount] = useState(0)
 
-  useEffect(() => {
-    const updateBooks = async () => {
-      const rawBooks = await getBooks()
-      setBooks(rawBooks)
+  // Store current pagination in a ref to avoid stale closures
+  const paginationRef = useRef(pagination)
+  paginationRef.current = pagination
+
+  // Track component mount
+  const isMountedRef = useRef(false)
+
+  // Track last fetched page to prevent duplicates
+  const lastFetchedRef = useRef<string>('')
+
+  const fetchBooksForPage = useCallback(async (pageIndex: number, pageSize: number) => {
+    const fetchKey = `${pageIndex}-${pageSize}`
+    const apiPage = pageIndex + 1
+
+    // Skip if we just fetched this page
+    if (lastFetchedRef.current === fetchKey) {
+      return
     }
 
-    updateBooks()
+    // Mark as fetching immediately to prevent duplicates
+    lastFetchedRef.current = fetchKey
+
+    try {
+      const result = await getBooks({
+        page: apiPage,
+        pageSize: pageSize,
+      })
+      setBooks(result.books)
+      setTotalCount(result.pagination.total)
+    } catch (error) {
+      console.error('Error fetching books:', error)
+      // Reset on error so we can retry
+      lastFetchedRef.current = ''
+    }
   }, [])
+
+  useEffect(() => {
+    // Skip first render - let the initial fetch happen naturally
+    if (!isMountedRef.current) {
+      isMountedRef.current = true
+      fetchBooksForPage(pagination.pageIndex, pagination.pageSize)
+      return
+    }
+
+    fetchBooksForPage(pagination.pageIndex, pagination.pageSize)
+  }, [pagination.pageIndex, pagination.pageSize, fetchBooksForPage])
 
   // Local states
   const [currentRow, setCurrentRow] = useState<Book | null>(null)
   const [open, setOpen] = useDialogState<BooksDialogType>(null)
 
   const refreshBooks = async () => {
-    try {
-      const rawBooks = await getBooks()
-      setBooks(rawBooks)
-    } catch (error) {
-      console.error('Error refreshing books-old:', error)
-    }
+    const { pageIndex, pageSize } = paginationRef.current
+    await fetchBooksForPage(pageIndex, pageSize)
   }
 
   const handleDelete = async (book: Book) => {
@@ -71,7 +107,13 @@ export default function BooksPage() {
       </HeaderContainer>
 
       <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
-        <DataTable data={books} columns={columns} />
+        <DataTable
+          data={books}
+          columns={columns}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          totalCount={totalCount}
+        />
       </div>
 
       <BooksMutateDrawer

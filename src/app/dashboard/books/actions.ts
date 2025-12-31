@@ -220,14 +220,17 @@ export type UpdateBookData = z.infer<typeof updateBookSchema>
 // ============================================================================
 
 /**
- * Get all books-old
+ * Get paginated books
  */
-export async function getBooks() {
+export async function getBooks(options?: { page?: number; pageSize?: number }) {
+  // Capture pageSize for use in catch block
+  const { page = 1, pageSize: defaultPageSize = 10 } = options || {}
+
   try {
-    const result = await getBooksFromDb()
+    const result = await getBooksFromDb({ page, limit: defaultPageSize })
 
     // Transform data for UI
-    return result.books.map(book => {
+    const books = result.books.map(book => {
         // Handle entryBy - check if it exists and has required properties
         let entryByName = 'Unknown'
         if (book.entryBy && typeof book.entryBy === 'object') {
@@ -271,9 +274,22 @@ export async function getBooks() {
           }))
       };
     })
+
+    return {
+      books,
+      pagination: result.pagination
+    }
   } catch (error) {
-    console.error('Error fetching books-old:', error)
-    return []
+    console.error('Error fetching books:', error)
+    return {
+      books: [],
+      pagination: {
+        total: 0,
+        pages: 0,
+        current: 1,
+        limit: defaultPageSize
+      }
+    }
   }
 }
 
