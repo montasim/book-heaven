@@ -1,5 +1,12 @@
 import { z } from 'zod'
 
+const entryBySchema = z.object({
+  id: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string(),
+}).optional()
+
 export const seriesSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -8,6 +15,7 @@ export const seriesSchema = z.object({
   directImageUrl: z.string().nullable(),
   entryDate: z.string(),
   entryById: z.string(),
+  entryBy: entryBySchema,
   createdAt: z.string(),
   updatedAt: z.string(),
   _count: z.object({
