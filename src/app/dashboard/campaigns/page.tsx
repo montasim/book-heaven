@@ -106,7 +106,7 @@ function CampaignsPageContent() {
         <CampaignsHeader campaignCount={campaigns.length} />
       </HeaderContainer>
 
-      <div className="space-y-4">
+      <div className="space-y-4 mt-4">
         {/* Campaign Summary */}
         <DashboardSummary summaries={summaryItems} />
 
@@ -157,5 +157,7 @@ function CampaignsPageContent() {
 }
 
 export default function Page() {
-  return <CampaignsPageContent />
+  return <div className='p-4'>
+      <CampaignsPageContent />
+  </div>
 }
