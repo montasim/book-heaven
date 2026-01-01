@@ -76,6 +76,7 @@ const formSchema = z.object({
   })).optional(),
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
+  featured: z.boolean().default(false),
 }).superRefine((data, ctx) => {
   if (data.type === 'HARD_COPY') {
     if (!data.bindingType) {
@@ -179,6 +180,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       series: [],
       isPublic: false,
       requiresPremium: false,
+      featured: false,
     },
     mode: 'onChange',
   })
@@ -206,6 +208,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         })) || [],
         isPublic: currentRow.isPublic || false,
         requiresPremium: currentRow.requiresPremium || false,
+        featured: currentRow.featured || false,
       } : {
         name: '',
         image: '',
@@ -224,6 +227,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         series: [],
         isPublic: false,
         requiresPremium: false,
+        featured: false,
       } as BookForm;
       form.reset(defaultValues);
       setPurchaseDate(currentRow?.purchaseDate ? new Date(currentRow.purchaseDate) : undefined);
@@ -712,6 +716,27 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                       Requires Premium
                     </FormLabel>
                     <InfoTooltip content="Enabling this will require users to have premium access to view this book." />
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='featured'
+              render={({ field }) => (
+                <FormItem className='flex flex-row items-center justify-between space-y-0'>
+                  <div className='flex items-center gap-2'>
+                    <FormLabel className='flex items-center gap-2'>
+                      Featured
+                    </FormLabel>
+                    <InfoTooltip content="Enabling this will display the book on the homepage as a featured book." />
                   </div>
                   <FormControl>
                     <Switch

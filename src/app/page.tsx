@@ -20,25 +20,32 @@ import {
 async function getFeaturedBooks() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/public/books?limit=6&sortBy=createdAt&sortOrder=desc`, {
+    const response = await fetch(`${baseUrl}/api/public/books/featured?limit=6&sortBy=createdAt&sortOrder=desc`, {
       next: { revalidate: 300 }, // Cache for 5 minutes
     })
 
     if (!response.ok) {
-      return { books: [] }
+      console.error(`API returned ${response.status}: ${response.statusText}`)
+      return { data: { books: [] } }
+    }
+
+    const contentType = response.headers.get('content-type')
+    if (!contentType?.includes('application/json')) {
+      console.error('API returned non-JSON response:', contentType)
+      return { data: { books: [] } }
     }
 
     const data = await response.json()
     return data
   } catch (error) {
     console.error('Failed to fetch featured books:', error)
-    return { books: [] }
+    return { data: { books: [] } }
   }
 }
 
 export default async function HomePage() {
   const data = await getFeaturedBooks()
-  const featuredBooks = data?.books || []
+  const featuredBooks = data?.data?.books || []
 
   const features = [
     {

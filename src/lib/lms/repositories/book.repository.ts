@@ -190,6 +190,7 @@ export async function createBook(data: {
   purchaseDate?: Date
   isPublic?: boolean
   requiresPremium?: boolean
+  featured?: boolean
   entryById: string
   authorIds: string[]
   publicationIds: string[]
@@ -248,6 +249,7 @@ export async function createBook(data: {
         purchaseDate: data.purchaseDate,
         isPublic: data.isPublic,
         requiresPremium: data.requiresPremium,
+        featured: data.featured,
         entryById: data.entryById,
       },
       // data: {
@@ -328,6 +330,7 @@ export async function updateBook(
     purchaseDate?: Date | null
     isPublic?: boolean | null
     requiresPremium?: boolean | null
+    featured?: boolean | null
     authorIds?: string[]
     publicationIds?: string[]
     categoryIds?: string[]
@@ -408,6 +411,7 @@ export async function updateBook(
           purchaseDate: data.purchaseDate,
           isPublic: data.isPublic ?? undefined,
           requiresPremium: data.requiresPremium ?? undefined,
+          featured: data.featured ?? undefined,
         },
         include: {
           entryBy: {

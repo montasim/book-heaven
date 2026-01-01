@@ -87,6 +87,7 @@ const createBookSchema = z.object({
   })).optional(),
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
+  featured: z.boolean().default(false),
 }).superRefine((data, ctx) => {
   // Validate image format (PNG only)
   if (data.image instanceof File && data.image.type !== 'image/png') {
@@ -159,6 +160,7 @@ const updateBookSchema = z.object({
   })).optional(),
   isPublic: z.boolean().default(false),
   requiresPremium: z.boolean().default(false),
+  featured: z.boolean().default(false),
 }).superRefine((data, ctx) => {
   // Validate image format (PNG only)
   if (data.image instanceof File && data.image.type !== 'image/png') {
@@ -255,6 +257,7 @@ export async function getBooks(options?: { page?: number; pageSize?: number }) {
           purchaseDate: book.purchaseDate?.toISOString() || null,
           isPublic: book.isPublic ?? false,
           requiresPremium: book.requiresPremium ?? false,
+          featured: book.featured ?? false,
           entryDate: book.entryDate.toISOString(),
           entryBy: entryByName,
           entryById: book.entryBy.id,
@@ -322,6 +325,7 @@ export async function getBookById(id: string) {
       purchaseDate: book.purchaseDate?.toISOString() || null,
       isPublic: book.isPublic ?? false,
       requiresPremium: book.requiresPremium ?? false,
+      featured: book.featured ?? false,
       entryDate: book.entryDate.toISOString(),
       entryBy: book.entryBy.name || book.entryBy.email,
       entryById: book.entryBy.id,
@@ -440,6 +444,7 @@ export async function createBook(formData: FormData) {
       purchaseDate: formData.get('purchaseDate') as string,
       isPublic: formData.get('isPublic') === 'true',
       requiresPremium: formData.get('requiresPremium') === 'true',
+      featured: formData.get('featured') === 'true',
       authorIds: formData.getAll('authorIds') as string[],
       publicationIds: formData.getAll('publicationIds') as string[],
       categoryIds: formData.getAll('categoryIds') as string[],
@@ -500,6 +505,7 @@ export async function createBook(formData: FormData) {
       purchaseDate: validatedData.purchaseDate ? new Date(validatedData.purchaseDate) : null,
       isPublic: validatedData.isPublic,
       requiresPremium: validatedData.requiresPremium,
+      featured: validatedData.featured,
       entryById: session.userId,
       authorIds: validatedData.authorIds,
       publicationIds: validatedData.publicationIds,
@@ -595,6 +601,7 @@ export async function updateBook(id: string, formData: FormData) {
       purchaseDate: formData.get('purchaseDate') as string,
       isPublic: formData.get('isPublic') === 'true',
       requiresPremium: formData.get('requiresPremium') === 'true',
+      featured: formData.get('featured') === 'true',
       authorIds: formData.getAll('authorIds') as string[],
       publicationIds: formData.getAll('publicationIds') as string[],
       categoryIds: formData.getAll('categoryIds') as string[],
@@ -685,6 +692,7 @@ export async function updateBook(id: string, formData: FormData) {
       purchaseDate: validatedData.purchaseDate ? new Date(validatedData.purchaseDate) : null,
       isPublic: validatedData.isPublic,
       requiresPremium: validatedData.requiresPremium,
+      featured: validatedData.featured,
       authorIds: validatedData.authorIds,
       publicationIds: validatedData.publicationIds,
       categoryIds: validatedData.categoryIds || [],

@@ -166,6 +166,7 @@ model Book {
   fileUrl             String?
   directFileUrl       String?
   isPublic            Boolean           @default(false)
+  featured            Boolean           @default(false)
   pageNumber          Int?
   requiresPremium     Boolean           @default(false)
   summary             String?
