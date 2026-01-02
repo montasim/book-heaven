@@ -17,17 +17,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, ShoppingBag, MessageSquare, Folder } from 'lucide-react'
+import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, ShoppingBag, MessageSquare } from 'lucide-react'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
-import { useCategories } from '@/hooks/use-categories'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 
 interface UserTopbarProps {
@@ -47,13 +43,6 @@ export function UserTopbar({
   const { user, logout, isLoading } = useAuth()
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
-
-  // Fetch categories for the navigation menu
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories({
-    limit: 10, // Show top 10 categories
-    minBooks: 1, // Only show categories with at least 1 book
-  })
-  const categories = categoriesData?.data?.categories || []
 
   const handleLogout = () => {
     setIsLogoutDialogOpen(true)
@@ -127,73 +116,9 @@ export function UserTopbar({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/messages" className="w-full cursor-pointer">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Messages
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
                   <Link href="/quiz" className="w-full cursor-pointer lg:hidden">
                     <Brain className="mr-2 h-4 w-4" />
                     Quiz Game
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="lg:hidden">
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    <span>Categories</span>
-                    <ChevronDown className="ml-auto h-4 w-4" />
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {categoriesLoading ? (
-                      <div className="p-2">
-                        <div className="space-y-2">
-                          {[...Array(3)].map((_, i) => (
-                            <div key={i} className="flex items-center space-x-2">
-                              <Skeleton className="h-4 w-24" />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : categories.length > 0 ? (
-                      <>
-                        {categories.slice(0, 6).map((category) => (
-                          <DropdownMenuItem key={category.id} asChild>
-                            <Link
-                              href={`/books?category=${encodeURIComponent(category.name.toLowerCase())}`}
-                              className="w-full cursor-pointer"
-                            >
-                              <div>
-                                <div className="font-medium">{category.name}</div>
-                                {category.description && (
-                                  <p className="text-xs text-muted-foreground line-clamp-1">
-                                    {category.description}
-                                  </p>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                  {category.bookCount} {category.bookCount === 1 ? 'book' : 'books'}
-                                </p>
-                              </div>
-                            </Link>
-                          </DropdownMenuItem>
-                        ))}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href="/books" className="w-full cursor-pointer font-medium">
-                            View All Categories
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
-                    ) : (
-                      <DropdownMenuItem disabled>
-                        <p className="text-xs text-muted-foreground">No categories available</p>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuItem asChild>
-                  <Link href="/about" className="w-full cursor-pointer">
-                    About
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -228,6 +153,12 @@ export function UserTopbar({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                    <Link href="/messages" className="w-full cursor-pointer">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Messages
+                    </Link>
+                </DropdownMenuItem>
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={() => handleNavigation('/settings/profile')}>
                   <User className="mr-2 h-4 w-4" />
@@ -308,66 +239,6 @@ export function UserTopbar({
               <BookOpen className="h-4 w-4" />
               <span>Books</span>
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
-                    pathname?.startsWith('/categories')
-                      ? "text-primary bg-accent"
-                      : "text-muted-foreground hover:text-primary hover:bg-accent"
-                  )}
-                >
-                  <Folder className="h-4 w-4" />
-                  <span>Categories</span>
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-96">
-                {categoriesLoading ? (
-                  <div className="p-4">
-                    <div className="grid grid-cols-3 gap-2">
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="space-y-1">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-3 w-2/3" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : categories.length > 0 ? (
-                  <div className="p-2">
-                    <div className="grid grid-cols-3 gap-1 mb-2">
-                      {categories.slice(0, 10).map((category) => (
-                        <DropdownMenuItem key={category.id} asChild className="p-2">
-                          <Link
-                            href={`/books?category=${encodeURIComponent(category.name.toLowerCase())}`}
-                            className="w-full cursor-pointer"
-                          >
-                            <div className="flex flex-col gap-1">
-                              <div className="font-medium text-sm">{category.name}</div>
-                              <p className="text-xs text-muted-foreground">
-                                {category.bookCount} {category.bookCount === 1 ? 'book' : 'books'}
-                              </p>
-                            </div>
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/categories" className="w-full cursor-pointer font-medium justify-center">
-                        View All Categories
-                      </Link>
-                    </DropdownMenuItem>
-                  </div>
-                ) : (
-                  <DropdownMenuItem disabled>
-                    <p className="text-xs text-muted-foreground">No categories available</p>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Link
               href="/marketplace"
               className={cn(
