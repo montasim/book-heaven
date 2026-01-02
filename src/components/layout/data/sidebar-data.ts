@@ -36,6 +36,7 @@ import {
   IconTrophy,
   IconHandStop,
   IconLibrary,
+  IconCurrency,
 } from '@tabler/icons-react'
 import { AudioWaveform, BookOpen as BookOpenIcon, Brain, Command, GalleryVerticalEnd } from 'lucide-react'
 import { type SidebarData } from '../types'
@@ -146,6 +147,11 @@ export const sidebarData: SidebarData = {
           title: 'Loans',
           url: '/dashboard/loans',
           icon: IconHandStop,
+        },
+        {
+          title: 'Cost Analytics',
+          url: '/dashboard/books/cost-analytics',
+          icon: IconCurrency,
         },
       ],
     },

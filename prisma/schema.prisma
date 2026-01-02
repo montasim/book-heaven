@@ -215,6 +215,9 @@ model Book {
   // Lending relations
   loans                        BookLoan[]
 
+  @@index([entryById, type, purchaseDate])
+  @@index([type, purchaseDate])
+  @@index([entryById, purchaseDate])
   @@map("books")
 }
 
