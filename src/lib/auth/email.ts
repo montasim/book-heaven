@@ -109,7 +109,7 @@ function emailTemplateWrapper(content: string, previewText?: string): string {
               <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">${APP_NAME}</h1>
+          <h1 style="color: #1e3a5f; margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">${APP_NAME}</h1>
         </div>
       </div>
 
