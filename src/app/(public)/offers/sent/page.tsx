@@ -98,7 +98,7 @@ function OffersSentPageContent() {
             setError(null)
 
             try {
-                const response = await fetch('/api/user/my-offers')
+                const response = await fetch('/api/user/offers')
                 const result: OffersResponse = await response.json()
 
                 if (result.success) {

@@ -28,12 +28,15 @@ import {
     Clock,
     RotateCcw,
     MessageSquare,
+    Filter,
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatPrice, formatDistanceToNow, getInitials } from '@/lib/utils'
 import { OfferStatus } from '@prisma/client'
 import { BreadcrumbList } from '@/components/breadcrumb/breadcrumb'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
+import { DashboardSummarySkeleton, OfferListSkeleton } from '@/components/data-table/table-skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // ============================================================================
 // TYPES
@@ -241,64 +244,89 @@ function OffersReceivedPageContent() {
                 </div>
 
                 {/* Stats */}
-                <DashboardSummary
-                    summaries={[
-                        {
-                            title: 'Total Offers',
-                            value: stats.total,
-                            description: 'All offers received',
-                        },
-                        {
-                            title: 'Pending',
-                            value: stats.pending,
-                            description: 'Awaiting response',
-                        },
-                        {
-                            title: 'Accepted',
-                            value: stats.accepted,
-                            description: 'Successfully negotiated',
-                        },
-                        {
-                            title: 'Rejected',
-                            value: stats.rejected,
-                            description: 'Declined offers',
-                        },
-                    ]}
-                />
+                {isLoading ? (
+                    <DashboardSummarySkeleton count={4} />
+                ) : (
+                    <DashboardSummary
+                        summaries={[
+                            {
+                                title: 'Total Offers',
+                                value: stats.total,
+                                description: 'All offers received',
+                            },
+                            {
+                                title: 'Pending',
+                                value: stats.pending,
+                                description: 'Awaiting response',
+                            },
+                            {
+                                title: 'Accepted',
+                                value: stats.accepted,
+                                description: 'Successfully negotiated',
+                            },
+                            {
+                                title: 'Rejected',
+                                value: stats.rejected,
+                                description: 'Declined offers',
+                            },
+                        ]}
+                    />
+                )}
 
                 {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search by listing or buyer..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 text-sm"
-                        />
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-                        {(['all', 'PENDING', 'ACCEPTED', 'REJECTED'] as const).map((status) => (
-                            <Button
-                                key={status}
-                                variant={filterStatus === status ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setFilterStatus(status)}
-                            >
-                                {status === 'all' ? 'All' : STATUS_CONFIG[status as OfferStatus].label}
-                            </Button>
-                        ))}
-                    </div>
-                </div>
+                {isLoading ? (
+                    <Card className="p-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <Skeleton className="h-5 w-20" />
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="relative flex-1">
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                            <div className="flex gap-2">
+                                {Array.from({ length: 4 }).map((_, index) => (
+                                    <Skeleton key={index} className="h-9 w-20" />
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                ) : (
+                    <Card className="p-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <Filter className="h-4 w-4" />
+                                Filters
+                            </h3>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search by listing or buyer..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+                                {(['all', 'PENDING', 'ACCEPTED', 'REJECTED'] as const).map((status) => (
+                                    <Button
+                                        key={status}
+                                        variant={filterStatus === status ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => setFilterStatus(status)}
+                                    >
+                                        {status === 'all' ? 'All' : STATUS_CONFIG[status as OfferStatus].label}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                )}
 
                 {/* Loading */}
-                {isLoading && (
-                    <div className="text-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">Loading offers...</p>
-                    </div>
-                )}
+                {isLoading && <OfferListSkeleton />}
 
                 {/* Error */}
                 {error && (
@@ -561,7 +589,31 @@ function OffersReceivedPageContent() {
 export default function OffersReceivedPage() {
     return (
         <AuthGuard>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <Suspense
+                fallback={
+                    <div className="min-h-screen bg-background">
+                        <main className="container mx-auto p-4 pb-24 lg:pb-8 space-y-6">
+                            <DashboardSummarySkeleton count={4} />
+                            <Card className="p-4 mb-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <Skeleton className="h-5 w-20" />
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <div className="relative flex-1">
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {Array.from({ length: 4 }).map((_, index) => (
+                                            <Skeleton key={index} className="h-9 w-20" />
+                                        ))}
+                                    </div>
+                                </div>
+                            </Card>
+                            <OfferListSkeleton />
+                        </main>
+                    </div>
+                }
+            >
                 <OffersReceivedPageContent />
             </Suspense>
         </AuthGuard>

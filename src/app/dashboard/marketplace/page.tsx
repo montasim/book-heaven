@@ -5,6 +5,8 @@ import { useAuth } from '@/context/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import {
     ShoppingBag,
     TrendingUp,
@@ -111,9 +113,68 @@ export default function AdminMarketplacePage() {
             </div>
 
             {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
+                <>
+                    {/* Quick Stats Skeleton */}
+                    <DashboardSummarySkeleton count={4} />
+
+                    {/* Activity Stats Skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-32" />
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-5 w-12" />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-28" />
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-5 w-12" />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Engagement Stats Skeleton */}
+                    <DashboardSummarySkeleton count={3} />
+
+                    {/* Quick Links Skeleton */}
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-6 w-48" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <Card key={i}>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center gap-3">
+                                                <Skeleton className="h-10 w-10 rounded-lg" />
+                                                <div className="flex-1">
+                                                    <Skeleton className="h-5 w-24 mb-2" />
+                                                    <Skeleton className="h-4 w-32" />
+                                                </div>
+                                                <Skeleton className="h-4 w-4" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
             ) : analytics && (
                 <>
                     {/* Quick Stats */}
