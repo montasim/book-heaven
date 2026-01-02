@@ -13,6 +13,7 @@ import { columns } from './components/columns'
 import { PublicationsMutateDrawer } from './components/publications-mutate-drawer'
 import { PublicationsDeleteDialog } from './components/publications-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
+import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
 import { Trash2, X } from 'lucide-react'
 import {
@@ -32,6 +33,7 @@ export default function PublicationsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Store current pagination in a ref to avoid stale closures
   const paginationRef = useRef(pagination)
@@ -55,6 +57,11 @@ export default function PublicationsPage() {
     // Mark as fetching immediately to prevent duplicates
     lastFetchedRef.current = fetchKey
 
+    // Set loading state for initial load or page change
+    if (publications.length === 0 || pageIndex !== pagination.pageIndex) {
+      setIsLoading(true)
+    }
+
     try {
       const result = await getPublications({
         page: apiPage,
@@ -66,8 +73,10 @@ export default function PublicationsPage() {
       console.error('Error fetching publications:', error)
       // Reset on error so we can retry
       lastFetchedRef.current = ''
+    } finally {
+      setIsLoading(false)
     }
-  }, [])
+  }, [publications.length, pagination.pageIndex])
 
   useEffect(() => {
     // Skip first render - let the initial fetch happen naturally
@@ -190,7 +199,9 @@ export default function PublicationsPage() {
       )}
 
       <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
-        {publications.length === 0 ? (
+        {isLoading ? (
+          <TableSkeleton rowCount={pagination.pageSize} />
+        ) : publications.length === 0 ? (
           <EmptyStateCard
             title='No publications found'
             description='There are no publications in the system yet. Create your first publication to get started.'

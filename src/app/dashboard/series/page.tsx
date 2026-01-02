@@ -13,6 +13,7 @@ import { SeriesMutateDrawer } from './components/series-mutate-drawer'
 import { SeriesDeleteDialog } from './components/series-delete-dialog'
 import SeriesProvider, { useSeriesContext, SeriesDialogType } from './context/series-context'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
+import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
 import { Trash2, X } from 'lucide-react'
 import {
@@ -32,6 +33,7 @@ export default function SeriesPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Store current pagination in a ref to avoid stale closures
   const paginationRef = useRef(pagination)
@@ -55,6 +57,11 @@ export default function SeriesPage() {
     // Mark as fetching immediately to prevent duplicates
     lastFetchedRef.current = fetchKey
 
+    // Set loading state for initial load or page change
+    if (series.length === 0 || pageIndex !== pagination.pageIndex) {
+      setIsLoading(true)
+    }
+
     try {
       const result = await getSeries({
         page: apiPage,
@@ -71,8 +78,10 @@ export default function SeriesPage() {
         description: 'Failed to load series',
         variant: 'destructive',
       })
+    } finally {
+      setIsLoading(false)
     }
-  }, [])
+  }, [series.length, pagination.pageIndex])
 
   useEffect(() => {
     // Skip first render - let the initial fetch happen naturally
@@ -169,7 +178,9 @@ export default function SeriesPage() {
       )}
 
       <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
-        {series.length === 0 ? (
+        {isLoading ? (
+          <TableSkeleton rowCount={pagination.pageSize} />
+        ) : series.length === 0 ? (
           <EmptyStateCard
             title='No series found'
             description='There are no series in the system yet. Create your first series to get started.'

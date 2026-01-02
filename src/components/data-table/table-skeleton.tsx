@@ -1,0 +1,113 @@
+/**
+ * Reusable Table Skeleton Component
+ *
+ * Displays a loading skeleton matching the DataTable structure
+ * with configurable row count for different page sizes
+ */
+
+import { Skeleton } from '@/components/ui/skeleton'
+
+interface TableSkeletonProps {
+  rowCount?: number
+  columns?: number
+  showSelect?: boolean
+  showActions?: boolean
+  columnWidths?: string[]
+}
+
+export function TableSkeleton({
+  rowCount = 10,
+  columns = 9,
+  showSelect = true,
+  showActions = true,
+  columnWidths,
+}: TableSkeletonProps) {
+  // Default column widths matching typical admin tables
+  const defaultWidths = showSelect
+    ? ['w-10', 'w-48', 'w-20', 'w-32', 'w-36', 'w-28', 'w-16', 'w-20', 'w-32', 'w-12']
+    : ['w-48', 'w-20', 'w-32', 'w-36', 'w-28', 'w-16', 'w-20', 'w-32', 'w-12']
+
+  const widths = columnWidths || defaultWidths
+
+  return (
+    <div className='space-y-4'>
+      <div className='overflow-x-auto rounded-md border'>
+        <table className='w-full caption-bottom text-sm'>
+          <thead className='[&_tr]:border-b'>
+            <tr className='border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted'>
+              {showSelect && (
+                <th className='h-12 px-4 text-left align-middle'>
+                  <Skeleton className='h-4 w-4' />
+                </th>
+              )}
+              {widths.slice(showSelect ? 1 : 0, showActions ? -1 : undefined).map((width, index) => (
+                <th key={index} className='h-12 px-4 text-left align-middle'>
+                  <Skeleton className={`h-4 ${width === 'w-auto' ? 'w-24' : width}`} />
+                </th>
+              ))}
+              {showActions && (
+                <th className='h-12 px-4 text-left align-middle w-12'>
+                  <Skeleton className='h-4 w-8' />
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody className='[&_tr:last-child]:border-0'>
+            {Array.from({ length: rowCount }).map((_, rowIndex) => (
+              <tr
+                key={rowIndex}
+                className='border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted'
+              >
+                {showSelect && (
+                  <td className='p-4 align-middle'>
+                    <Skeleton className='h-4 w-4' />
+                  </td>
+                )}
+                {widths.slice(showSelect ? 1 : 0, showActions ? -1 : undefined).map((width, cellIndex) => (
+                  <td key={cellIndex} className='p-4 align-middle'>
+                    <Skeleton className={`h-5 ${width === 'w-auto' ? 'w-full max-w-48' : width}`} />
+                  </td>
+                ))}
+                {showActions && (
+                  <td className='p-4 align-middle'>
+                    <Skeleton className='h-8 w-8 rounded' />
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {/* Pagination skeleton */}
+      <TablePaginationSkeleton />
+    </div>
+  )
+}
+
+function TablePaginationSkeleton() {
+  return (
+    <div className='flex items-center justify-between overflow-auto px-2'>
+      {/* Selected rows info */}
+      <div className='hidden flex-1 text-sm text-muted-foreground sm:block'>
+        <Skeleton className='h-4 w-40' />
+      </div>
+      {/* Pagination controls */}
+      <div className='flex items-center sm:space-x-6 lg:space-x-8'>
+        {/* Rows per page */}
+        <div className='flex items-center space-x-2'>
+          <Skeleton className='h-4 w-24' />
+          <Skeleton className='h-8 w-[70px]' />
+        </div>
+        {/* Page X of Y */}
+        <Skeleton className='h-4 w-24' />
+        {/* Navigation buttons */}
+        <div className='flex items-center space-x-2'>
+          <Skeleton className='h-8 w-8' />
+          <Skeleton className='h-8 w-8' />
+          <Skeleton className='h-8 w-8' />
+          <Skeleton className='h-8 w-8' />
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -101,6 +101,13 @@ const formSchema = z.object({
       });
     }
   } else if (data.type === 'EBOOK') {
+    if (!data.pageNumber || isNaN(Number(data.pageNumber)) || Number(data.pageNumber) <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Page number is required and must be a positive number',
+        path: ['pageNumber'],
+      });
+    }
     if (!data.fileUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -428,6 +435,27 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
             )}
 
             {(watchType === 'EBOOK' || watchType === 'AUDIO') && (
+                <>
+                {watchType === 'EBOOK' && (
+                  <FormField
+                    control={form.control}
+                    name='pageNumber'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Page Number <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input
+                            type='number'
+                            min='1'
+                            placeholder='Enter number of pages'
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <FormField
                   control={form.control}
                   name='fileUrl'
@@ -448,6 +476,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                     </FormItem>
                   )}
                 />
+                </>
             )}
 
             <FormField

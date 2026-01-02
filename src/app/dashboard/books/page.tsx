@@ -9,6 +9,7 @@ import useDialogState from '@/hooks/use-dialog-state'
 import BooksContextProvider, { BooksDialogType } from './context/books-context'
 import { toast } from '@/hooks/use-toast'
 import { DataTable } from '@/components/data-table/data-table'
+import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { columns } from './components/columns'
 import { BooksMutateDrawer } from './components/books-mutate-drawer'
 import { BooksDeleteDialog } from './components/books-delete-dialog'
@@ -32,6 +33,7 @@ export default function BooksPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Store current pagination in a ref to avoid stale closures
   const paginationRef = useRef(pagination)
@@ -48,12 +50,17 @@ export default function BooksPage() {
     const apiPage = pageIndex + 1
 
     // Skip if we just fetched this page
-    if (lastFetchedRef.current === fetchKey) {
+    if (lastFetchedRef.current === fetchKey && books.length > 0) {
       return
     }
 
     // Mark as fetching immediately to prevent duplicates
     lastFetchedRef.current = fetchKey
+
+    // Set loading state for initial load or page change
+    if (books.length === 0 || pageIndex !== pagination.pageIndex) {
+      setIsLoading(true)
+    }
 
     try {
       const result = await getBooks({
@@ -66,8 +73,10 @@ export default function BooksPage() {
       console.error('Error fetching books:', error)
       // Reset on error so we can retry
       lastFetchedRef.current = ''
+    } finally {
+      setIsLoading(false)
     }
-  }, [])
+  }, [books.length, pagination.pageIndex])
 
   useEffect(() => {
     // Skip first render - let the initial fetch happen naturally
@@ -190,7 +199,9 @@ export default function BooksPage() {
       )}
 
       <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
-        {books.length === 0 ? (
+        {isLoading ? (
+          <TableSkeleton rowCount={pagination.pageSize} />
+        ) : books.length === 0 ? (
           <EmptyStateCard
             title='No books found'
             description='There are no books in the system yet. Create your first book to get started.'

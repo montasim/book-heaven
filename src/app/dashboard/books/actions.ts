@@ -568,7 +568,16 @@ export async function createBook(formData: FormData) {
     }
   } catch (error) {
     console.error('Error creating book:', error)
-    throw error || new Error('Failed to create book')
+    // Handle ZodError - extract first error message
+    if (error && typeof error === 'object' && 'issues' in error && Array.isArray(error.issues)) {
+      const firstError = error.issues[0]
+      throw new Error(firstError?.message || 'Failed to create book')
+    }
+    // Handle regular Error
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('Failed to create book')
   }
 }
 
@@ -752,7 +761,16 @@ export async function updateBook(id: string, formData: FormData) {
     }
   } catch (error) {
     console.error('Error updating book:', error)
-    throw error || new Error('Failed to update book')
+    // Handle ZodError - extract first error message
+    if (error && typeof error === 'object' && 'issues' in error && Array.isArray(error.issues)) {
+      const firstError = error.issues[0]
+      throw new Error(firstError?.message || 'Failed to update book')
+    }
+    // Handle regular Error
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('Failed to update book')
   }
 }
 
@@ -795,7 +813,16 @@ export async function deleteBook(id: string) {
     return { message: 'Book deleted successfully' }
   } catch (error) {
     console.error('Error deleting book:', error)
-    throw error || new Error('Failed to delete book')
+    // Handle ZodError - extract first error message
+    if (error && typeof error === 'object' && 'issues' in error && Array.isArray(error.issues)) {
+      const firstError = error.issues[0]
+      throw new Error(firstError?.message || 'Failed to delete book')
+    }
+    // Handle regular Error
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('Failed to delete book')
   }
 }
 
