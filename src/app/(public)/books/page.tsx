@@ -63,7 +63,7 @@ function deriveFiltersFromSearchParams(searchParams: ReturnType<typeof useSearch
     sortOrder: 'desc' as 'asc' | 'desc',
     premium: 'all' as 'all' | 'free' | 'premium',
     page: parseInt(searchParams?.get('page') || '1', 10),
-    limit: 12
+    limit: 9
   }
 }
 
@@ -124,7 +124,7 @@ function BooksPageContent({
       sortOrder: 'desc',
       premium: 'all',
       page: 1,
-      limit: 12
+      limit: 9
     })
   }
 
@@ -628,7 +628,7 @@ function BooksPageContent({
             {/* Loading State */}
             {isLoading && (
               <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"}>
-                {[...Array(12)].map((_, i) => (
+                {[...Array(9)].map((_, i) => (
                   <BookCardSkeleton key={i} viewMode={viewMode} />
                 ))}
               </div>
