@@ -71,10 +71,16 @@ function BooksPageContent({
   initialFilters,
   searchParams,
   user,
+  categories,
+  categoriesLoading,
+  onCategoriesLoaded,
 }: {
   initialFilters: ReturnType<typeof deriveFiltersFromSearchParams>
   searchParams: ReturnType<typeof useSearchParams>
   user: any
+  categories: Category[]
+  categoriesLoading: boolean
+  onCategoriesLoaded: (categories: Category[]) => void
 }) {
   const [filters, setFilters] = useState(initialFilters)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -126,31 +132,6 @@ function BooksPageContent({
 
   const books = booksData?.books || []
   const pagination = booksData?.pagination
-
-  // State for dynamic categories
-  const [categories, setCategories] = useState<Category[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
-
-  // Fetch categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setCategoriesLoading(true)
-      try {
-        const response = await fetch('/api/categories')
-        const data = await response.json()
-
-        if (data.success) {
-          setCategories(data.data.categories)
-        }
-      } catch (err) {
-        console.error('Failed to fetch categories:', err)
-      } finally {
-        setCategoriesLoading(false)
-      }
-    }
-
-    fetchCategories()
-  }, [])
 
   // Category options for MultiSelect - derived from dynamic data
   const CATEGORY_OPTIONS = useMemo(() => {
@@ -878,6 +859,31 @@ function BooksPageWrapper() {
   const searchParams = useSearchParams()
   const { user } = useAuth()
 
+  // State for dynamic categories - fetched once at wrapper level
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+
+  // Fetch categories once when wrapper mounts
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true)
+      try {
+        const response = await fetch('/api/categories')
+        const data = await response.json()
+
+        if (data.success) {
+          setCategories(data.data.categories)
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err)
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
   // Use a key to force re-mount when URL params change
   const initialFilters = useMemo(() => deriveFiltersFromSearchParams(searchParams), [searchParams])
   const key = useMemo(() => searchParams?.toString() || '', [searchParams])
@@ -890,6 +896,9 @@ function BooksPageWrapper() {
         initialFilters={initialFilters}
         searchParams={searchParams}
         user={user}
+        categories={categories}
+        categoriesLoading={categoriesLoading}
+        onCategoriesLoaded={setCategories}
       />
     </>
   )
