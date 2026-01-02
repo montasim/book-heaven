@@ -294,26 +294,23 @@ function HelpCenterPageContent() {
                 </TabsTrigger>
               </Link>
             )}
-            {user && (
-              <Link href="/help-center?tab=new">
-                <TabsTrigger value="new">New Ticket</TabsTrigger>
-              </Link>
-            )}
             {!user && (
               <Link href="/help-center?tab=tickets">
                 <TabsTrigger value="tickets">My Tickets</TabsTrigger>
               </Link>
             )}
-            {!user && (
-              <Link href="/help-center?tab=new">
-                <TabsTrigger value="new">New Ticket</TabsTrigger>
-              </Link>
-            )}
           </TabsList>
 
-          {/* Filter Toolbar - Shows based on active tab */}
-          {activeTab === 'faq' && (
-            <div className="flex items-center gap-2">
+          {/* Right side: Create Ticket button and Filter Toolbar */}
+          <div className="flex items-center gap-2">
+            {user && activeTab !== 'new' && (
+              <Button onClick={() => router.push('/help-center?tab=new')}>
+                <Plus className='h-4 w-4 mr-2' />
+                Create Ticket
+              </Button>
+            )}
+            {activeTab === 'faq' && (
+              <div className="flex items-center gap-2">
                 <Input
                     placeholder='Search FAQs...'
                     value={searchQuery}
@@ -331,9 +328,10 @@ function HelpCenterPageContent() {
                   ))}
                 </SelectContent>
               </Select>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
 
         <ScrollArea className='flex-1 pb-4'>
           <div className='space-y-4'>
@@ -344,12 +342,16 @@ function HelpCenterPageContent() {
                   <FAQTabSkeleton cardCount={3} />
                 ) : filteredFaqs.length === 0 ? (
                   <Card>
-                    <CardContent className='py-12 text-center'>
-                      <Search className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-                      <h3 className='text-lg font-semibold mb-2'>No FAQs Found</h3>
-                      <p className='text-sm text-muted-foreground'>
-                        Try adjusting your search or filter to find what you&lsquo;re looking for.
-                      </p>
+                    <CardContent className='pt-6'>
+                      <div className='py-16 text-center'>
+                        <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted'>
+                          <Search className='h-8 w-8 text-muted-foreground' />
+                        </div>
+                        <h3 className='text-lg font-semibold mb-2'>No FAQs Found</h3>
+                        <p className='text-sm text-muted-foreground'>
+                          Try adjusting your search or filter to find what you&lsquo;re looking for.
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
@@ -416,16 +418,20 @@ function HelpCenterPageContent() {
                   <TicketsTabSkeleton itemCount={3} />
                 ) : tickets.length === 0 ? (
                   <Card>
-                    <CardContent className='py-12 text-center'>
-                      <MessageSquare className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-                      <h3 className='text-lg font-semibold mb-2'>No Support Tickets</h3>
-                      <p className='text-sm text-muted-foreground mb-4'>
-                        You haven&lsquo;t created any support tickets yet.
-                      </p>
-                      <Button onClick={() => router.push('/help-center?tab=new')}>
-                        <Plus className='h-4 w-4 mr-2' />
-                        Create Your First Ticket
-                      </Button>
+                    <CardContent className='pt-6'>
+                      <div className='py-16 text-center'>
+                        <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted'>
+                          <MessageSquare className='h-8 w-8 text-muted-foreground' />
+                        </div>
+                        <h3 className='text-lg font-semibold mb-2'>No Support Tickets</h3>
+                        <p className='text-sm text-muted-foreground mb-4'>
+                          You haven&lsquo;t created any support tickets yet.
+                        </p>
+                        <Button onClick={() => router.push('/help-center?tab=new')}>
+                          <Plus className='h-4 w-4 mr-2' />
+                          Create Your First Ticket
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (

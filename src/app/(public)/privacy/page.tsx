@@ -33,7 +33,6 @@ export default async function PrivacyPage() {
   return (
     <div className="min-h-screen">
       <main className="container mx-auto p-4 py-8 md:py-12">
-        <div className="max-w-4xl">
         {/* Header */}
         <div className="mb-8 space-y-4">
           <div className="flex items-center gap-3">
@@ -103,7 +102,6 @@ export default async function PrivacyPage() {
             </p>
           </div>
         )}
-        </div>
         </main>
     </div>
   )
