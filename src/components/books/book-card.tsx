@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -77,10 +77,20 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
   }, ref) => {
     const queryClient = useQueryClient()
     const router = useRouter()
+    const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-    // Prefetch book data on hover
+    // Prefetch book data on hover with debouncing
     const handleMouseEnter = () => {
-      if (viewMoreHref) {
+      if (!viewMoreHref) return
+
+      // Clear any existing timeout
+      if (prefetchTimeoutRef.current) {
+        clearTimeout(prefetchTimeoutRef.current)
+      }
+
+      // Set a new timeout to prefetch after 300ms of hovering
+      // This prevents prefetching during quick mouse movements
+      prefetchTimeoutRef.current = setTimeout(() => {
         // Extract book ID from href (e.g., /books/d7dfc67b-7179-43c1-9386-0e46c36618e4)
         const bookId = viewMoreHref.split('/').pop()
         if (bookId) {
@@ -95,8 +105,25 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
             }
           })
         }
+      }, 300) // 300ms delay ensures intentional hover
+    }
+
+    // Cleanup timeout on unmount or mouse leave
+    const handleMouseLeave = () => {
+      if (prefetchTimeoutRef.current) {
+        clearTimeout(prefetchTimeoutRef.current)
+        prefetchTimeoutRef.current = null
       }
     }
+
+    // Cleanup timeout on component unmount
+    useEffect(() => {
+      return () => {
+        if (prefetchTimeoutRef.current) {
+          clearTimeout(prefetchTimeoutRef.current)
+        }
+      }
+    }, [])
 
     // Safely get library context - it may not be available in all contexts (e.g., public books page)
     const libraryContext = useContext(LibraryContext)
@@ -162,6 +189,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
           )}
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           {...props}
         >
           <CardContent className="p-3">
@@ -342,6 +370,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                               className="flex-1"
                               onClick={(e) => e.stopPropagation()}
                               onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
                             >
                               <Button variant="outline" size="sm" className="w-full h-6 text-[10px] px-2">
                                 View More
@@ -370,6 +399,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                             className="w-full"
                             onClick={(e) => e.stopPropagation()}
                             onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
                           >
                             <Button variant="outline" size="sm" className="w-full h-6 text-[10px] px-2">
                               View More
@@ -665,6 +695,7 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                   className={showProgressActions ? 'flex-1' : 'w-full'}
                   onClick={(e) => e.stopPropagation()}
                   onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
                 >
                   <Button variant="outline" size="sm" className="w-full">
                     View More
