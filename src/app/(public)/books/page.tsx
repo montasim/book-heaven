@@ -588,27 +588,6 @@ function BooksPageContent({
               </div>
             )}
 
-            {/* Loading State */}
-            {isLoading && (
-              <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"}>
-                {[...Array(12)].map((_, i) => (
-                  <BookCardSkeleton key={i} viewMode={viewMode} />
-                ))}
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">
-                  Unable to load books. Please try again later.
-                </p>
-                <Button onClick={() => refetch()}>
-                  Try Again
-                </Button>
-              </div>
-            )}
-
             {/* Mood-Based Recommendations Section */}
             {(!user || user.showMoodRecommendations !== false) && (
             <div className="mt-4 md:mt-0 lg:mt-0 mb-6">
@@ -678,6 +657,27 @@ function BooksPageContent({
                 )}
               </Card>
             </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"}>
+                {[...Array(12)].map((_, i) => (
+                  <BookCardSkeleton key={i} viewMode={viewMode} />
+                ))}
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">
+                  Unable to load books. Please try again later.
+                </p>
+                <Button onClick={() => refetch()}>
+                  Try Again
+                </Button>
+              </div>
             )}
 
             {/* Books Display */}
