@@ -149,7 +149,7 @@ export default function UserActivityPage() {
     : 0
 
   return (
-    <div className='flex flex-1 flex-col'>
+    <div className='flex flex-col h-full'>
         <HeaderContainer>
             {loading ? (
               <ActivityPageHeaderSkeleton />
@@ -163,7 +163,7 @@ export default function UserActivityPage() {
             )}
         </HeaderContainer>
 
-      <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16'>
+      <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16 h-full'>
         <div className='space-y-6'>
             {/* Stats Cards */}
             {loading ? (
