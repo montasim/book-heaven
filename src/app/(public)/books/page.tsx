@@ -13,6 +13,7 @@ import { MultiSelect } from '@/components/ui/multi-select'
 import { BookGrid } from '@/components/books/book-grid'
 import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
 import { BooksFilterSidebarSkeleton, BooksFilterMobileSkeleton } from '@/components/books/books-filter-sidebar-skeleton'
+import { MoodRecommendationsSkeleton } from '@/components/books/mood-recommendations-skeleton'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { SearchBar } from '@/components/books/search-bar'
 import { MoodSelector } from '@/components/books/mood-selector'
@@ -599,73 +600,77 @@ function BooksPageContent({
 
             {/* Mood-Based Recommendations Section */}
             {(!user || user.showMoodRecommendations !== false) && (
-            <div className="mt-4 md:mt-0 lg:mt-0 mb-6">
-              <Card>
-                <CardHeader className="cursor-pointer py-3 sm:py-6 px-4 sm:px-6" onClick={() => setShowMoodPicker(!showMoodPicker)}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base sm:text-lg">Recommended for Your Mood</CardTitle>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      {showMoodPicker ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </CardHeader>
-                {showMoodPicker && (
-                  <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-                    {!selectedMood ? (
-                      <MoodSelector onSelectMood={setSelectedMood} />
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{selectedMood.emoji}</span>
-                            <div>
-                              <h3 className="font-semibold">{selectedMood.name} Mood</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {selectedMood.description}
-                              </p>
-                            </div>
-                          </div>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedMood(null)}>
-                            Change Mood
-                          </Button>
+              isLoading ? (
+                <MoodRecommendationsSkeleton />
+              ) : (
+                <div className="mt-4 md:mt-0 lg:mt-0 mb-6">
+                  <Card>
+                    <CardHeader className="cursor-pointer py-3 sm:py-6 px-4 sm:px-6" onClick={() => setShowMoodPicker(!showMoodPicker)}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-base sm:text-lg">Recommended for Your Mood</CardTitle>
                         </div>
-
-                        {isLoadingMood ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[...Array(6)].map((_, i) => (
-                              <BookCardSkeleton key={i} viewMode="grid" />
-                            ))}
-                          </div>
-                        ) : moodBooks.length > 0 ? (
-                          <BookGrid
-                            books={moodBooks}
-                            viewMode={viewMode}
-                            viewMoreHref={(book) => `/books/${book.id}`}
-                            showTypeBadge={true}
-                            showPremiumBadge={true}
-                            showCategories={true}
-                            showReaderCount={true}
-                            showAddToBookshelf={true}
-                            showUploader={true}
-                            showLockOverlay={true}
-                            coverHeight="tall"
-                            showProgressActions={true}
-                          />
-                        ) : (
-                          <EmptyStateCard
-                            title='No books found for this mood'
-                            description='Try selecting another mood to see different book recommendations.'
-                          />
-                        )}
+                        <Button variant="ghost" size="sm">
+                          {showMoodPicker ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
                       </div>
+                    </CardHeader>
+                    {showMoodPicker && (
+                      <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                        {!selectedMood ? (
+                          <MoodSelector onSelectMood={setSelectedMood} />
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">{selectedMood.emoji}</span>
+                                <div>
+                                  <h3 className="font-semibold">{selectedMood.name} Mood</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {selectedMood.description}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button variant="outline" size="sm" onClick={() => setSelectedMood(null)}>
+                                Change Mood
+                              </Button>
+                            </div>
+
+                            {isLoadingMood ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[...Array(6)].map((_, i) => (
+                                  <BookCardSkeleton key={i} viewMode="grid" />
+                                ))}
+                              </div>
+                            ) : moodBooks.length > 0 ? (
+                              <BookGrid
+                                books={moodBooks}
+                                viewMode={viewMode}
+                                viewMoreHref={(book) => `/books/${book.id}`}
+                                showTypeBadge={true}
+                                showPremiumBadge={true}
+                                showCategories={true}
+                                showReaderCount={true}
+                                showAddToBookshelf={true}
+                                showUploader={true}
+                                showLockOverlay={true}
+                                coverHeight="tall"
+                                showProgressActions={true}
+                              />
+                            ) : (
+                              <EmptyStateCard
+                                title='No books found for this mood'
+                                description='Try selecting another mood to see different book recommendations.'
+                              />
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
                     )}
-                  </CardContent>
-                )}
-              </Card>
-            </div>
+                  </Card>
+                </div>
+              )
             )}
 
             {/* Loading State */}
