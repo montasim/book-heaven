@@ -171,10 +171,14 @@ function getRegistrationOtpEmailTemplate(otp: string, email?: string): {
         </p>
 
         <!-- OTP Code - Prominent Display -->
-        <div class="otp-container">
-          <p class="otp-label">Your Verification Code</p>
-          <p class="otp-code">${otp}</p>
-          <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 12px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px dashed #93c5fd; border-radius: 16px; padding: 32px 24px; margin: 32px 0; position: relative;">
+          <p style="color: #1e40af; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0;">
+            Your Verification Code
+          </p>
+          <p style="font-size: 36px; font-weight: 800; letter-spacing: 12px; color: #2563eb; text-align: center; font-family: 'Inter', monospace; line-height: 1; margin: 16px 0;">
+            ${otp}
+          </p>
+          <p style="color: #1d4ed8; font-size: 11px; text-align: center; margin: 12px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
             Valid for 10 minutes
           </p>
         </div>
