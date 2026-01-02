@@ -36,13 +36,26 @@ interface Category {
   image: string | null
 }
 
+// Type for author
+interface Author {
+  id: string
+  name: string
+}
+
+// Type for publication
+interface Publication {
+  id: string
+  name: string
+}
+
 // Helper function to derive filters from searchParams
 function deriveFiltersFromSearchParams(searchParams: ReturnType<typeof useSearchParams>) {
   return {
     search: searchParams?.get('search') || '',
     types: ['HARD_COPY'], // Only hard copy books
     categories: searchParams?.get('categories')?.split(',').filter(Boolean) || [],
-    author: searchParams?.get('author') || '',
+    authors: searchParams?.get('authors')?.split(',').filter(Boolean) || [],
+    publications: searchParams?.get('publications')?.split(',').filter(Boolean) || [],
     sortBy: searchParams?.get('sortBy') || 'createdAt',
     sortOrder: 'desc' as 'asc' | 'desc',
     premium: 'all' as 'all' | 'free' | 'premium',
@@ -81,7 +94,8 @@ function LibraryPageContent({
       search: '',
       types: ['HARD_COPY'],
       categories: [],
-      author: '',
+      authors: [],
+      publications: [],
       sortBy: 'createdAt',
       sortOrder: 'desc',
       premium: 'all',
@@ -90,14 +104,18 @@ function LibraryPageContent({
     })
   }
 
-  const hasActiveFilters = filters.categories.length > 0 || filters.author || filters.premium !== 'all'
+  const hasActiveFilters = filters.categories.length > 0 || filters.authors.length > 0 || filters.publications.length > 0 || filters.premium !== 'all'
 
   const books = booksData?.books || []
   const pagination = booksData?.pagination
 
-  // State for dynamic categories
+  // State for dynamic categories, authors, and publications
   const [categories, setCategories] = useState<Category[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [authors, setAuthors] = useState<Author[]>([])
+  const [authorsLoading, setAuthorsLoading] = useState(true)
+  const [publications, setPublications] = useState<Publication[]>([])
+  const [publicationsLoading, setPublicationsLoading] = useState(true)
 
   // Fetch categories
   useEffect(() => {
@@ -120,6 +138,48 @@ function LibraryPageContent({
     fetchCategories()
   }, [])
 
+  // Fetch authors
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      setAuthorsLoading(true)
+      try {
+        const response = await fetch('/api/public/authors?limit=1000')
+        const data = await response.json()
+
+        if (data.success) {
+          setAuthors(data.data.authors)
+        }
+      } catch (err) {
+        console.error('Failed to fetch authors:', err)
+      } finally {
+        setAuthorsLoading(false)
+      }
+    }
+
+    fetchAuthors()
+  }, [])
+
+  // Fetch publications
+  useEffect(() => {
+    const fetchPublications = async () => {
+      setPublicationsLoading(true)
+      try {
+        const response = await fetch('/api/public/publications?limit=1000')
+        const data = await response.json()
+
+        if (data.success) {
+          setPublications(data.data.publications)
+        }
+      } catch (err) {
+        console.error('Failed to fetch publications:', err)
+      } finally {
+        setPublicationsLoading(false)
+      }
+    }
+
+    fetchPublications()
+  }, [])
+
   // Category options for MultiSelect - derived from dynamic data
   const CATEGORY_OPTIONS = useMemo(() => {
     return categories.map(cat => ({
@@ -128,13 +188,30 @@ function LibraryPageContent({
     }))
   }, [categories])
 
+  // Author options for MultiSelect - derived from dynamic data
+  const AUTHOR_OPTIONS = useMemo(() => {
+    return authors.map(author => ({
+      value: author.id,
+      label: author.name
+    }))
+  }, [authors])
+
+  // Publication options for MultiSelect - derived from dynamic data
+  const PUBLICATION_OPTIONS = useMemo(() => {
+    return publications.map(pub => ({
+      value: pub.id,
+      label: pub.name
+    }))
+  }, [publications])
+
   // Sync filters to URL parameters
   useEffect(() => {
     const params = new URLSearchParams()
 
     if (filters.search) params.set('search', filters.search)
     if (filters.categories.length > 0) params.set('categories', filters.categories.join(','))
-    if (filters.author) params.set('author', filters.author)
+    if (filters.authors.length > 0) params.set('authors', filters.authors.join(','))
+    if (filters.publications.length > 0) params.set('publications', filters.publications.join(','))
     if (filters.sortBy !== 'createdAt') params.set('sortBy', filters.sortBy)
     if (filters.sortOrder !== 'desc') params.set('sortOrder', filters.sortOrder)
     if (filters.premium !== 'all') params.set('premium', filters.premium)
@@ -280,6 +357,30 @@ function LibraryPageContent({
                   />
                 </div>
 
+                {/* Author Filter */}
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Authors</Label>
+                  <MultiSelect
+                    options={AUTHOR_OPTIONS}
+                    selected={filters.authors}
+                    onChange={(values) => handleFilterChange('authors', values)}
+                    placeholder="Select authors"
+                    maxVisible={2}
+                  />
+                </div>
+
+                {/* Publication Filter */}
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Publications</Label>
+                  <MultiSelect
+                    options={PUBLICATION_OPTIONS}
+                    selected={filters.publications}
+                    onChange={(values) => handleFilterChange('publications', values)}
+                    placeholder="Select publications"
+                    maxVisible={2}
+                  />
+                </div>
+
                 {/* Sort Options */}
                 <div>
                   <Label className="text-sm font-medium mb-3 block">Sort By</Label>
@@ -364,6 +465,30 @@ function LibraryPageContent({
                   />
                 </div>
 
+                {/* Author Filter */}
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Authors</Label>
+                  <MultiSelect
+                    options={AUTHOR_OPTIONS}
+                    selected={filters.authors}
+                    onChange={(values) => handleFilterChange('authors', values)}
+                    placeholder="Select authors"
+                    maxVisible={2}
+                  />
+                </div>
+
+                {/* Publication Filter */}
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Publications</Label>
+                  <MultiSelect
+                    options={PUBLICATION_OPTIONS}
+                    selected={filters.publications}
+                    onChange={(values) => handleFilterChange('publications', values)}
+                    placeholder="Select publications"
+                    maxVisible={2}
+                  />
+                </div>
+
                 {/* Sort Options */}
                 <div>
                   <Label className="text-sm font-medium mb-3 block">Sort By</Label>
@@ -410,6 +535,30 @@ function LibraryPageContent({
                       <X
                         className="h-3 w-3 cursor-pointer"
                         onClick={() => handleFilterChange('categories', filters.categories.filter(c => c !== categoryValue))}
+                      />
+                    </Badge>
+                  )
+                })}
+                {filters.authors.map((authorValue) => {
+                  const author = AUTHOR_OPTIONS.find(opt => opt.value === authorValue)
+                  return (
+                    <Badge key={authorValue} variant="secondary" className="flex items-center gap-1">
+                      Author: {author?.label || authorValue}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => handleFilterChange('authors', filters.authors.filter(a => a !== authorValue))}
+                      />
+                    </Badge>
+                  )
+                })}
+                {filters.publications.map((publicationValue) => {
+                  const publication = PUBLICATION_OPTIONS.find(opt => opt.value === publicationValue)
+                  return (
+                    <Badge key={publicationValue} variant="secondary" className="flex items-center gap-1">
+                      Publication: {publication?.label || publicationValue}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => handleFilterChange('publications', filters.publications.filter(p => p !== publicationValue))}
                       />
                     </Badge>
                   )

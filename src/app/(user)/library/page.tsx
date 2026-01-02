@@ -34,6 +34,7 @@ import { UploadBooksMutateDrawer } from './upload-books-mutate-drawer'
 import { LibraryFilterToolbar } from './components/library-filter-toolbar'
 import { BookshelfFilterToolbar } from './components/bookshelf-filter-toolbar'
 import { RequestBookDrawer } from './request-book-drawer'
+import { BookGridSkeleton } from '@/components/books/book-grid-skeleton'
 import { Book } from '@/app/dashboard/books/data/schema'
 import { deleteBook } from '@/app/dashboard/books/actions'
 import { getBookshelves, deleteBookshelf, getUserBooks } from './actions'
@@ -142,6 +143,7 @@ function LibraryPageContent() {
   searchParams.get('tab') || 'my-uploads'
 
   const [books, setBooks] = useState<Book[]>([])
+  const [booksLoading, setBooksLoading] = useState(true)
   const [requests, setRequests] = useState<BookRequest[]>([])
   const [requestsLoading, setRequestsLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState<string | null>(null)

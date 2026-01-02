@@ -38,7 +38,9 @@ const BooksQuerySchema = z.object({
     category: z.string().uuid().optional(),
     categories: arrayFromString(z.string().uuid()).optional(),
     author: z.string().uuid().optional(),
+    authors: arrayFromString(z.string().uuid()).optional(),
     publication: z.string().uuid().optional(),
+    publications: arrayFromString(z.string().uuid()).optional(),
     type: z.enum([BookType.HARD_COPY, BookType.EBOOK, BookType.AUDIO]).optional(),
     types: arrayFromString(z.enum([BookType.HARD_COPY, BookType.EBOOK, BookType.AUDIO])).optional(),
     bindingType: z.enum([BindingType.HARDCOVER, BindingType.PAPERBACK]).optional(),
@@ -68,7 +70,9 @@ function buildFilterConditions(
         category,
         categories,
         author,
+        authors,
         publication,
+        publications,
         type,
         types,
         bindingType,
@@ -114,8 +118,15 @@ function buildFilterConditions(
         }
     }
 
-    // Author filter
-    if (author) {
+    // Author filter (support both single and multiple)
+    if (authors && authors.length > 0) {
+        where.authors = {
+            some: {
+                authorId: { in: authors }
+            }
+        }
+    } else if (author) {
+        // Backward compatibility for single author
         where.authors = {
             some: {
                 authorId: author
@@ -123,8 +134,15 @@ function buildFilterConditions(
         }
     }
 
-    // Publication filter
-    if (publication) {
+    // Publication filter (support both single and multiple)
+    if (publications && publications.length > 0) {
+        where.publications = {
+            some: {
+                publicationId: { in: publications }
+            }
+        }
+    } else if (publication) {
+        // Backward compatibility for single publication
         where.publications = {
             some: {
                 publicationId: publication
@@ -388,7 +406,9 @@ export async function GET(request: NextRequest) {
                     category: validatedQuery.category || null,
                     categories: validatedQuery.categories || null,
                     author: validatedQuery.author || null,
+                    authors: validatedQuery.authors || null,
                     publication: validatedQuery.publication || null,
+                    publications: validatedQuery.publications || null,
                     type: validatedQuery.type || null,
                     types: validatedQuery.types || null,
                     bindingType: validatedQuery.bindingType || null,

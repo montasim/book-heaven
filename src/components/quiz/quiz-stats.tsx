@@ -7,6 +7,7 @@ import { Flame, Target, Trophy, TrendingUp, Calendar, CheckCircle, Loader2 } fro
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuth } from '@/context/auth-context'
 import { getUserDisplayName } from '@/lib/utils/user'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -20,11 +21,59 @@ export function QuizStats() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* User Profile Card Skeleton */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-16 w-16 rounded-full" />
+              <div className="flex-1">
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Streak Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-6 w-16 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-6 w-12 mb-2" />
+              <Skeleton className="h-3 w-32" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Overall Statistics Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="text-center">
+                  <Skeleton className="h-6 w-12 mx-auto mb-2" />
+                  <Skeleton className="h-4 w-24 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 

@@ -6,6 +6,7 @@ import { Trophy, Medal, Loader2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { getUserDisplayName } from '@/lib/utils/user'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -41,8 +42,26 @@ export function QuizLeaderboard() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Global Leaderboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-3 rounded-lg">
+                <Skeleton className="h-8 w-12 rounded-full" />
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1 min-w-0">
+                  <Skeleton className="h-5 w-32 mb-2" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
+                <Skeleton className="h-6 w-12" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     )
@@ -98,11 +117,11 @@ export function QuizLeaderboard() {
 
               {/* User Avatar */}
               <Avatar className="h-10 w-10">
-                {entry.user.avatar ? (
-                  <AvatarImage src={entry.user.avatar} alt={entry.user.username || entry.user.email || 'User'} />
+                {entry.user?.avatar ? (
+                  <AvatarImage src={entry.user.avatar} alt={entry.user?.username || entry.user?.email || 'User'} />
                 ) : (
                   <AvatarFallback>
-                    {(entry.user.firstName || entry.user.username || entry.user.name || entry.user.email || 'U')?.[0]?.toUpperCase()}
+                    {(entry.user?.firstName || entry.user?.username || entry.user?.name || entry.user?.email || 'U')?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 )}
               </Avatar>
@@ -110,13 +129,13 @@ export function QuizLeaderboard() {
               {/* User Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">
-                  {getUserDisplayName({
+                  {entry.user ? getUserDisplayName({
                     firstName: entry.user.firstName,
                     lastName: entry.user.lastName,
                     username: entry.user.username,
                     name: entry.user.name,
                     email: entry.user.email || '',
-                  })}
+                  }) : 'Unknown User'}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{entry.category}</span>
