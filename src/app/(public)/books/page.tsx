@@ -746,34 +746,54 @@ function BooksPageContent({
                 </Button>
 
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(3, pagination.totalPages) }, (_, i) => {
-                    const pageNum = i + 1
-                    const isCurrentPage = pageNum === filters.page
+                  {(() => {
+                    // Calculate the range of pages to show
+                    const totalPages = pagination.totalPages
+                    const currentPage = filters.page
+                    const maxVisible = 3
 
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={isCurrentPage ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleFilterChange('page', pageNum)}
-                        disabled={isCurrentPage}
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+                    let endPage = Math.min(totalPages, startPage + maxVisible - 1)
 
-                  {pagination.totalPages > 3 && (
-                    <>
-                      <span className="px-2 text-sm text-muted-foreground">...</span>
-                      <Button
-                        variant={filters.page === pagination.totalPages ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleFilterChange('page', pagination.totalPages)}
-                      >
-                        {pagination.totalPages}
-                      </Button>
-                    </>
+                    // Adjust start if we're near the end
+                    if (endPage - startPage + 1 < maxVisible) {
+                      startPage = Math.max(1, endPage - maxVisible + 1)
+                    }
+
+                    const pagesToShow = []
+                    for (let i = startPage; i <= endPage; i++) {
+                      pagesToShow.push(i)
+                    }
+
+                    return pagesToShow.map((pageNum) => {
+                      const isCurrentPage = pageNum === currentPage
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={isCurrentPage ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handleFilterChange('page', pageNum)}
+                          disabled={isCurrentPage}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    })
+                  })()}
+
+                  {pagination.totalPages > 3 && filters.page < pagination.totalPages - 1 && (
+                    <span className="px-2 text-sm text-muted-foreground">...</span>
+                  )}
+
+                  {pagination.totalPages > 3 && filters.page < pagination.totalPages && (
+                    <Button
+                      variant={filters.page === pagination.totalPages ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleFilterChange('page', pagination.totalPages)}
+                    >
+                      {pagination.totalPages}
+                    </Button>
                   )}
                 </div>
 
