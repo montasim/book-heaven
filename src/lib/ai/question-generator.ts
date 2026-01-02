@@ -24,6 +24,64 @@ export interface GeneratedQuestions {
 }
 
 /**
+ * Parse numbered list format Q&A
+ * Format: "1. **Q:** Question text **A:** Answer text"
+ */
+function parseNumberedListFormat(content: string): QuestionAnswer[] {
+  const questions: QuestionAnswer[] = [];
+
+  // Split by numbered pattern (1., 2., etc.)
+  const items = content.split(/\n\s*\d+\.\s*\*\*Q:\*\*/);
+
+  for (const item of items) {
+    if (!item.trim()) continue;
+
+    // Extract question and answer
+    // Format: "**Q:** Question **A:** Answer"
+    const answerMatch = item.split(/\*\*A:\*\*/);
+
+    if (answerMatch.length >= 2) {
+      const question = answerMatch[0].trim().replace(/^\*\*Q:\*\*/, '').trim();
+      const answer = answerMatch[1].trim();
+
+      // Clean up markdown formatting
+      const cleanQuestion = question.replace(/\*\*/g, '').trim();
+      const cleanAnswer = answer.replace(/\*\*/g, '').trim();
+
+      if (cleanQuestion && cleanAnswer) {
+        questions.push({
+          question: cleanQuestion,
+          answer: cleanAnswer,
+        });
+      }
+    }
+  }
+
+  // Also try alternative format: "1. Q: ... A: ..." (without bold)
+  if (questions.length === 0) {
+    const altItems = content.split(/\n\s*\d+\.\s+Q:\s*/);
+    for (const item of altItems) {
+      if (!item.trim()) continue;
+
+      const parts = item.split(/\s+A:\s*/);
+      if (parts.length >= 2) {
+        const question = parts[0].trim();
+        let answer = parts.slice(1).join(' ').trim();
+
+        // Remove trailing content that's not part of the answer
+        answer = answer.split(/\n\s*\d+\./)[0].trim();
+
+        if (question && answer) {
+          questions.push({ question, answer });
+        }
+      }
+    }
+  }
+
+  return questions;
+}
+
+/**
  * Generate book questions and answers using Zhipu AI
  *
  * @param options - Question generation options
@@ -38,6 +96,15 @@ export async function generateBookQuestions(
     console.error('[Question Generator] ZHIPU_AI_API_KEY is not set');
     throw new Error('ZHIPU_AI_API_KEY is not set');
   }
+
+  // Validate book content
+  if (!options.bookContent || options.bookContent.trim().length === 0) {
+    console.error('[Question Generator] Book content is empty');
+    throw new Error('Book content is empty. Cannot generate questions without content.');
+  }
+
+  console.log('[Question Generator] Book content length:', options.bookContent.length);
+  console.log('[Question Generator] Book name:', options.bookName);
 
   const token = await generateZhipuToken(apiKey);
   const questionCount = options.questionCount || 20;
@@ -98,7 +165,7 @@ Generate the ${questionCount} questions and answers now. Return ONLY the JSON ar
         model: process.env.ZHIPU_AI_MODEL || 'glm-4.7',
         messages: [{ role: 'user', content: systemPrompt }],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 8000,
       })
     });
 
@@ -109,13 +176,63 @@ Generate the ${questionCount} questions and answers now. Return ONLY the JSON ar
     }
 
     const data = await response.json();
-    const content = data.choices[0]?.message?.content || '';
+    const choice = data.choices[0];
+    let content = choice?.message?.content || '';
+
+    // Check if content is in reasoning_content (happens when max_tokens is reached)
+    if ((!content || content.trim().length === 0) && choice?.message?.reasoning_content) {
+      console.log('[Question Generator] Using reasoning_content as content (max_tokens reached)');
+      content = choice.message.reasoning_content;
+    }
+
+    // Validate we have content
+    if (!content || content.trim().length === 0) {
+      console.error('[Question Generator] AI returned empty response');
+      console.error('[Question Generator] API response:', JSON.stringify(data, null, 2));
+      throw new Error('AI returned empty response. Please try again.');
+    }
+
+    // Log finish reason for debugging
+    if (choice?.finish_reason) {
+      console.log('[Question Generator] Finish reason:', choice.finish_reason);
+      if (choice.finish_reason === 'length') {
+        console.warn('[Question Generator] Response was truncated due to max_tokens limit');
+      }
+    }
 
     // Parse JSON response
     let questions: QuestionAnswer[];
+    let cleanedContent = content.trim();
+
     try {
       // Clean up any markdown code blocks
-      let cleanedContent = content.trim();
+      cleanedContent = content.trim();
+
+      console.log('[Question Generator] Raw content length:', content.length);
+      console.log('[Question Generator] Cleaned content preview:', cleanedContent.substring(0, 200));
+
+      // If content is not starting with '[', it might have reasoning text before JSON
+      // Try to find the JSON array start
+      if (!cleanedContent.startsWith('[')) {
+        const jsonStartIndex = cleanedContent.indexOf('[');
+        if (jsonStartIndex !== -1) {
+          // Find the matching closing bracket
+          let bracketCount = 0;
+          let jsonEndIndex = jsonStartIndex;
+          for (let i = jsonStartIndex; i < cleanedContent.length; i++) {
+            if (cleanedContent[i] === '[') bracketCount++;
+            if (cleanedContent[i] === ']') bracketCount--;
+            if (bracketCount === 0) {
+              jsonEndIndex = i + 1;
+              break;
+            }
+          }
+          if (bracketCount === 0) {
+            cleanedContent = cleanedContent.substring(jsonStartIndex, jsonEndIndex);
+            console.log('[Question Generator] Extracted JSON from mixed content');
+          }
+        }
+      }
 
       // Remove markdown code blocks if present
       if (cleanedContent.startsWith('```json')) {
@@ -152,9 +269,18 @@ Generate the ${questionCount} questions and answers now. Return ONLY the JSON ar
 
       console.log(`[Question Generator] Successfully parsed ${questions.length} questions`);
     } catch (parseError) {
-      console.error('[Question Generator] Failed to parse AI response:', content);
+      console.error('[Question Generator] JSON parse failed, trying numbered list format...');
       console.error('[Question Generator] Parse error:', parseError);
-      throw new Error('Failed to parse generated questions. AI returned invalid format.');
+
+      // Try parsing numbered format: "1. **Q:** ... **A:** ..."
+      questions = parseNumberedListFormat(cleanedContent);
+
+      if (questions.length === 0) {
+        console.error('[Question Generator] Failed to parse AI response:', content.substring(0, 1000));
+        throw new Error('Failed to parse generated questions. AI returned invalid format.');
+      }
+
+      console.log(`[Question Generator] Successfully parsed ${questions.length} questions from numbered format`);
     }
 
     console.log('[Question Generator] Usage:', data.usage);
