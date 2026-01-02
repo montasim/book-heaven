@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SupportTicket, TicketPriority, TicketStatus } from '@prisma/client'
 import { LifeBuoy, Search, Plus, ChevronDown, ChevronRight, MessageSquare, Send, CheckCircle2, XCircle, Clock, AlertCircle, User } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { FAQTabSkeleton, TicketsTabSkeleton } from '@/components/help-center/help-center-skeleton'
 
 interface FAQ {
   id: string
@@ -240,66 +241,74 @@ function HelpCenterPageContent() {
     }
   }
 
-  if (!user) {
-    return (
-      <div className='flex flex-1 flex-col'>
-        <div className='flex-none mb-2'>
-          <h1 className='text-2xl font-bold'>Help Center</h1>
-          <p className='text-sm text-muted-foreground'>
-            Get help with your questions and issues
-          </p>
-        </div>
-        <div className='flex items-center justify-center flex-1'>
-          <Card className='w-full max-w-md'>
-            <CardContent className='pt-6 text-center'>
-              <LifeBuoy className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-              <h3 className='text-lg font-semibold mb-2'>Sign In Required</h3>
-              <p className='text-sm text-muted-foreground mb-4'>
-                Please sign in to access the help center and create support tickets.
-              </p>
-              <Button asChild>
-                <a href='/auth/sign-in'>Sign In</a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+  // Render sign-in required card for protected tabs
+  const renderSignInRequired = () => (
+    <Card>
+      <CardContent className='py-12 text-center'>
+        <LifeBuoy className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
+        <h3 className='text-lg font-semibold mb-2'>Sign In Required</h3>
+        <p className='text-sm text-muted-foreground mb-4'>
+          Please sign in to access this feature.
+        </p>
+        <Button asChild>
+          <a href='/auth/sign-in'>Sign In</a>
+        </Button>
+      </CardContent>
+    </Card>
+  )
 
   return (
-    <div className='flex flex-1 flex-col'>
-      {/* Header */}
-      <div className='flex-none mb-2'>
-        <h1 className='text-2xl font-bold flex items-center gap-2'>
-          <LifeBuoy className='h-6 w-6' />
-          Help Center
-        </h1>
-        <p className='text-sm text-muted-foreground'>
-          Find answers or get support from our team
-        </p>
-      </div>
+    <div className='min-h-screen'>
+      <main className='container mx-auto p-4 py-8 md:py-12'>
+        {/* Header */}
+        <div className='mb-8 space-y-4'>
+            <div className='flex items-center gap-3'>
+              <div className='flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10'>
+                <LifeBuoy className='h-6 w-6 text-primary' />
+              </div>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight sm:text-3xl'>Help Center</h1>
+                <p className='text-sm text-muted-foreground mt-1'>
+                  {user ? 'Find answers or get support from our team' : 'Browse our FAQs or sign in to get personalized support'}
+                </p>
+              </div>
+            </div>
+          </div>
 
-      <Tabs value={activeTab} className="space-y-4" onValueChange={(value) => router.push(`/help-center?tab=${value}`)}>
-        {/* Tabs List with Filter Toolbar - Side by Side */}
-        <div className="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
+          <Tabs value={activeTab} className="space-y-4" onValueChange={(value) => router.push(`/help-center?tab=${value}`)}>
+            {/* Tabs List with Filter Toolbar - Side by Side */}
+            <div className="flex flex-col md:flex-row md:justify-between gap-4">
           <TabsList>
             <Link href="/help-center?tab=faq">
               <TabsTrigger value="faq">FAQ</TabsTrigger>
             </Link>
-            <Link href="/help-center?tab=tickets">
-              <TabsTrigger value="tickets">
-                My Tickets
-                {tickets.some(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS' || t.status === 'WAITING_FOR_USER') && (
-                  <Badge variant='destructive' className='ml-2 h-5 px-1.5 text-xs'>
-                    {tickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS' || t.status === 'WAITING_FOR_USER').length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </Link>
-            <Link href="/help-center?tab=new">
-              <TabsTrigger value="new">New Ticket</TabsTrigger>
-            </Link>
+            {user && (
+              <Link href="/help-center?tab=tickets">
+                <TabsTrigger value="tickets">
+                  My Tickets
+                  {tickets.some(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS' || t.status === 'WAITING_FOR_USER') && (
+                    <Badge variant='destructive' className='ml-2 h-5 px-1.5 text-xs'>
+                      {tickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS' || t.status === 'WAITING_FOR_USER').length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </Link>
+            )}
+            {user && (
+              <Link href="/help-center?tab=new">
+                <TabsTrigger value="new">New Ticket</TabsTrigger>
+              </Link>
+            )}
+            {!user && (
+              <Link href="/help-center?tab=tickets">
+                <TabsTrigger value="tickets">My Tickets</TabsTrigger>
+              </Link>
+            )}
+            {!user && (
+              <Link href="/help-center?tab=new">
+                <TabsTrigger value="new">New Ticket</TabsTrigger>
+              </Link>
+            )}
           </TabsList>
 
           {/* Filter Toolbar - Shows based on active tab */}
@@ -327,19 +336,15 @@ function HelpCenterPageContent() {
         </div>
 
         <ScrollArea className='flex-1 pb-4'>
-          <div className='space-y-4 pr-4'>
+          <div className='space-y-4'>
             {/* FAQ Tab */}
             {activeTab === 'faq' && (
               <div className='space-y-4'>
                 {loadingFaqs ? (
-                  <Card>
-                    <CardContent className='pt-6 text-center text-muted-foreground'>
-                      Loading FAQs...
-                    </CardContent>
-                  </Card>
+                  <FAQTabSkeleton cardCount={3} />
                 ) : filteredFaqs.length === 0 ? (
                   <Card>
-                    <CardContent className='pt-6 text-center'>
+                    <CardContent className='py-12 text-center'>
                       <Search className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
                       <h3 className='text-lg font-semibold mb-2'>No FAQs Found</h3>
                       <p className='text-sm text-muted-foreground'>
@@ -405,15 +410,13 @@ function HelpCenterPageContent() {
             {/* My Tickets Tab */}
             {activeTab === 'tickets' && (
               <div className='space-y-4'>
-                {loadingTickets ? (
-                  <Card>
-                    <CardContent className='pt-6 text-center text-muted-foreground'>
-                      Loading tickets...
-                    </CardContent>
-                  </Card>
+                {!user ? (
+                  renderSignInRequired()
+                ) : loadingTickets ? (
+                  <TicketsTabSkeleton itemCount={3} />
                 ) : tickets.length === 0 ? (
                   <Card>
-                    <CardContent className='pt-6 text-center'>
+                    <CardContent className='py-12 text-center'>
                       <MessageSquare className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
                       <h3 className='text-lg font-semibold mb-2'>No Support Tickets</h3>
                       <p className='text-sm text-muted-foreground mb-4'>
@@ -489,76 +492,79 @@ function HelpCenterPageContent() {
 
             {/* New Ticket Tab */}
             {activeTab === 'new' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create Support Ticket</CardTitle>
-                  <CardDescription>
-                    Fill out the form below and our support team will get back to you as soon as possible.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Category</label>
-                    <Select
-                      value={newTicket.category}
-                      onValueChange={(value) => setNewTicket({ ...newTicket, category: value as keyof typeof TICKET_CATEGORIES })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(TICKET_CATEGORIES).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              !user ? (
+                renderSignInRequired()
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Support Ticket</CardTitle>
+                    <CardDescription>
+                      Fill out the form below and our support team will get back to you as soon as possible.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className='space-y-4'>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium'>Category</label>
+                      <Select
+                        value={newTicket.category}
+                        onValueChange={(value) => setNewTicket({ ...newTicket, category: value as keyof typeof TICKET_CATEGORIES })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(TICKET_CATEGORIES).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Priority</label>
-                    <Select
-                      value={newTicket.priority}
-                      onValueChange={(value) => setNewTicket({ ...newTicket, priority: value as TicketPriority })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={TicketPriority.LOW}>{PRIORITY_LABELS[TicketPriority.LOW]}</SelectItem>
-                        <SelectItem value={TicketPriority.MEDIUM}>{PRIORITY_LABELS[TicketPriority.MEDIUM]}</SelectItem>
-                        <SelectItem value={TicketPriority.HIGH}>{PRIORITY_LABELS[TicketPriority.HIGH]}</SelectItem>
-                        <SelectItem value={TicketPriority.URGENT}>{PRIORITY_LABELS[TicketPriority.URGENT]}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium'>Priority</label>
+                      <Select
+                        value={newTicket.priority}
+                        onValueChange={(value) => setNewTicket({ ...newTicket, priority: value as TicketPriority })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={TicketPriority.LOW}>{PRIORITY_LABELS[TicketPriority.LOW]}</SelectItem>
+                          <SelectItem value={TicketPriority.MEDIUM}>{PRIORITY_LABELS[TicketPriority.MEDIUM]}</SelectItem>
+                          <SelectItem value={TicketPriority.HIGH}>{PRIORITY_LABELS[TicketPriority.HIGH]}</SelectItem>
+                          <SelectItem value={TicketPriority.URGENT}>{PRIORITY_LABELS[TicketPriority.URGENT]}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Subject *</label>
-                    <Input
-                      placeholder='Brief description of your issue'
-                      value={newTicket.subject}
-                      onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                    />
-                  </div>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium'>Subject *</label>
+                      <Input
+                        placeholder='Brief description of your issue'
+                        value={newTicket.subject}
+                        onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
+                      />
+                    </div>
 
-                  <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Description *</label>
-                    <Textarea
-                      placeholder='Please provide as much detail as possible about your issue...'
-                      rows={6}
-                      value={newTicket.description}
-                      onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                    />
-                  </div>
+                    <div className='space-y-2'>
+                      <label className='text-sm font-medium'>Description *</label>
+                      <Textarea
+                        placeholder='Please provide as much detail as possible about your issue...'
+                        rows={6}
+                        value={newTicket.description}
+                        onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
+                      />
+                    </div>
 
-                  <Button onClick={handleSubmitTicket} disabled={submittingTicket} className='w-full'>
-                    {submittingTicket ? (
-                      <>
-                        <Clock className='h-4 w-4 mr-2 animate-spin' />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
+                    <Button onClick={handleSubmitTicket} disabled={submittingTicket} className='w-full'>
+                      {submittingTicket ? (
+                        <>
+                          <Clock className='h-4 w-4 mr-2 animate-spin' />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
                         <Send className='h-4 w-4 mr-2' />
                         Submit Ticket
                       </>
@@ -566,10 +572,12 @@ function HelpCenterPageContent() {
                   </Button>
                 </CardContent>
               </Card>
+              )
             )}
           </div>
         </ScrollArea>
       </Tabs>
+      </main>
     </div>
   )
 }
