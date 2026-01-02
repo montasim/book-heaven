@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     },
     // Reduce memory usage during builds
     experimental: {
+        proxyClientMaxBodySize: '30mb',
+
         // Optimize package imports to reduce bundle size
         optimizePackageImports: [
             'lucide-react',
@@ -20,9 +22,9 @@ const nextConfig: NextConfig = {
             '@tanstack/react-table',
             'recharts',
         ],
-        // Configure server actions for large file uploads (PDFs up to 30MB)
+        // Configure server actions for large file uploads
         serverActions: {
-            bodySizeLimit: '30mb', // Increase from default 1mb to 30mb for pdf uploads
+            bodySizeLimit: '50mb', // Increased to 50mb for database backups and pdf uploads
         },
     },
 
