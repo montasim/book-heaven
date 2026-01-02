@@ -10,6 +10,13 @@ import { formatDistanceToNow } from 'date-fns'
 import { Calendar, Filter, Clock, CheckCircle, XCircle, BookOpen, MessageSquare, ShoppingCart, User, Settings, TrendingUp, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
+import { DashboardSummarySkeleton } from '@/components/dashboard/dashboard-summary-skeleton'
+import {
+  ActivityPageSkeleton,
+  ActivityPageHeaderSkeleton,
+  ActivityFilterCardSkeleton,
+  ActivityTimelineGroupSkeleton
+} from '@/components/activity/activity-skeleton'
 import { useAuth } from '@/context/auth-context'
 import {HeaderContainer} from "@/components/ui/header-container";
 
@@ -144,103 +151,116 @@ export default function UserActivityPage() {
   return (
     <div className='flex flex-1 flex-col'>
         <HeaderContainer>
-            <div>
-                <h1 className='text-2xl font-bold'>Your Activity Timeline</h1>
-                <p className='text-sm text-muted-foreground'>
-                    Track your recent activities on the platform
-                </p>
-            </div>
+            {loading ? (
+              <ActivityPageHeaderSkeleton />
+            ) : (
+              <div>
+                  <h1 className='text-2xl font-bold'>Your Activity Timeline</h1>
+                  <p className='text-sm text-muted-foreground'>
+                      Track your recent activities on the platform
+                  </p>
+              </div>
+            )}
         </HeaderContainer>
 
       <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16'>
         <div className='space-y-6'>
             {/* Stats Cards */}
-            <DashboardSummary
-          summaries={[
-            {
-              title: 'Total Activities',
-              value: stats.total.toString(),
-              description: 'All your activities',
-              icon: ({ className }: { className?: string }) => (
-                <Activity className={className} />
-              ),
-            },
-            {
-              title: 'Successful',
-              value: stats.success.toString(),
-              description: `${successRate}% success rate`,
-              icon: ({ className }: { className?: string }) => (
-                <CheckCircle className={className} />
-              ),
-            },
-            {
-              title: 'Failed',
-              value: stats.failed.toString(),
-              description: 'Activities that failed',
-              icon: ({ className }: { className?: string }) => (
-                <XCircle className={className} />
-              ),
-            },
-            {
-              title: 'This Week',
-              value: stats.thisWeek.toString(),
-              description: 'Activities in last 7 days',
-              icon: ({ className }: { className?: string }) => (
-                <TrendingUp className={className} />
-              ),
-            },
-          ]}
-        />
+            {loading ? (
+              <DashboardSummarySkeleton count={4} />
+            ) : (
+              <DashboardSummary
+                summaries={[
+                  {
+                    title: 'Total Activities',
+                    value: stats.total.toString(),
+                    description: 'All your activities',
+                    icon: ({ className }: { className?: string }) => (
+                      <Activity className={className} />
+                    ),
+                  },
+                  {
+                    title: 'Successful',
+                    value: stats.success.toString(),
+                    description: `${successRate}% success rate`,
+                    icon: ({ className }: { className?: string }) => (
+                      <CheckCircle className={className} />
+                    ),
+                  },
+                  {
+                    title: 'Failed',
+                    value: stats.failed.toString(),
+                    description: 'Activities that failed',
+                    icon: ({ className }: { className?: string }) => (
+                      <XCircle className={className} />
+                    ),
+                  },
+                  {
+                    title: 'This Week',
+                    value: stats.thisWeek.toString(),
+                    description: 'Activities in last 7 days',
+                    icon: ({ className }: { className?: string }) => (
+                      <TrendingUp className={className} />
+                    ),
+                  },
+                ]}
+              />
+            )}
 
         {/* Filters */}
-        <Card className='p-4'>
-          <div className='flex items-center gap-2 mb-4'>
-            <Filter className='h-4 w-4 text-muted-foreground' />
-            <h3 className='font-semibold'>Filter Activities</h3>
-          </div>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Action Type</label>
-              <Select value={selectedAction} onValueChange={setSelectedAction}>
-                <SelectTrigger>
-                  <SelectValue placeholder='All actions' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Actions</SelectItem>
-                  {Object.values(ActivityAction).map((action) => (
-                    <SelectItem key={action} value={action}>
-                      {formatActionName(action)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {loading ? (
+          <ActivityFilterCardSkeleton />
+        ) : (
+          <Card className='p-4'>
+            <div className='flex items-center gap-2 mb-4'>
+              <Filter className='h-4 w-4 text-muted-foreground' />
+              <h3 className='font-semibold'>Filter Activities</h3>
             </div>
 
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Resource Type</label>
-              <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
-                <SelectTrigger>
-                  <SelectValue placeholder='All types' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Resource Types</SelectItem>
-                  {Object.values(ActivityResourceType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {formatResourceType(type)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Action Type</label>
+                <Select value={selectedAction} onValueChange={setSelectedAction}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='All actions' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All Actions</SelectItem>
+                    {Object.values(ActivityAction).map((action) => (
+                      <SelectItem key={action} value={action}>
+                        {formatActionName(action)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Resource Type</label>
+                <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='All types' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All Resource Types</SelectItem>
+                    {Object.values(ActivityResourceType).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {formatResourceType(type)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
 
         {/* Timeline */}
         {loading ? (
-          <div className='flex items-center justify-center py-12'>
-            <div className='text-muted-foreground'>Loading your activities...</div>
-          </div>
+          <>
+            <ActivityTimelineGroupSkeleton count={3} />
+            <ActivityTimelineGroupSkeleton count={2} />
+          </>
         ) : activities.length === 0 ? (
           <Card className='p-12 text-center'>
             <div className='flex flex-col items-center gap-4'>
