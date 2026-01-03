@@ -26,6 +26,11 @@ const serverConfig = {
   // PDF Compression (aPDF.io)
   apdfApiKey: process.env.APDF_API_KEY,
 
+  // Stripe
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+  stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+
   // URLs
   baseUrl: process.env.BASE_URL,
   appUrl: process.env.NEXT_PUBLIC_APP_URL,
@@ -48,6 +53,7 @@ const serverConfig = {
 // Public configuration (can be used in client components)
 export const publicConfig = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL || '',
+  stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
 } as const
 
 // Full server config
