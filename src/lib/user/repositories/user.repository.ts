@@ -27,7 +27,6 @@ export async function findUserByEmail(email: string) {
     return prisma.user.findUnique({
         where: { email },
         include: {
-            subscription: true,
             _count: {
                 select: {
                     readingProgress: true,
@@ -48,7 +47,6 @@ export async function findUserById(id: string) {
     return prisma.user.findUnique({
         where: { id },
         include: {
-            subscription: true,
             _count: {
                 select: {
                     readingProgress: true,
@@ -114,21 +112,10 @@ export async function isUserActive(id: string): Promise<boolean> {
 export async function isUserPremium(id: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
         where: { id },
-        include: { subscription: true }
+        select: { isPremium: true }
     })
 
-    if (!user) return false
-
-    // Check if user has premium flag or active subscription
-    if (user.isPremium) return true
-
-    if (user.subscription?.isActive) {
-        if (!user.subscription.endDate || user.subscription.endDate > new Date()) {
-            return true
-        }
-    }
-
-    return false
+    return user?.isPremium ?? false
 }
 
 /**
@@ -180,9 +167,6 @@ export async function createUser(data: {
     const db = tx || prisma
     return db.user.create({
         data,
-        include: {
-            subscription: true,
-        }
     })
 }
 
@@ -213,9 +197,6 @@ export async function updateUser(
     return prisma.user.update({
         where: { id },
         data,
-        include: {
-            subscription: true,
-        }
     })
 }
 
@@ -323,7 +304,6 @@ export async function getAllUsers() {
     return prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
         include: {
-            subscription: true,
             _count: {
                 select: {
                     readingProgress: true,
@@ -385,9 +365,6 @@ export async function createFullUser(data: {
 }) {
     return prisma.user.create({
         data,
-        include: {
-            subscription: true,
-        }
     })
 }
 
@@ -429,8 +406,5 @@ export async function updateUserProfile(
     return prisma.user.update({
         where: { id },
         data,
-        include: {
-            subscription: true,
-        }
     })
 }
