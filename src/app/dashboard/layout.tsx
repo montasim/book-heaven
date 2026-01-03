@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 import { UserTopbar } from "@/components/layout/user-topbar";
 import { MDXViewerProvider } from 'mdx-craft';
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
+import {Main} from "@/components/ui/main";
+import React from "react";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -69,11 +71,11 @@ export default function DashboardLayout({
                     topNavLinks={adminTopNav}
                   />
 
-                  <div className="flex-1 overflow-auto bg-background">
+                  <Main fixed>
                     <MDXViewerProvider>
                       {children}
                     </MDXViewerProvider>
-                  </div>
+                  </Main>
 
                   {/* Mobile Bottom Navigation */}
                   <MobileBottomNav />
