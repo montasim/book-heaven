@@ -9,6 +9,7 @@ import {
   Settings,
   Plus,
   BookOpen,
+  Brain,
 } from 'lucide-react'
 
 interface NavItem {
@@ -27,6 +28,11 @@ const navItems: NavItem[] = [
     label: 'Library',
     href: '/library',
     icon: Bookmark,
+  },
+  {
+    label: 'Quiz',
+    href: '/quiz',
+    icon: Brain,
   },
   {
     label: 'Settings',
