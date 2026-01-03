@@ -94,6 +94,8 @@ export async function getActivities(
           select: {
             id: true,
             name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             avatar: true,
             directAvatarUrl: true,
@@ -181,6 +183,8 @@ export async function getActivityStats(filters: {
         select: {
           id: true,
           name: true,
+          firstName: true,
+          lastName: true,
           email: true,
           avatar: true,
           directAvatarUrl: true,
@@ -238,6 +242,8 @@ export async function getUserActivities(
           select: {
             id: true,
             name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             avatar: true,
             directAvatarUrl: true,
@@ -272,6 +278,8 @@ export async function getActivityById(id: string) {
         select: {
           id: true,
           name: true,
+          firstName: true,
+          lastName: true,
           email: true,
           avatar: true,
           directAvatarUrl: true,

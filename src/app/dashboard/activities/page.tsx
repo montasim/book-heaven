@@ -61,7 +61,7 @@ export default function AdminActivitiesPage() {
       const validatedActivities = activitiesListSchema.parse(result.data.activities)
       setActivities(validatedActivities)
       setPagination({
-        currentPage: result.data.page,
+        currentPage: result.data.currentPage,
         totalPages: result.data.pages,
         total: result.data.total,
         limit: pagination.limit,
@@ -183,7 +183,7 @@ export default function AdminActivitiesPage() {
         {loading ? (
           <DashboardSummarySkeleton count={4} />
         ) : (
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <div className='rounded-lg border bg-card p-4'>
               <div className='text-sm text-muted-foreground'>Total Activities</div>
               <div className='text-2xl font-bold'>{pagination.total.toLocaleString()}</div>
