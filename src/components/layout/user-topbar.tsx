@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/books/search-bar'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Search } from '@/components/search'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { TopNav } from './top-nav'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,12 +31,19 @@ interface UserTopbarProps {
   className?: string
   showSearch?: boolean
   showSidebarToggle?: boolean
+  topNavLinks?: Array<{
+    title: string
+    href: string
+    isActive?: boolean
+    disabled?: boolean
+  }>
 }
 
 export function UserTopbar({
   className,
   showSearch = true,
   showSidebarToggle = false,
+  topNavLinks,
   ...props
 }: UserTopbarProps) {
   const router = useRouter()
@@ -213,6 +221,9 @@ export function UserTopbar({
         {showSidebarToggle && (
           <SidebarTrigger variant='outline' className='scale-125 sm:scale-100' />
         )}
+
+        {/* TopNav for dashboard - grouped with sidebar toggle */}
+        {topNavLinks && <TopNav links={topNavLinks} />}
 
         {/* Logo for public pages */}
         {!showSidebarToggle && (

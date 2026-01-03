@@ -13,6 +13,33 @@ import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
 
 const inter = Inter({ subsets: ['latin'] })
 
+const adminTopNav = [
+    {
+        title: 'Overview',
+        href: 'dashboard',
+        isActive: true,
+        disabled: false,
+    },
+    {
+        title: 'Customers',
+        href: 'dashboard/users',
+        isActive: false,
+        disabled: true,
+    },
+    {
+        title: 'Books',
+        href: 'dashboard/books',
+        isActive: false,
+        disabled: true,
+    },
+    {
+        title: 'Settings',
+        href: 'dashboard/settings',
+        isActive: false,
+        disabled: true,
+    },
+]
+
 export default function DashboardLayout({
   children,
 }: {
@@ -40,7 +67,9 @@ export default function DashboardLayout({
                   <UserTopbar
                     showSidebarToggle={true}
                     className="border-b shadow"
+                    topNavLinks={adminTopNav}
                   />
+
                   <Main fixed>
                     <MDXViewerProvider>
                       {children}
