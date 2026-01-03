@@ -9,7 +9,7 @@ import { ActivityAction, ActivityResourceType } from '@prisma/client'
 import { formatDistanceToNow } from 'date-fns'
 import { Calendar, Filter, Clock, CheckCircle, XCircle, BookOpen, MessageSquare, ShoppingCart, User, Settings, TrendingUp, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
+import { DashboardSummary, DashboardSummaryGrid } from '@/components/dashboard/dashboard-summary'
 import { DashboardSummarySkeleton } from '@/components/dashboard/dashboard-summary-skeleton'
 import {
   ActivityPageSkeleton,
@@ -169,7 +169,7 @@ export default function UserActivityPage() {
             {loading ? (
               <DashboardSummarySkeleton count={4} />
             ) : (
-              <DashboardSummary
+              <DashboardSummaryGrid
                 summaries={[
                   {
                     title: 'Total Activities',
@@ -204,6 +204,7 @@ export default function UserActivityPage() {
                     ),
                   },
                 ]}
+                compactMobile={true}
               />
             )}
 
