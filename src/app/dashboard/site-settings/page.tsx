@@ -153,7 +153,7 @@ export default function SiteSettingsPage() {
   }
 
   return (
-    <div>
+    <div className="pb-safe-bottom">
         <div className="flex items-center justify-between mb-6">
             <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -169,25 +169,26 @@ export default function SiteSettingsPage() {
                 variant="outline"
                 onClick={fetchSettings}
                 disabled={isLoading}
+                size="sm"
             >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
+                <span className="hidden sm:inline ml-2">Refresh</span>
             </Button>
         </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 pb-20">
         {/* Under Construction Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Under Construction Mode</CardTitle>
+            <CardTitle className="text-lg">Under Construction Mode</CardTitle>
             <CardDescription>
               Enable to show a banner on all public pages informing users that the site is under construction
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="under-construction">Enable Under Construction Banner</Label>
+              <div className="space-y-0.5 flex-1 pr-4">
+                <Label htmlFor="under-construction" className="text-base">Enable Under Construction Banner</Label>
                 <p className="text-sm text-muted-foreground">
                   Show a banner below the navbar on all public pages
                 </p>
@@ -203,13 +204,14 @@ export default function SiteSettingsPage() {
 
             {settings.underConstruction && (
               <div className="space-y-2 pt-4">
-                <Label htmlFor="message">Banner Message</Label>
+                <Label htmlFor="message" className="text-base">Banner Message</Label>
                 <Textarea
                   id="message"
                   placeholder="Site is under construction. Some features may not work as expected."
                   value={underConstructionMessage}
                   onChange={(e) => setUnderConstructionMessage(e.target.value)}
                   rows={3}
+                  className="resize-none"
                 />
                 <p className="text-sm text-muted-foreground">
                   This message will be displayed to all users on the public pages
@@ -218,16 +220,18 @@ export default function SiteSettingsPage() {
             )}
 
             <div className="flex justify-end pt-4">
-              <Button onClick={handleSave} disabled={isSaving}>
+              <Button onClick={handleSave} disabled={isSaving} size="sm">
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    <span className="hidden sm:inline">Saving...</span>
+                    <span className="sm:hidden">Save</span>
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    <span className="hidden sm:inline">Save Changes</span>
+                    <span className="sm:hidden">Save</span>
                   </>
                 )}
               </Button>
@@ -239,15 +243,15 @@ export default function SiteSettingsPage() {
         {settings.underConstruction && (
           <Card>
             <CardHeader>
-              <CardTitle>Banner Preview</CardTitle>
+              <CardTitle className="text-lg">Banner Preview</CardTitle>
               <CardDescription>
                 This is how the banner will appear on public pages
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="border-b-2 border-amber-500/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-t-lg">
-                <div className="container mx-auto px-4 py-2">
-                  <div className="flex items-center justify-center gap-3 text-sm">
+                <div className="px-3 py-2 sm:px-4">
+                  <div className="flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm">
                     <Construction className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                     <p className="text-amber-900 dark:text-amber-100 font-medium">
                       {underConstructionMessage || 'Site is under construction. Some features may not work as expected.'}
