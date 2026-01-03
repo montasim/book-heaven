@@ -60,15 +60,9 @@ export async function checkBookAccess(
 
     if (userId) {
         // Check premium status for specific user
-        const { isUserPremium } = await import('@/lib/auth/repositories/user.repository')
-        const { hasActivePremiumSubscription } = await import('@/lib/user/repositories/subscription.repository')
+        const { isUserPremium } = await import('@/lib/user/repositories/user.repository')
 
-        const [premiumFlag, hasActiveSubscription] = await Promise.all([
-            isUserPremium(userId),
-            hasActivePremiumSubscription(userId)
-        ])
-
-        userHasPremium = premiumFlag || hasActiveSubscription
+        userHasPremium = await isUserPremium(userId)
     } else {
         // Check current user session
         try {

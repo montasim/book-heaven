@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { IconBrowserCheck, IconNotification, IconPalette, IconTool, IconUser, IconCreditCard, IconReceipt } from '@tabler/icons-react'
+import { IconBrowserCheck, IconNotification, IconPalette, IconTool, IconUser } from '@tabler/icons-react'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/layout/header'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -24,16 +24,6 @@ const sidebarNavItems = [
     title: 'Account',
     icon: <IconTool size={18} />,
     href: '/settings/account',
-  },
-  {
-    title: 'Subscription',
-    icon: <IconCreditCard size={18} />,
-    href: '/settings/subscription',
-  },
-  {
-    title: 'Billing',
-    icon: <IconReceipt size={18} />,
-    href: '/settings/billing',
   },
   {
     title: 'Appearance',
