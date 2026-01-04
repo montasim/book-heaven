@@ -667,6 +667,42 @@ model Subscription {
   @@map("subscriptions")
 }
 
+// ============================================================================
+// CONTENT MANAGEMENT (Pricing & FAQ)
+// ============================================================================
+
+model PricingTier {
+  id               String           @id @default(uuid())
+  plan             SubscriptionPlan @unique
+  name             String
+  description      String
+  monthlyPrice     Int              @default(0) // in cents
+  yearlyPrice      Int              @default(0) // in cents
+  popular          Boolean          @default(false)
+  stripeMonthlyPriceId String?
+  stripeYearlyPriceId  String?
+  isActive         Boolean          @default(true)
+  order            Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  features         PricingFeature[]
+
+  @@map("pricing_tiers")
+}
+
+model PricingFeature {
+  id           String     @id @default(uuid())
+  tierId       String
+  text         String
+  included     Boolean    @default(true)
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  tier         PricingTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_features")
+}
+
 model ReadingProgress {
   id            String   @id @default(uuid())
   userId        String

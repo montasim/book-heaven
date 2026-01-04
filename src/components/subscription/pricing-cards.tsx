@@ -5,9 +5,33 @@ import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { SUBSCRIPTION_TIERS, formatPrice, getYearlySavings, getSubscriptionTier } from '@/lib/stripe/config'
+import { formatPrice, getYearlySavings } from '@/lib/stripe/config'
 import { SubscriptionPlan } from '@prisma/client'
 import { CheckoutButton } from '@/components/subscription/checkout-button'
+import { useState, useEffect } from 'react'
+
+interface PricingFeature {
+  id: string
+  tierId: string
+  text: string
+  included: boolean
+  order: number
+}
+
+interface PricingTier {
+  id: string
+  plan: SubscriptionPlan
+  name: string
+  description: string
+  monthlyPrice: number
+  yearlyPrice: number
+  popular: boolean
+  stripeMonthlyPriceId: string | null
+  stripeYearlyPriceId: string | null
+  isActive: boolean
+  order: number
+  features: PricingFeature[]
+}
 
 interface PricingCardsProps {
   interval?: 'month' | 'year'
@@ -20,13 +44,55 @@ export function PricingCards({
   currentPlan = SubscriptionPlan.FREE,
   showCheckoutButton = true,
 }: PricingCardsProps) {
+  const [tiers, setTiers] = useState<PricingTier[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPricingTiers()
+  }, [])
+
+  const fetchPricingTiers = async () => {
+    try {
+      const response = await fetch('/api/pricing')
+      const result = await response.json()
+      if (result.success) {
+        setTiers(result.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch pricing tiers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="h-96">
+            <CardContent className="flex items-center justify-center h-full">
+              <div className="text-muted-foreground">Loading...</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (tiers.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-12">
+        No pricing tiers available. Please contact support.
+      </div>
+    )
+  }
+
   return (
     <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-      {Object.values(SUBSCRIPTION_TIERS).map((tier) => {
-        const tierKey = tier.id.toUpperCase().replace('-', '_') as SubscriptionPlan
-        const price = tier.price[interval === 'month' ? 'monthly' : 'yearly']
-        const isCurrentPlan = tierKey === currentPlan
-        const savings = interval === 'year' ? getYearlySavings(tier.price.monthly, tier.price.yearly) : 0
+      {tiers.map((tier) => {
+        const price = interval === 'month' ? tier.monthlyPrice : tier.yearlyPrice
+        const isCurrentPlan = tier.plan === currentPlan
+        const savings = interval === 'year' ? getYearlySavings(tier.monthlyPrice, tier.yearlyPrice) : 0
 
         return (
           <Card
@@ -57,7 +123,7 @@ export function PricingCards({
 
             <CardContent className="space-y-3">
               {tier.features.map((feature) => (
-                <div key={feature.text} className="flex items-start gap-2">
+                <div key={feature.id} className="flex items-start gap-2">
                   <Check
                     className={`h-5 w-5 mt-0.5 ${feature.included ? 'text-green-600' : 'text-muted-foreground'}`}
                   />
@@ -75,13 +141,13 @@ export function PricingCards({
                 <Button variant="outline" className="w-full" disabled>
                   Current Plan
                 </Button>
-              ) : tierKey === SubscriptionPlan.FREE ? (
+              ) : tier.plan === SubscriptionPlan.FREE ? (
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/signup">Get Started</Link>
                 </Button>
               ) : showCheckoutButton ? (
                 <CheckoutButton
-                  plan={tierKey}
+                  plan={tier.plan}
                   interval={interval}
                   className="w-full"
                   variant={tier.popular ? 'default' : 'outline'}
@@ -94,7 +160,7 @@ export function PricingCards({
                   variant={tier.popular ? 'default' : 'outline'}
                   asChild
                 >
-                  <Link href={`/pricing?plan=${tierKey}&interval=${interval}`}>
+                  <Link href={`/pricing?plan=${tier.plan}&interval=${interval}`}>
                     Choose {tier.name}
                   </Link>
                 </Button>

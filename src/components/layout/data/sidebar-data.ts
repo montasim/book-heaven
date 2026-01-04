@@ -82,6 +82,11 @@ export const sidebarData: SidebarData = {
           icon: IconBuildingFactory,
         },
         {
+          title: 'Pricing Page Content',
+          url: '/dashboard/admin/content',
+          icon: IconCrown,
+        },
+        {
           title: 'Users',
           url: '/dashboard/users',
           icon: IconUsers,
