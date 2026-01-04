@@ -628,15 +628,26 @@ model UserOtp {
 }
 
 model UserSession {
-  id        String   @id @default(uuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  tokenType    TokenType @default(ACCESS) // ACCESS or REFRESH
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  revokedAt    DateTime?
+  userAgent    String?
+  ipAddress    String?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
+  @@index([userId, tokenType])
+  @@index([expiresAt])
   @@map("user_sessions")
+}
+
+enum TokenType {
+  ACCESS   // Short-lived token (15 minutes)
+  REFRESH  // Long-lived token (7 days)
 }
 
 // ============================================================================

@@ -24,6 +24,7 @@ import {
     generateDummyHash,
 } from '@/lib/auth/crypto'
 import { createLoginSession } from '@/lib/auth/session'
+import { createTokenPair } from '@/lib/auth/token.repository'
 import { checkRateLimit, RateLimitAction, resetRateLimit } from '@/lib/auth/rate-limit'
 import {
     getClientIp,
@@ -122,6 +123,11 @@ export async function POST(request: NextRequest) {
             user.avatar || null
         )
 
+        // Create access and refresh tokens
+        const userAgent = request.headers.get('user-agent') || undefined
+        const ipAddress = getClientIp(request)
+        const tokens = await createTokenPair(user.id, userAgent, ipAddress)
+
         // Log login activity (non-blocking)
         logActivity({
             userId: user.id,
@@ -137,8 +143,15 @@ export async function POST(request: NextRequest) {
         // Send login notification email (non-blocking)
         sendLoginNotificationEmail(user.email, new Date(), clientIp).catch(console.error)
 
-        // Return success response with user data including role
-        const response: LoginResponse = {
+        // Return success response with user data, tokens, and role
+        const response: LoginResponse & {
+            tokens: {
+                accessToken: string
+                accessTokenExpiresAt: Date
+                refreshToken: string
+                refreshTokenExpiresAt: Date
+            }
+        } = {
             success: true,
             user: {
                 id: user.id,
@@ -146,6 +159,12 @@ export async function POST(request: NextRequest) {
                 name: user.name,
                 role: user.role,
                 isPremium: user.isPremium,
+            },
+            tokens: {
+                accessToken: tokens.accessToken,
+                accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+                refreshToken: tokens.refreshToken,
+                refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
             },
         }
 

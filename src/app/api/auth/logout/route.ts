@@ -8,20 +8,24 @@
 
 import { NextRequest } from 'next/server'
 import { deleteSession, getSession } from '@/lib/auth/session'
+import { revokeAllRefreshTokens } from '@/lib/auth/token.repository'
 import { successResponse, errorResponse } from '@/lib/auth/request-utils'
 import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
     try {
-        // Get session before deleting (for logging)
+        // Get session before deleting (for logging and token revocation)
         const session = await getSession()
 
         // Delete session cookie
         await deleteSession()
 
-        // Log logout activity (non-blocking)
+        // Revoke all refresh tokens for this user
         if (session) {
+            await revokeAllRefreshTokens(session.userId)
+
+            // Log logout activity (non-blocking)
             logActivity({
                 userId: session.userId,
                 userRole: session.role as any,
