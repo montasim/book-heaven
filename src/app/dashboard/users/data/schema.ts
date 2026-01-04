@@ -15,20 +15,38 @@ const userRoleSchema = z.union([
 ])
 export type UserRole = z.infer<typeof userRoleSchema>
 
+const subscriptionPlanSchema = z.union([
+  z.literal('FREE'),
+  z.literal('PREMIUM'),
+  z.literal('PREMIUM_PLUS'),
+])
+export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>
+
 export const userSchema = z.object({
   id: z.string(),
-  name: z.string(), // This comes from Admin.firstName + Admin.lastName (full name)
+  name: z.string(),
   email: z.string().email(),
-  status: userStatusSchema.default('active'), // All registered admins are active
-  role: userRoleSchema.default('ADMIN'), // All admins have admin role for now
+  status: userStatusSchema.default('active'),
+  role: userRoleSchema.default('USER'),
   createdAt: z.string(),
   updatedAt: z.string(),
 
-  // All UI fields (derived from Admin model)
+  // UI fields
   firstName: z.string(),
-  lastName: z.string().optional(), // Optional field
+  lastName: z.string().optional(),
   username: z.string(),
-  phoneNumber: z.string().optional(), // Optional field
+  phoneNumber: z.string().optional(),
+
+  // Subscription fields
+  isPremium: z.boolean().default(false),
+  subscriptionPlan: subscriptionPlanSchema.optional(),
+  subscriptionIsActive: z.boolean().optional(),
+  subscriptionStartDate: z.string().optional(),
+  subscriptionEndDate: z.string().optional(),
+  stripeCustomerId: z.string().optional(),
+  stripeSubscriptionId: z.string().optional(),
+  stripePriceId: z.string().optional(),
+  cancelAtPeriodEnd: z.boolean().optional(),
 })
 export type User = z.infer<typeof userSchema>
 

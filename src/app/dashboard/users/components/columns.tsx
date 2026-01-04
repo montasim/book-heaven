@@ -11,6 +11,16 @@ import { getUserDisplayName } from '@/lib/utils/user'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
 
+// Helper function to format dates
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
 export const columns: ColumnDef<User>[] = [
   {
     id: 'select',
@@ -137,6 +147,81 @@ export const columns: ColumnDef<User>[] = [
     },
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    accessorKey: 'subscriptionPlan',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Plan' />
+    ),
+    cell: ({ row }) => {
+      const plan = (row.getValue('subscriptionPlan') as string | undefined) || 'FREE'
+      const planColors: Record<string, string> = {
+        FREE: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+        PREMIUM: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+        PREMIUM_PLUS: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+      }
+      const isPremium = row.original.isPremium
+      return (
+        <div className='flex items-center gap-2'>
+          {isPremium && <span className='text-lg'>💎</span>}
+          <Badge variant='outline' className={cn('capitalize', planColors[plan] || planColors['FREE'])}>
+            {plan}
+          </Badge>
+        </div>
+      )
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id) || 'FREE')
+    },
+  },
+  {
+    accessorKey: 'subscriptionIsActive',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Sub Status' />
+    ),
+    cell: ({ row }) => {
+      const isActive = row.getValue('subscriptionIsActive')
+      const cancelAtEnd = row.original.cancelAtPeriodEnd
+      if (isActive === undefined || isActive === null) {
+        return <span className='text-muted-foreground'>-</span>
+      }
+      return (
+        <div className='flex items-center gap-2'>
+          <Badge variant={isActive ? 'default' : 'secondary'} className='capitalize'>
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+          {cancelAtEnd && (
+            <span className='text-xs text-muted-foreground' title='Cancels at period end'>
+              Ending Soon
+            </span>
+          )}
+        </div>
+      )
+    },
+    filterFn: (row, id, value) => {
+      const isActive = row.getValue(id)
+      if (isActive === undefined || isActive === null) return value.includes('none')
+      return value.includes(isActive ? 'active' : 'inactive')
+    },
+  },
+  {
+    accessorKey: 'subscriptionStartDate',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Start Date' />
+    ),
+    cell: ({ row }) => {
+      return <span className='text-sm'>{formatDate(row.getValue('subscriptionStartDate'))}</span>
+    },
+  },
+  {
+    accessorKey: 'subscriptionEndDate',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='End Date' />
+    ),
+    cell: ({ row }) => {
+      const endDate = row.getValue('subscriptionEndDate')
+      return <span className='text-sm'>{formatDate(endDate as string | undefined)}</span>
+    },
   },
   {
     id: 'actions',

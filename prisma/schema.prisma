@@ -1618,6 +1618,36 @@ enum LegalContentType {
 }
 
 // ============================================================================
+// CONTACT SUBMISSIONS
+// ============================================================================
+
+enum ContactStatus {
+  NEW
+  READ
+  RESPONDED
+  ARCHIVED
+}
+
+model ContactSubmission {
+  id          String        @id @default(uuid())
+  name        String
+  email       String
+  subject     String?
+  message     String        @db.Text
+  status      ContactStatus @default(NEW)
+  ipAddress   String?
+  userAgent   String?
+  readAt      DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([email])
+  @@map("contact_submissions")
+}
+
+// ============================================================================
 // PDF PROCESSING MODELS
 // ============================================================================
 

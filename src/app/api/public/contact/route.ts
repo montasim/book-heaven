@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendContactFormEmail } from '@/lib/auth/email'
 import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { ContactStatus } from '@prisma/client'
 
 /**
  * POST /api/public/contact
- * Submit contact form and send email to admin
+ * Submit contact form, save to database, and send email to admin
  */
 
 // Validation schema for contact form
@@ -34,18 +36,31 @@ export async function POST(request: NextRequest) {
 
     const { name, email, subject, message } = validationResult.data
 
+    // Get client IP and user agent
+    const ipAddress = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown'
+    const userAgent = request.headers.get('user-agent') || 'unknown'
+
+    // Save to database
+    await prisma.contactSubmission.create({
+      data: {
+        name,
+        email,
+        subject: subject || null,
+        message,
+        ipAddress,
+        userAgent,
+        status: ContactStatus.NEW,
+      },
+    })
+
     // Send the email
     const result = await sendContactFormEmail(name, email, subject || '', message)
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Failed to send message. Please try again later.',
-          error: result.error,
-        },
-        { status: 500 }
-      )
+      // Log the error but don't fail the request since we saved to database
+      console.error('Failed to send contact email:', result.error)
     }
 
     return NextResponse.json({

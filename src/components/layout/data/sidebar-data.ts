@@ -118,6 +118,11 @@ export const sidebarData: SidebarData = {
           icon: IconHelp,
         },
         {
+          title: 'Contact Submissions',
+          url: '/dashboard/admin/contact-submissions',
+          icon: IconMessages,
+        },
+        {
           title: 'Legal Content',
           url: '/dashboard/legal',
           icon: IconFileText,

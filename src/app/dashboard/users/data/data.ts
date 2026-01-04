@@ -3,6 +3,8 @@ import {
   IconShield,
   IconUsersGroup,
   IconUserShield,
+  IconDiamond,
+  IconStar,
 } from '@tabler/icons-react'
 import { UserStatus } from './schema'
 
@@ -34,5 +36,44 @@ export const userTypes = [
     value: 'SUPER_ADMIN',
     icon: IconShield,
     description: 'Super administrator with all permissions',
+  },
+] as const
+
+export const subscriptionPlanTypes = [
+  {
+    label: 'Free',
+    value: 'FREE',
+    icon: IconUsersGroup,
+    description: 'Free tier users',
+  },
+  {
+    label: 'Premium',
+    value: 'PREMIUM',
+    icon: IconStar,
+    description: 'Premium subscribers',
+  },
+  {
+    label: 'Premium Plus',
+    value: 'PREMIUM_PLUS',
+    icon: IconDiamond,
+    description: 'Premium Plus subscribers',
+  },
+] as const
+
+export const subscriptionStatusTypes = [
+  {
+    label: 'Active',
+    value: 'active',
+    description: 'Active subscriptions',
+  },
+  {
+    label: 'Inactive',
+    value: 'inactive',
+    description: 'Inactive subscriptions',
+  },
+  {
+    label: 'None',
+    value: 'none',
+    description: 'No subscription',
   },
 ] as const

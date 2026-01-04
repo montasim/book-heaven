@@ -3,14 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { User, userSchema } from './data/schema'
-import { getAllAdmins, deleteUser as deleteUserFromDb, findUserById, updateUser as updateUserDb } from '@/lib/auth/repositories/user.repository'
+import { getAllAdmins, getAllUsersWithSubscriptions, deleteUser as deleteUserFromDb, findUserById, updateUser as updateUserDb } from '@/lib/auth/repositories/user.repository'
 
 
-// Get all users (admins from database)
+// Get all users with subscription data
 export async function getUsers() {
   try {
-    const admins = await getAllAdmins()
-    return admins.map(mapAdminToUser)
+    const users = await getAllUsersWithSubscriptions()
+    return users.map(mapUserWithSubscription)
   } catch (error) {
     console.error('Error fetching users:', error)
     return []
@@ -120,28 +120,43 @@ export async function updateUserRole(id: string, role: string) {
   }
 }
 
-// Helper function to map Admin to User interface
-function mapAdminToUser(admin: any): User {
+// Helper function to map User with Subscription to User interface
+function mapUserWithSubscription(user: any): User {
   // Try to get the actual username from database, fallback to email prefix
-  const username = admin.username || admin.email.split('@')[0] || ''
+  const username = user.username || user.email.split('@')[0] || ''
 
-  // Get the stored role or default to 'ADMIN'
-  const role = userRoles[admin.id] || 'ADMIN'
+  // Get the stored role or default to user's actual role
+  const role = userRoles[user.id] || user.role || 'USER'
+
+  // Extract subscription data
+  const subscription = user.subscription
+  const isPremium = user.isPremium || false
 
   return {
-    id: admin.id,
-    name: admin.lastName ? `${admin.firstName} ${admin.lastName}` : admin.firstName,
-    email: admin.email,
-    status: 'active', // All registered admins are active
-    role: role as 'USER' | 'ADMIN' | 'SUPER_ADMIN', // Use the stored role
-    createdAt: admin.createdAt.toISOString(),
-    updatedAt: admin.updatedAt.toISOString(),
+    id: user.id,
+    name: user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName,
+    email: user.email,
+    status: user.isActive ? 'active' : 'inactive',
+    role: role as 'USER' | 'ADMIN' | 'SUPER_ADMIN',
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
 
     // All UI fields
-    firstName: admin.firstName,
-    lastName: admin.lastName || '',
+    firstName: user.firstName,
+    lastName: user.lastName || '',
     username,
-    phoneNumber: admin.phoneNumber || '',
+    phoneNumber: user.phoneNumber || '',
+
+    // Subscription fields
+    isPremium,
+    subscriptionPlan: subscription?.plan || undefined,
+    subscriptionIsActive: subscription?.isActive,
+    subscriptionStartDate: subscription?.startDate ? subscription.startDate.toISOString() : undefined,
+    subscriptionEndDate: subscription?.endDate ? subscription.endDate.toISOString() : undefined,
+    stripeCustomerId: user.stripeCustomerId || undefined,
+    stripeSubscriptionId: subscription?.stripeSubscriptionId || undefined,
+    stripePriceId: subscription?.stripePriceId || undefined,
+    cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd,
   }
 }
 

@@ -118,6 +118,22 @@ export async function getAllAdmins() {
 }
 
 /**
+ * Get all users with their subscription data
+ *
+ * @returns {Promise<User[]>} Array of all users with subscription information
+ */
+export async function getAllUsersWithSubscriptions() {
+    return prisma.user.findMany({
+        include: {
+            subscription: true,
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+    })
+}
+
+/**
  * Check if user has premium status
  *
  * @param {string} userId - User ID
