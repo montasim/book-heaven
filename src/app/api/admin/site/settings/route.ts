@@ -6,10 +6,74 @@ import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 
 const updateSettingsSchema = z.object({
+  // Existing fields
   underConstruction: z.boolean().optional(),
-  underConstructionMessage: z.string().optional(),
+  underConstructionMessage: z.string().nullable().optional(),
   maintenanceMode: z.boolean().optional(),
-  maintenanceMessage: z.string().optional(),
+  maintenanceMessage: z.string().nullable().optional(),
+
+  // Branding
+  siteName: z.string().min(1).max(100),
+  siteSlogan: z.string().max(200).nullable().optional(),
+  logoUrl: z.string().url().nullable().optional(),
+  directLogoUrl: z.string().url().nullable().optional(),
+  faviconUrl: z.string().url().nullable().optional(),
+  directFaviconUrl: z.string().url().nullable().optional(),
+
+  // SEO
+  seoTitle: z.string().max(60).nullable().optional(),
+  seoDescription: z.string().max(160).nullable().optional(),
+  seoKeywords: z.string().max(255).nullable().optional(),
+  ogImage: z.string().url().nullable().optional(),
+  directOgImageUrl: z.string().url().nullable().optional(),
+
+  // Contact
+  supportEmail: z.string().email().nullable().optional(),
+  contactEmail: z.string().email().nullable().optional(),
+  socialTwitter: z.string().url().nullable().optional(),
+  socialGithub: z.string().url().nullable().optional(),
+  socialFacebook: z.string().url().nullable().optional(),
+  socialInstagram: z.string().url().nullable().optional(),
+  socialLinkedIn: z.string().url().nullable().optional(),
+}).transform((data) => {
+  // Convert empty strings to null for optional fields
+  const transformed: any = { ...data }
+
+  // List of fields that should be null if empty string
+  const nullifyFields = [
+    'underConstructionMessage',
+    'maintenanceMessage',
+    'siteSlogan',
+    'logoUrl',
+    'directLogoUrl',
+    'faviconUrl',
+    'directFaviconUrl',
+    'seoTitle',
+    'seoDescription',
+    'seoKeywords',
+    'ogImage',
+    'directOgImageUrl',
+    'supportEmail',
+    'contactEmail',
+    'socialTwitter',
+    'socialGithub',
+    'socialFacebook',
+    'socialInstagram',
+    'socialLinkedIn',
+  ]
+
+  nullifyFields.forEach((field) => {
+    if (transformed[field] === '') {
+      transformed[field] = null
+    }
+  })
+
+  // Ensure siteName has a default value if empty
+  if (!transformed.siteName || transformed.siteName.trim() === '') {
+    transformed.siteName = 'Book Heaven'
+  }
+
+  return transformed
 })
 
 /**
@@ -32,7 +96,19 @@ export async function GET(request: NextRequest) {
     // If no settings exist, create default settings
     if (!settings) {
       settings = await prisma.systemSettings.create({
-        data: {},
+        data: {
+          siteName: 'Book Heaven',
+        },
+      })
+    }
+
+    // Ensure siteName exists (for records created before the field was added)
+    if (!settings.siteName) {
+      settings = await prisma.systemSettings.update({
+        where: { id: settings.id },
+        data: {
+          siteName: 'Book Heaven',
+        },
       })
     }
 
@@ -81,6 +157,10 @@ export async function PUT(request: NextRequest) {
         data: validatedData,
       })
     }
+
+    // Invalidate cache after update
+    const { invalidateSiteSettingsCache } = await import('@/lib/cache/site-settings')
+    await invalidateSiteSettingsCache()
 
     return NextResponse.json({
       success: true,

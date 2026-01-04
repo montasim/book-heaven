@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import {BookOpen} from "lucide-react";
+import { useEffect, useState } from 'react'
 
 interface Props {
   children: React.ReactNode
@@ -10,6 +11,19 @@ interface Props {
 export default function AuthLayout({ children }: Props) {
   const pathname = usePathname()
   const isSignIn2 = pathname === '/auth/sign-in-2'
+  const [siteName, setSiteName] = useState('Book Heaven Admin')
+
+  useEffect(() => {
+    // Fetch site name from public API
+    fetch('/api/public/site/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.siteName) {
+          setSiteName(`${data.data.siteName} Admin`)
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   if (isSignIn2) {
     return <div className="relative min-h-screen overflow-hidden">{children}</div>
@@ -20,7 +34,7 @@ export default function AuthLayout({ children }: Props) {
       <div className='mx-auto flex w-full flex-col justify-center space-y-2 sm:w-[480px] lg:p-8'>
         <div className='mb-4 flex items-center justify-center gap-2'>
           <BookOpen />
-          <h1 className='text-xl font-medium'>Book Heaven Admin</h1>
+          <h1 className='text-xl font-medium'>{siteName}</h1>
         </div>
         {children}
       </div>

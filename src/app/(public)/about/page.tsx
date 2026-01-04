@@ -5,13 +5,18 @@ import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LegalContentType } from '@prisma/client'
+import { getSiteName } from '@/lib/utils/site-settings'
 
-export const metadata: Metadata = {
-  title: 'About Us - Book Heaven',
-  description: 'Learn more about Book Heaven and our mission',
+export async function generateMetadata(): Promise<Metadata> {
+  const siteName = await getSiteName()
+  return {
+    title: `About Us - ${siteName}`,
+    description: `Learn more about ${siteName} and our mission`,
+  }
 }
 
 export default async function AboutPage() {
+  const siteName = await getSiteName()
   let legalContent = null
 
   try {
@@ -66,7 +71,7 @@ export default async function AboutPage() {
               </div>
             </div>
             <p className="text-muted-foreground">
-              Discover our story, mission, and the team behind Book Heaven
+              Discover our story, mission, and the team behind {siteName}
             </p>
           </div>
 

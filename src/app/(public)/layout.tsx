@@ -8,13 +8,19 @@ import { PublicHeader } from '@/components/layout/public-header'
 import { PublicFooter } from '@/components/layout/public-footer'
 import { UnderConstructionBanner } from '@/components/layout/under-construction-banner'
 import { MDXViewerProvider } from 'mdx-craft'
+import { getSiteName, getSEOMetadata } from '@/lib/utils/site-settings'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Book Heaven - Discover, Read, and Share Books',
-  description: 'Discover amazing books, track your reading progress, and share your favorite reads with our comprehensive book management platform.',
-  keywords: ['books', 'reading', 'library', 'ebooks', 'audiobooks', 'book discovery', 'book heaven'],
+export async function generateMetadata(): Promise<Metadata> {
+  const siteName = await getSiteName()
+  const seo = await getSEOMetadata()
+
+  return {
+    title: `${siteName} - Discover, Read, and Share Books`,
+    description: seo.description,
+    keywords: seo.keywords.split(','),
+  }
 }
 
 export default function PublicLayout({

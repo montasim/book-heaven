@@ -5,13 +5,18 @@ import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LegalContentType } from '@prisma/client'
+import { getSiteName } from '@/lib/utils/site-settings'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service - Book Heaven',
-  description: 'Terms of Service and conditions for using Book Heaven platform',
+export async function generateMetadata(): Promise<Metadata> {
+  const siteName = await getSiteName()
+  return {
+    title: `Terms of Service - ${siteName}`,
+    description: `Terms of Service and conditions for using ${siteName} platform`,
+  }
 }
 
 export default async function TermsPage() {
+  const siteName = await getSiteName()
   let legalContent = null
 
   try {
@@ -66,7 +71,7 @@ export default async function TermsPage() {
             </div>
           </div>
           <p className="text-muted-foreground">
-            Please read these terms carefully before using our platform. By accessing or using Book Heaven, you agree to be bound by these terms.
+            Please read these terms carefully before using our platform. By accessing or using {siteName}, you agree to be bound by these terms.
           </p>
         </div>
 
@@ -98,7 +103,7 @@ export default async function TermsPage() {
         {legalContent?.content && (
           <div className="mt-6 rounded-lg border bg-muted/50 p-4">
             <p className="text-center text-sm text-muted-foreground">
-              <span className="font-medium">Important:</span> By continuing to use Book Heaven, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with these terms, please discontinue use of our platform.
+              <span className="font-medium">Important:</span> By continuing to use {siteName}, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with these terms, please discontinue use of our platform.
             </p>
           </div>
         )}

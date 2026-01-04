@@ -4,31 +4,39 @@ import { AuthProvider } from '@/context/auth-context'
 import { WebSocketProvider } from '@/context/websocket-context'
 import { ThemeProvider } from 'next-themes'
 import { AppQueryClientProvider } from '@/components/providers/query-client-provider'
+import { getSiteName, getSEOMetadata, getOGImage } from '@/lib/utils/site-settings'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: {
-    default: 'Book Heaven - AI-Powered Digital Library',
-    template: '%s | Book Heaven'
-  },
-  description: 'Discover, read, and interact with books using advanced AI. Chat with books, get mood-based recommendations, take quizzes, and join a community of passionate readers.',
-  keywords: ['digital library', 'AI chat', 'ebooks', 'audiobooks', 'reading', 'book recommendations', 'online library'],
-  authors: [{ name: 'Book Heaven' }],
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    title: 'Book Heaven - AI-Powered Digital Library',
-    description: 'Discover, read, and interact with books using advanced AI technology.',
-    siteName: 'Book Heaven',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Book Heaven - AI-Powered Digital Library',
-    description: 'Discover, read, and interact with books using advanced AI technology.',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const siteName = await getSiteName()
+  const seo = await getSEOMetadata()
+  const ogImage = await getOGImage()
+
+  return {
+    title: {
+      default: seo.title,
+      template: `%s | ${siteName}`
+    },
+    description: seo.description,
+    keywords: seo.keywords.split(','),
+    authors: [{ name: siteName }],
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      title: seo.title,
+      description: seo.description,
+      siteName: siteName,
+      images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.title,
+      description: seo.description,
+    },
+  }
 }
 
 export default function RootLayout({

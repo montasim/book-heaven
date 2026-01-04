@@ -22,6 +22,21 @@ export async function GET(request: NextRequest) {
       data: {
         underConstruction: settings.underConstruction,
         underConstructionMessage: settings.underConstructionMessage,
+        siteName: settings.siteName,
+        siteSlogan: settings.siteSlogan,
+        logoUrl: settings.directLogoUrl || settings.logoUrl,
+        faviconUrl: settings.directFaviconUrl || settings.faviconUrl,
+        seoTitle: settings.seoTitle,
+        seoDescription: settings.seoDescription,
+        seoKeywords: settings.seoKeywords,
+        ogImage: settings.directOgImageUrl || settings.ogImage,
+        supportEmail: settings.supportEmail,
+        contactEmail: settings.contactEmail,
+        socialTwitter: settings.socialTwitter,
+        socialGithub: settings.socialGithub,
+        socialFacebook: settings.socialFacebook,
+        socialInstagram: settings.socialInstagram,
+        socialLinkedIn: settings.socialLinkedIn,
       },
     })
   } catch (error: any) {

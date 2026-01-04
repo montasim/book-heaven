@@ -5,13 +5,18 @@ import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LegalContentType } from '@prisma/client'
+import { getSiteName } from '@/lib/utils/site-settings'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy - Book Heaven',
-  description: 'Privacy Policy and how Book Heaven handles your data',
+export async function generateMetadata(): Promise<Metadata> {
+  const siteName = await getSiteName()
+  return {
+    title: `Privacy Policy - ${siteName}`,
+    description: `Privacy Policy and how ${siteName} handles your data`,
+  }
 }
 
 export default async function PrivacyPage() {
+  const siteName = await getSiteName()
   let legalContent = null
 
   try {
@@ -66,7 +71,7 @@ export default async function PrivacyPage() {
             </div>
           </div>
           <p className="text-muted-foreground">
-            Your privacy is important to us. This policy explains how we collect, use, disclose, and safeguard your information when you use Book Heaven.
+            Your privacy is important to us. This policy explains how we collect, use, disclose, and safeguard your information when you use {siteName}.
           </p>
         </div>
 

@@ -1,10 +1,42 @@
 'use client'
 
 import Link from 'next/link'
-import { BookOpen, Github, Twitter, Heart } from 'lucide-react'
+import { BookOpen, Github, Twitter, Heart, Facebook, Instagram, Linkedin } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+interface SocialLinks {
+  twitter?: string
+  github?: string
+  facebook?: string
+  instagram?: string
+  linkedin?: string
+}
 
 export function PublicFooter() {
   const currentYear = new Date().getFullYear()
+  const [siteName, setSiteName] = useState('Book Heaven')
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({})
+
+  useEffect(() => {
+    // Fetch site settings from public API
+    fetch('/api/public/site/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (data.data.siteName) setSiteName(data.data.siteName)
+          if (data.data.socialTwitter || data.data.socialGithub || data.data.socialFacebook || data.data.socialInstagram || data.data.socialLinkedIn) {
+            setSocialLinks({
+              twitter: data.data.socialTwitter,
+              github: data.data.socialGithub,
+              facebook: data.data.socialFacebook,
+              instagram: data.data.socialInstagram,
+              linkedin: data.data.socialLinkedIn,
+            })
+          }
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   return (
     <footer className="border-t bg-background">
@@ -14,26 +46,67 @@ export function PublicFooter() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              <span className="text-lg font-bold">Book Heaven</span>
+              <span className="text-lg font-bold">{siteName}</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Discover, read, and share amazing books with our comprehensive book management platform.
             </p>
             <div className="flex items-center space-x-4">
-              <Link
-                href="https://github.com"
-                className="text-muted-foreground hover:text-primary transition-colors"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
-              </Link>
-              <Link
-                href="https://twitter.com"
-                className="text-muted-foreground hover:text-primary transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </Link>
+              {socialLinks.github && (
+                <Link
+                  href={socialLinks.github}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="GitHub"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks.twitter && (
+                <Link
+                  href={socialLinks.twitter}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Twitter"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Twitter className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks.facebook && (
+                <Link
+                  href={socialLinks.facebook}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Facebook"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Facebook className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks.instagram && (
+                <Link
+                  href={socialLinks.instagram}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Instagram"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Instagram className="h-5 w-5" />
+                </Link>
+              )}
+              {socialLinks.linkedin && (
+                <Link
+                  href={socialLinks.linkedin}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="LinkedIn"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Linkedin className="h-5 w-5" />
+                </Link>
+              )}
             </div>
           </div>
 
@@ -107,7 +180,7 @@ export function PublicFooter() {
         <div className="mt-8 pt-8 border-t">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} Book Heaven. All rights reserved.
+              © {currentYear} {siteName}. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               Made with <Heart className="h-4 w-4 fill-red-500 text-red-500" /> for book lovers

@@ -1154,10 +1154,37 @@ model Notification {
 // System-wide settings
 model SystemSettings {
   id                        String   @id @default(uuid())
+
+  // Maintenance & Construction Mode
   underConstruction         Boolean  @default(false)
   underConstructionMessage  String?  @default("Site is under construction. Some features may not work as expected.")
   maintenanceMode           Boolean  @default(false)
   maintenanceMessage        String?
+
+  // Branding
+  siteName                  String   @default("Book Heaven")
+  siteSlogan                String?
+  logoUrl                   String?
+  directLogoUrl             String?
+  faviconUrl                String?
+  directFaviconUrl          String?
+
+  // SEO Metadata
+  seoTitle                  String?
+  seoDescription            String?
+  seoKeywords               String?
+  ogImage                   String?
+  directOgImageUrl          String?
+
+  // Contact Information
+  supportEmail              String?
+  contactEmail              String?
+  socialTwitter             String?
+  socialGithub              String?
+  socialFacebook            String?
+  socialInstagram           String?
+  socialLinkedIn            String?
+
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 

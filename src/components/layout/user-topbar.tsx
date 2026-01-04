@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -51,6 +51,19 @@ export function UserTopbar({
   const { user, logout, isLoading } = useAuth()
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const [siteName, setSiteName] = useState('Book Heaven')
+
+  useEffect(() => {
+    // Fetch site name from public API
+    fetch('/api/public/site/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.siteName) {
+          setSiteName(data.data.siteName)
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   const handleLogout = () => {
     setIsLogoutDialogOpen(true)
@@ -230,7 +243,7 @@ export function UserTopbar({
           <div className="flex items-center space-x-2">
             <Link href="/" className="flex items-center space-x-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              <h1 className="text-lg font-bold hidden sm:block">Book Heaven</h1>
+              <h1 className="text-lg font-bold hidden sm:block">{siteName}</h1>
             </Link>
           </div>
         )}

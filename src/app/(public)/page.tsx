@@ -4,8 +4,22 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Brain, Trophy, Users, BookOpen, ArrowRight, TrendingUp, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export default function LandingPage() {
+  const [siteName, setSiteName] = useState('Book Heaven')
+
+  useEffect(() => {
+    // Fetch site name from public API
+    fetch('/api/public/site/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.siteName) {
+          setSiteName(data.data.siteName)
+        }
+      })
+      .catch(console.error)
+  }, [])
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -14,7 +28,7 @@ export default function LandingPage() {
           <div className="text-center space-y-6">
             <h1 className="text-5xl font-bold tracking-tight">
               Your Digital{' '}
-              <span className="text-primary">Book Heaven</span>
+              <span className="text-primary">{siteName}</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Discover amazing books, track your reading progress, and challenge your knowledge with interactive quizzes.

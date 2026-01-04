@@ -12,6 +12,7 @@ import { config } from '@/config'
 
 const resend = new Resend(config.resendApiKey)
 const FROM_EMAIL = config.fromEmail || 'onboarding@resend.dev'
+// TODO: Make APP_NAME dynamic - currently using fallback
 const APP_NAME = 'Book Heaven'
 const BASE_URL = config.baseUrl || 'http://localhost:3000'
 
