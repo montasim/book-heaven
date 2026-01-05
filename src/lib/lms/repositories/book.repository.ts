@@ -618,9 +618,18 @@ export async function deleteBook(id: string) {
     })
 
     // Delete the book
-    return await tx.book.delete({
-      where: { id },
-    })
+    try {
+      return await tx.book.delete({
+        where: { id },
+      })
+    } catch (error: any) {
+      // If record not found (P2025), book was already deleted by cascade
+      if (error.code === 'P2025') {
+        console.log(`[BookRepository] Book ${id} already deleted or not found`)
+        return { id, deleted: true } // Return success since book is gone
+      }
+      throw error
+    }
   })
 }
 

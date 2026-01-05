@@ -198,6 +198,12 @@ model Book {
   questionsGeneratedAt         DateTime?         // When questions were generated
   questionsStatus              String?           // 'pending', 'completed', 'failed'
 
+  // PDF processing status
+  processingStatus             String?           // 'pending', 'processing', 'completed', 'failed'
+  processingCompletedAt        DateTime?         // When processing was completed
+  processingError              String?           @db.Text // Error message if processing failed
+  processingFailedAt           DateTime?         // When processing failed
+
   // Questions relationship
   questions                    BookQuestion[]
 
