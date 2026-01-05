@@ -58,19 +58,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       )
     }
 
-    // Update processing status to failed
-    await prisma.book.update({
-      where: { id: bookId },
-      data: {
-        processingStatus: 'FAILED',
-        processingError: error,
-        processingFailedAt: new Date(),
-      },
-    })
+    // Processing status is now handled by the PDF processor's pdfProcessingJob table
+    // This endpoint is kept for compatibility but doesn't need to update the Book
+    // The PDF processor updates the job status directly
 
     return NextResponse.json({
       success: true,
-      message: 'Error reported successfully',
+      message: 'Error acknowledged',
     })
   } catch (error) {
     console.error('Error reporting processing error:', error)
