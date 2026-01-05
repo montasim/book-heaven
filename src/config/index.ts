@@ -48,6 +48,12 @@ const serverConfig = {
     timeout: parseInt(process.env.QUIZ_API_TIMEOUT || '10000', 10), // 10 seconds
     maxRetries: parseInt(process.env.QUIZ_API_MAX_RETRIES || '3', 10),
   },
+
+  // Socket Server (for PDF processing)
+  socketServer: {
+    url: process.env.SOCKET_SERVER_URL || 'http://localhost:3001',
+    webhookApiKey: process.env.WEBHOOK_API_KEY || '',
+  },
 } as const
 
 // Public configuration (can be used in client components)

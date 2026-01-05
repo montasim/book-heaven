@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getBookWithExtractedContent,
   updateBookExtractedContent,
-  updateBookAISummary,
-  updateQuestionsStatus
 } from '@/lib/lms/repositories/book.repository';
-import { createBookQuestions } from '@/lib/lms/repositories/book-question.repository';
 import { extractBookContent } from '@/lib/ai/book-content-extractor';
 import { queueBookExtraction } from '@/lib/queue/job-handler';
-import { prisma } from '@/lib/prisma';
 
 interface RouteContext {
   params: Promise<{
@@ -95,34 +91,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     });
 
     console.log('[Content Extraction API] Extraction completed successfully');
-
-    // Get full book details for AI generation
-    const fullBook = await prisma.book.findUnique({
-      where: { id },
-      include: {
-        authors: {
-          include: {
-            author: true,
-          }
-        },
-        categories: {
-          include: {
-            category: true,
-          }
-        },
-      }
-    });
-
-    // Trigger AI generation in background (fire and forget)
-    if (fullBook) {
-      generateBookSummaryInBackground(id, fullBook, content.text).catch(err => {
-        console.error('[Content Extraction API] Failed to generate summary:', err);
-      });
-
-      generateBookQuestionsInBackground(id, fullBook, content.text).catch(err => {
-        console.error('[Content Extraction API] Failed to generate questions:', err);
-      });
-    }
+    console.log('[Content Extraction API] AI summary/questions generation handled by PDF processor service');
 
     return NextResponse.json({
       message: 'Content extracted successfully',
@@ -176,79 +145,5 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       { error: error.message || 'Failed to get extraction status' },
       { status: 500 }
     );
-  }
-}
-
-// ============================================================================
-// BACKGROUND AI GENERATION HELPERS
-// ============================================================================
-
-/**
- * Generate book summary in background (fire and forget)
- */
-async function generateBookSummaryInBackground(bookId: string, book: any, content: string) {
-  try {
-    const { generateBookSummary } = await import('@/lib/ai/summary-generator');
-
-    const authorNames = book.authors?.map((a: any) => a.author?.name || a.name) || [];
-    const categoryNames = book.categories?.map((c: any) => c.category?.name || c.name) || [];
-
-    console.log('[Content Extraction API] Generating AI summary for book:', bookId);
-
-    const { summary } = await generateBookSummary({
-      bookName: book.name,
-      authors: authorNames,
-      categories: categoryNames,
-      bookContent: content,
-      targetWords: 200,
-    });
-
-    await updateBookAISummary(bookId, {
-      aiSummary: summary,
-      aiSummaryStatus: 'completed',
-    });
-
-    console.log('[Content Extraction API] AI summary generated successfully');
-  } catch (error) {
-    console.error('[Content Extraction API] Summary generation failed:', error);
-    await updateBookAISummary(bookId, {
-      aiSummary: '',
-      aiSummaryStatus: 'failed',
-    });
-  }
-}
-
-/**
- * Generate book questions in background (fire and forget)
- */
-async function generateBookQuestionsInBackground(bookId: string, book: any, content: string) {
-  try {
-    const { generateBookQuestions } = await import('@/lib/ai/question-generator');
-
-    const authorNames = book.authors?.map((a: any) => a.author?.name || a.name) || [];
-    const categoryNames = book.categories?.map((c: any) => c.category?.name || c.name) || [];
-
-    console.log('[Content Extraction API] Generating questions for book:', bookId);
-
-    const { questions } = await generateBookQuestions({
-      bookName: book.name,
-      authors: authorNames,
-      categories: categoryNames,
-      bookContent: content,
-      questionCount: 20,
-    });
-
-    await createBookQuestions(bookId, questions);
-    await updateQuestionsStatus(bookId, {
-      questionsStatus: 'completed',
-      questionsGeneratedAt: new Date(),
-    });
-
-    console.log('[Content Extraction API] Questions generated successfully');
-  } catch (error) {
-    console.error('[Content Extraction API] Question generation failed:', error);
-    await updateQuestionsStatus(bookId, {
-      questionsStatus: 'failed',
-    });
   }
 }

@@ -6,11 +6,20 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import LongText from '@/components/long-text'
+import { Progress } from '@/components/ui/progress'
 import { Book } from '../data/schema'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from './data-table-row-actions'
-import { BookOpen, HardDrive, Headphones } from 'lucide-react'
+import { BookOpen, HardDrive, Headphones, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+
+interface ProcessingProgress {
+  bookId: string
+  bookName: string
+  step: string
+  progress: number
+  message: string
+}
 
 const bookTypeIcons = {
   HARD_COPY: HardDrive,
@@ -76,7 +85,8 @@ function ExpandableTags({
   )
 }
 
-export const columns: ColumnDef<Book>[] = [
+export function getColumns(processingProgress: Map<string, ProcessingProgress>): ColumnDef<Book>[] {
+  return [
   {
     id: 'select',
     header: ({ table }) => (
@@ -142,6 +152,28 @@ export const columns: ColumnDef<Book>[] = [
       )
     },
     meta: { className: 'w-24' },
+  },
+  {
+    id: 'processing',
+    header: 'Processing',
+    cell: ({ row }) => {
+      const progress = processingProgress.get(row.original.id)
+      if (!progress) return null
+
+      return (
+        <div className='flex flex-col gap-1 min-w-32'>
+          <div className='flex items-center gap-2 text-xs'>
+            <Loader2 className='h-3 w-3 animate-spin' />
+            <span className='font-medium capitalize'>{progress.step}</span>
+            <span className='text-muted-foreground'>{progress.progress}%</span>
+          </div>
+          <Progress value={progress.progress} className='h-1.5' />
+          <p className='text-[10px] text-muted-foreground truncate'>{progress.message}</p>
+        </div>
+      )
+    },
+    meta: { className: 'w-40' },
+    enableSorting: false,
   },
   {
     accessorKey: 'authors',
@@ -242,3 +274,4 @@ export const columns: ColumnDef<Book>[] = [
     },
   },
 ]
+}

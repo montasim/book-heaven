@@ -3,14 +3,14 @@
 import { deleteBook, getBooks } from './actions'
 import { HeaderContainer } from '@/components/ui/header-container'
 import { BooksHeader } from './components/books-header'
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { Book } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
 import BooksContextProvider, { BooksDialogType } from './context/books-context'
 import { toast } from '@/hooks/use-toast'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
-import { columns } from './components/columns'
+import { getColumns } from './components/columns'
 import { BooksMutateDrawer } from './components/books-mutate-drawer'
 import { BooksDeleteDialog } from './components/books-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
@@ -26,6 +26,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useWebSocket } from '@/context/websocket-context'
+
+interface ProcessingProgress {
+  bookId: string
+  bookName: string
+  step: string
+  progress: number
+  message: string
+}
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([])
@@ -34,6 +43,8 @@ export default function BooksPage() {
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [processingProgress, setProcessingProgress] = useState<Map<string, ProcessingProgress>>(new Map())
+  const { onPdfProcessingProgress, onPdfProcessingComplete, onPdfProcessingStarted } = useWebSocket()
 
   // Store current pagination in a ref to avoid stale closures
   const paginationRef = useRef(pagination)
@@ -45,22 +56,24 @@ export default function BooksPage() {
   // Track last fetched page to prevent duplicates
   const lastFetchedRef = useRef<string>('')
 
-  const fetchBooksForPage = useCallback(async (pageIndex: number, pageSize: number) => {
+  const fetchBooksForPage = useCallback(async (pageIndex: number, pageSize: number, force = false) => {
     const fetchKey = `${pageIndex}-${pageSize}`
     const apiPage = pageIndex + 1
 
-    // Skip if we just fetched this page
-    if (lastFetchedRef.current === fetchKey && books.length > 0) {
+    // Skip if we just fetched this page (unless forced)
+    if (!force && lastFetchedRef.current === fetchKey && books.length > 0) {
       return
     }
 
     // Mark as fetching immediately to prevent duplicates
+    // But reset first if forcing to allow the fetch
+    if (force) {
+      lastFetchedRef.current = ''
+    }
     lastFetchedRef.current = fetchKey
 
     // Set loading state for initial load or page change
-    if (books.length === 0 || pageIndex !== pagination.pageIndex) {
-      setIsLoading(true)
-    }
+    setIsLoading(true)
 
     try {
       const result = await getBooks({
@@ -95,8 +108,70 @@ export default function BooksPage() {
 
   const refreshBooks = async () => {
     const { pageIndex, pageSize } = paginationRef.current
-    await fetchBooksForPage(pageIndex, pageSize)
+    await fetchBooksForPage(pageIndex, pageSize, true) // Force refresh
   }
+
+  // Create columns dynamically with processing progress
+  const columns = useMemo(() => getColumns(processingProgress), [processingProgress])
+
+  // Listen for PDF processing progress updates
+  useEffect(() => {
+    const unsubscribeStarted = onPdfProcessingStarted((data) => {
+      // Add initial progress state when processing starts
+      setProcessingProgress(prev => new Map(prev).set(data.bookId, {
+        bookId: data.bookId,
+        bookName: data.bookName,
+        step: 'downloading',
+        progress: 0,
+        message: 'PDF processing started...',
+      }))
+    })
+
+    const unsubscribeProgress = onPdfProcessingProgress((data) => {
+      const book = books.find(b => b.id === data.bookId)
+      if (book) {
+        setProcessingProgress(prev => new Map(prev).set(data.bookId, {
+          bookId: data.bookId,
+          bookName: book.name,
+          step: data.step,
+          progress: data.progress,
+          message: data.message,
+        }))
+      }
+    })
+
+    const unsubscribeComplete = onPdfProcessingComplete((data) => {
+      if (data.success) {
+        setProcessingProgress(prev => {
+          const newMap = new Map(prev)
+          newMap.delete(data.bookId)
+          return newMap
+        })
+        toast({
+          title: 'PDF Processing Complete',
+          description: `Book processing completed successfully. Extracted ${data.stats.wordsExtracted} words from ${data.stats.pagesExtracted} pages.`,
+        })
+        refreshBooks()
+      } else {
+        setProcessingProgress(prev => {
+          const newMap = new Map(prev)
+          newMap.delete(data.bookId)
+          return newMap
+        })
+        toast({
+          title: 'PDF Processing Failed',
+          description: 'Failed to process PDF. Please try again.',
+          variant: 'destructive',
+        })
+      }
+    })
+
+    return () => {
+      unsubscribeStarted()
+      unsubscribeProgress()
+      unsubscribeComplete()
+    }
+  }, [books, onPdfProcessingProgress, onPdfProcessingComplete, onPdfProcessingStarted, refreshBooks])
 
   const handleDelete = async (book: Book) => {
     try {

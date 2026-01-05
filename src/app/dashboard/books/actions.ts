@@ -9,6 +9,7 @@ import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
 import { validateRequest, sanitizeUserContent } from '@/lib/validation'
 import { sendBookUploadNotificationEmail, sendBookPublishedNotificationEmail } from '@/lib/auth/email'
+import { notifyPdfProcessor } from '@/lib/pdf-processor/notifier'
 
 // Repository imports
 import {
@@ -25,14 +26,6 @@ import {
 // ============================================================================
 // TYPES
 // ============================================================================
-
-interface ExtractionResult {
-  success: boolean
-  wordCount?: number
-  pageCount?: number
-  size?: number
-  error?: string
-}
 
 // ============================================================================
 // SCHEMAS
@@ -458,12 +451,15 @@ export async function createBook(formData: FormData) {
     const validatedData = createBookSchema.parse(rawData)
 
     // Handle file uploads
+    console.log('[Book Actions] Handling file uploads...')
     let imageUrl = null
     let directImageUrl = null
     if (validatedData.image instanceof File) {
+      console.log('[Book Actions] Uploading image to Google Drive...')
       const uploadResult = await uploadFile(validatedData.image, config.google.driveFolderId)
       imageUrl = uploadResult.previewUrl
       directImageUrl = uploadResult.directUrl
+      console.log('[Book Actions] Image uploaded successfully')
     } else if (typeof validatedData.image === 'string') {
       imageUrl = validatedData.image
       // Generate direct URL if it's a Google Drive URL
@@ -476,9 +472,11 @@ export async function createBook(formData: FormData) {
     let fileUrl = null
     let directFileUrl = null
     if (validatedData.fileUrl instanceof File) {
+      console.log('[Book Actions] Uploading PDF to Google Drive...')
       const uploadResult = await uploadFile(validatedData.fileUrl, config.google.driveFolderId)
       fileUrl = uploadResult.previewUrl
       directFileUrl = uploadResult.directUrl
+      console.log('[Book Actions] PDF uploaded successfully')
     } else if (typeof validatedData.fileUrl === 'string') {
       fileUrl = validatedData.fileUrl
       // Generate direct URL if it's a Google Drive URL
@@ -514,6 +512,16 @@ export async function createBook(formData: FormData) {
     }
 
     // Create book
+    console.log('[Book Actions] Creating book in database...')
+    console.log('[Book Actions] Book data:', {
+      name: processedData.name,
+      type: processedData.type,
+      pageNumber: processedData.pageNumber,
+      fileUrl: processedData.fileUrl ? 'SET' : 'NULL',
+      authorIds: processedData.authorIds,
+      publicationIds: processedData.publicationIds,
+    })
+
     const createdBook = await createBookInDb({
       ...processedData,
       image: processedData.image ?? undefined,
@@ -528,6 +536,8 @@ export async function createBook(formData: FormData) {
       numberOfCopies: processedData.numberOfCopies ?? undefined,
       purchaseDate: processedData.purchaseDate ?? undefined,
     })
+
+    console.log('[Book Actions] Book created:', createdBook ? 'SUCCESS' : 'FAILED', createdBook?.id)
 
     if (!createdBook) {
       return { error: 'Failed to create book' }
@@ -553,13 +563,35 @@ export async function createBook(formData: FormData) {
     // Send book upload notification email (non-blocking)
     sendBookUploadNotificationEmail(session.email, processedData.name, createdBook.id).catch(console.error)
 
-    // Trigger content extraction for ebooks/audiobooks (wait for completion)
+    // Notify PDF processor service for ebooks/audiobooks (non-blocking)
+    console.log('[Book Actions] Checking PDF processing notification conditions:', {
+      type: processedData.type,
+      hasFileUrl: !!processedData.fileUrl,
+      hasCreatedBook: !!createdBook,
+      bookId: createdBook?.id,
+    })
+
     if ((processedData.type === 'EBOOK' || processedData.type === 'AUDIO') && processedData.fileUrl && createdBook) {
-      console.log('[Book Actions] Waiting for content extraction...')
-      await triggerAsyncContentExtraction(createdBook.id)
+      console.log('[Book Actions] Notifying PDF processor service...')
+
+      // Get author names for the processor
+      const authorNames = createdBook.authors?.map(a => a.author?.name).filter(Boolean) || []
+
+      // Notify socket server to trigger PDF processing (fire and forget)
+      notifyPdfProcessor({
+        bookId: createdBook.id,
+        pdfUrl: createdBook.fileUrl || '',
+        directPdfUrl: createdBook.directFileUrl,
+        bookName: createdBook.name,
+        authorNames,
+      }).catch(err => {
+        console.error('[Book Actions] Failed to notify PDF processor:', err)
+      })
+    } else {
+      console.log('[Book Actions] Skipping PDF processing notification (conditions not met)')
     }
 
-    revalidatePath('/dashboard/books-old')
+    revalidatePath('/dashboard/books')
     return {
       message: 'Book created successfully',
       note: (processedData.type === 'EBOOK' || processedData.type === 'AUDIO')
@@ -739,20 +771,35 @@ export async function updateBook(id: string, formData: FormData) {
       sendBookPublishedNotificationEmail(session.email, processedData.name, id).catch(console.error)
     }
 
-    // Clear content cache and trigger re-extraction if file changed
+    // Clear content cache and trigger re-processing if file changed
     if (fileChanged && (processedData.type === 'EBOOK' || processedData.type === 'AUDIO') && processedData.fileUrl) {
       // Import repository functions
       const { clearBookExtractedContent } = await import('@/lib/lms/repositories/book.repository')
 
-      // Clear existing content to force re-extraction
+      // Clear existing content to force re-processing
       await clearBookExtractedContent(id)
 
-      // Trigger extraction and wait for completion
-      console.log('[Book Actions] File changed, waiting for content re-extraction...')
-      await triggerAsyncContentExtraction(id)
+      // Notify socket server to trigger PDF processing (fire and forget)
+      console.log('[Book Actions] File changed, notifying PDF processor service...')
+
+      // Get the updated book to get author names
+      const updatedBook = await getBookByIdFromDb(id)
+      if (updatedBook) {
+        const authorNames = updatedBook.authors?.map(a => a.author?.name).filter(Boolean) || []
+
+        notifyPdfProcessor({
+          bookId: id,
+          pdfUrl: updatedBook.fileUrl || '',
+          directPdfUrl: updatedBook.directFileUrl,
+          bookName: updatedBook.name,
+          authorNames,
+        }).catch(err => {
+          console.error('[Book Actions] Failed to notify PDF processor:', err)
+        })
+      }
     }
 
-    revalidatePath('/dashboard/books-old')
+    revalidatePath('/dashboard/books')
     return {
       message: 'Book updated successfully',
       note: fileChanged && (processedData.type === 'EBOOK' || processedData.type === 'AUDIO')
@@ -809,7 +856,7 @@ export async function deleteBook(id: string) {
     }
 
     await deleteBookFromDb(id)
-    revalidatePath('/dashboard/books-old')
+    revalidatePath('/dashboard/books')
     return { message: 'Book deleted successfully' }
   } catch (error) {
     console.error('Error deleting book:', error)
@@ -823,56 +870,6 @@ export async function deleteBook(id: string) {
       throw error
     }
     throw new Error('Failed to delete book')
-  }
-}
-
-/**
- * Trigger content extraction for a book and wait for completion
- * @param bookId - ID of the book to extract content from
- * @param timeoutMs - Maximum time to wait for extraction (default: 2 minutes)
- */
-async function triggerAsyncContentExtraction(bookId: string, timeoutMs: number = 120000) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL || 'http://localhost:3000'
-
-  try {
-    console.log(`[Book Actions] Starting content extraction for book: ${bookId}`)
-
-    // Create a timeout promise
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Extraction timeout')), timeoutMs)
-    )
-
-    // Start the extraction
-    const extractionPromise = fetch(`${baseUrl}/api/books/${bookId}/extract-content`, {
-      method: 'POST',
-    }).then(async (res) => {
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Extraction failed')
-      }
-      return data
-    })
-
-    // Wait for either extraction to complete or timeout
-    const result = await Promise.race([extractionPromise, timeoutPromise]) as ExtractionResult
-
-    console.log(`[Book Actions] Content extraction completed successfully`)
-    console.log(`[Book Actions] - Word count: ${result.wordCount}`)
-    console.log(`[Book Actions] - Page count: ${result.pageCount}`)
-    console.log(`[Book Actions] - Size: ${result.size} bytes`)
-
-    return result
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('[Book Actions] Content extraction failed:', errorMessage)
-
-    // Log error but don't throw - book is still created, just chat won't work immediately
-    // The extraction will be triggered again when the first user opens chat
-    if (errorMessage === 'Extraction timeout') {
-      console.warn('[Book Actions] Extraction timed out. Will retry on first chat access.')
-    }
-
-    return null
   }
 }
 

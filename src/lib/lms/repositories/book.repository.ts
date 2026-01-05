@@ -285,13 +285,15 @@ export async function createBook(data: {
       })),
     })
 
-    // Create category relationships
-    await tx.bookCategory.createMany({
-      data: data.categoryIds.map(categoryId => ({
-        bookId: book.id,
-        categoryId,
-      })),
-    })
+    // Create category relationships (only if categories are provided)
+    if (data.categoryIds && data.categoryIds.length > 0) {
+      await tx.bookCategory.createMany({
+        data: data.categoryIds.map(categoryId => ({
+          bookId: book.id,
+          categoryId,
+        })),
+      })
+    }
 
     // Create series relationships if provided
     if (data.series && data.series.length > 0) {
@@ -304,8 +306,67 @@ export async function createBook(data: {
       })
     }
 
-    // Return book with relationships
-    return getBookById(book.id)
+    // Return book with relationships using transaction context
+    const bookWithRelations = await tx.book.findUnique({
+      where: { id: book.id },
+      include: {
+        entryBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        authors: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+        publications: {
+          include: {
+            publication: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+        series: {
+          include: {
+            series: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    })
+
+    return bookWithRelations
   })
 }
 
@@ -519,31 +580,47 @@ export async function updateBook(
  */
 export async function deleteBook(id: string) {
   return await prisma.$transaction(async (tx) => {
-    // Delete related records first (cascades should handle this, but being explicit)
+    // Delete all related records first (explicit deletion to avoid foreign key issues)
+
+    // Delete series relationships
+    await tx.bookSeries.deleteMany({
+      where: { bookId: id },
+    })
+
+    // Delete book questions
+    await tx.bookQuestion.deleteMany({
+      where: { bookId: id },
+    })
+
+    // Delete book chat contexts
+    await tx.bookChatContext.deleteMany({
+      where: { bookId: id },
+    })
+
+    // Delete PDF processing job (from PDF processor database)
+    await tx.pdfProcessingJob.deleteMany({
+      where: { bookId: id },
+    })
+
+    // Delete author relationships
     await tx.bookAuthor.deleteMany({
       where: { bookId: id },
     })
 
+    // Delete publication relationships
     await tx.bookPublication.deleteMany({
       where: { bookId: id },
     })
 
+    // Delete category relationships
     await tx.bookCategory.deleteMany({
       where: { bookId: id },
     })
 
     // Delete the book
-    try {
-      return await tx.book.delete({
-        where: { id },
-      })
-    } catch (error: any) {
-      // If record not found (P2025), that's okay - book was already deleted
-      if (error.code === 'P2025') {
-        return { id, deleted: false }
-      }
-      throw error
-    }
+    return await tx.book.delete({
+      where: { id },
+    })
   })
 }
 

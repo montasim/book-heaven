@@ -68,6 +68,26 @@ interface TicketUpdate {
   updatedAt: Date
 }
 
+interface PdfProcessingProgress {
+  bookId: string
+  step: 'downloading' | 'extracting' | 'summary' | 'questions' | 'embedding' | 'saving' | 'completed' | 'failed'
+  progress: number
+  message: string
+}
+
+interface PdfProcessingComplete {
+  bookId: string
+  success: boolean
+  stats: {
+    pagesExtracted: number
+    wordsExtracted: number
+    summaryLength: number
+    questionsGenerated: number
+    embeddingsCreated: number
+    processingTime: number
+  }
+}
+
 interface WebSocketContextType {
   socket: Socket | null
   isConnected: boolean
@@ -94,6 +114,11 @@ interface WebSocketContextType {
   // Support ticket events
   onTicketUpdated: (callback: (data: TicketUpdate) => void) => () => void
   onNewTicketResponse: (callback: (data: { ticketId: string; response: TicketResponse }) => void) => () => void
+
+  // PDF processing events
+  onPdfProcessingProgress: (callback: (data: PdfProcessingProgress) => void) => () => void
+  onPdfProcessingComplete: (callback: (data: PdfProcessingComplete) => void) => () => void
+  onPdfProcessingStarted: (callback: (data: { bookId: string; bookName: string; jobId: string }) => void) => () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined)
@@ -298,6 +323,31 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     return () => socket.off('new_ticket_response', handler)
   }, [socket])
 
+  // PDF processing event listeners
+  const onPdfProcessingProgress = useCallback((callback: (data: PdfProcessingProgress) => void) => {
+    if (!socket) return () => {}
+
+    const handler = (data: PdfProcessingProgress) => callback(data)
+    socket.on('pdf:processing:progress', handler)
+    return () => socket.off('pdf:processing:progress', handler)
+  }, [socket])
+
+  const onPdfProcessingComplete = useCallback((callback: (data: PdfProcessingComplete) => void) => {
+    if (!socket) return () => {}
+
+    const handler = (data: PdfProcessingComplete) => callback(data)
+    socket.on('pdf:processing:complete', handler)
+    return () => socket.off('pdf:processing:complete', handler)
+  }, [socket])
+
+  const onPdfProcessingStarted = useCallback((callback: (data: { bookId: string; bookName: string; jobId: string }) => void) => {
+    if (!socket) return () => {}
+
+    const handler = (data: { bookId: string; bookName: string; jobId: string }) => callback(data)
+    socket.on('pdf:processing:started', handler)
+    return () => socket.off('pdf:processing:started', handler)
+  }, [socket])
+
   const value: WebSocketContextType = {
     socket,
     isConnected,
@@ -315,7 +365,10 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     onNewOffer,
     onOfferUpdated,
     onTicketUpdated,
-    onNewTicketResponse
+    onNewTicketResponse,
+    onPdfProcessingProgress,
+    onPdfProcessingComplete,
+    onPdfProcessingStarted
   }
 
   return (
