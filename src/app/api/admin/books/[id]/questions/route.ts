@@ -61,18 +61,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     // Create questions (this deletes old AI-generated questions first)
     await createBookQuestions(bookId, questions)
 
-    // Update questions status on the book
-    await prisma.book.update({
-      where: { id: bookId },
-      data: {
-        questionsStatus: 'COMPLETED',
-        questionsGeneratedAt: new Date(),
-      },
-    })
+    // Note: questionsStatus and questionsGeneratedAt are updated by the PDF processor
+    // via the pdfProcessingJob table, not through this endpoint
 
     return NextResponse.json({
       success: true,
-      message: 'Questions updated successfully',
+      message: 'Questions saved successfully',
       count: questions.length,
     })
   } catch (error) {
