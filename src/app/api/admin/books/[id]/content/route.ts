@@ -20,7 +20,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const body = await request.json()
 
     // Validate required fields
-    const { extractedContent, contentPageCount, contentWordCount } = body
+    const { extractedContent, contentHash: requestContentHash, contentPageCount, contentWordCount } = body
     if (!extractedContent || contentPageCount === undefined || contentWordCount === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields: extractedContent, contentPageCount, contentWordCount' },
@@ -57,7 +57,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     // Calculate content hash and size
-    const contentHash = Buffer.from(extractedContent).toString('base64').slice(0, 32)
+    // Use provided hash from PDF processor (SHA-256), or fall back to legacy method
+    const contentHash = requestContentHash || Buffer.from(extractedContent).toString('base64').slice(0, 32)
     const contentSize = Buffer.byteLength(extractedContent, 'utf8')
 
     // Update extracted content
