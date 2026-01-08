@@ -1,504 +1,772 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import useSWR from 'swr'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuth } from '@/context/auth-context'
 import { cn } from '@/lib/utils'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
-import { getUserDisplayName } from '@/lib/utils/user'
-import { BookDetailsSkeleton } from '@/components/books/book-details-skeleton'
-import { LendBookDialog } from '@/components/books/lend-book-dialog'
+import { BookTypeBadge } from '@/components/books/book-type-badge'
+import { MDXViewer } from '@/components/ui/mdx-viewer'
+import { LendBookDrawer } from '@/components/books/lend-book-drawer'
+import { PhysicalLibraryBookSkeleton } from '@/components/books/physical-library-book-skeleton'
 import {
   BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  User as UserIcon,
-  Home,
-  ArrowLeft,
+  LibraryBig,
+  Users,
+  Share2,
   Building2,
-  X,
-  Lock,
+  Calendar,
+  Home,
+  Printer,
+  Copy,
+  Sparkles,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Download,
 } from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
-import { format } from 'date-fns'
-import { MDXViewer } from '@/components/ui/mdx-viewer'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-// Types
-interface Loan {
-  id: string
-  loanDate: string
-  dueDate: string
-  returnDate: string | null
-  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE' | 'CANCELLED'
-  notes: string | null
-  user: {
-    id: string
-    firstName: string | null
-    lastName: string | null
-    username: string | null
-    email: string
-    image: string | null
-  }
-  lentBy: {
-    id: string
-    firstName: string | null
-    lastName: string | null
-    email: string
-  }
+// Expandable description component with MDX support (defined outside component to avoid recreation)
+interface ExpandableDescriptionProps {
+  description: string
+  sectionId: string
+  isExpanded: boolean
+  onToggle: (sectionId: string) => void
+}
+
+function ExpandableDescription({
+  description,
+  sectionId,
+  isExpanded,
+  onToggle,
+}: ExpandableDescriptionProps) {
+  // Estimate if text is long enough to potentially exceed 4 lines
+  const isLong = description.length > 300 || description.split('\n').length > 4
+
+  return (
+    <div className="text-sm leading-relaxed">
+      {!isExpanded && isLong ? (
+        <div className="relative max-h-[5.6rem] overflow-hidden">
+          <div
+            className="pr-16"
+            style={{
+              maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
+            }}
+          >
+            <MDXViewer content={description} className='text-sm [&>*]:leading-relaxed' />
+          </div>
+          <button
+            onClick={() => onToggle(sectionId)}
+            className="absolute bottom-0 right-0 text-primary text-sm hover:underline bg-background"
+          >
+            View more...
+          </button>
+        </div>
+      ) : (
+        <>
+          <MDXViewer content={description} className='text-sm' />
+          {isLong && (
+            <div className="text-right">
+              <button
+                onClick={() => onToggle(sectionId)}
+                className="text-primary text-sm mt-2 hover:underline"
+              >
+                View less...
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
 }
 
 interface Book {
   id: string
   name: string
-  description: string
+  description: string | null
   image: string | null
   type: string
   isbn: string | null
   publishedDate: string | null
   pageNumber: number | null
   language: string
-  categories: Array<{ id: string; name: string }>
-  authors: Array<{ id: string; name: string }>
-  publication: { id: string; name: string } | null
+  buyingPrice: number | null
+  categories: Array<{ id: string; name: string; description?: string | null; image?: string | null }>
+  authors: Array<{ id: string; name: string; description?: string | null; image?: string | null }>
+  publication: { id: string; name: string; description?: string | null; image?: string | null } | null
   totalCopies: number
   availableCopies: number
   createdAt: string
 }
 
-// Timeline Component for Lending History
-interface LoanTimelineProps {
-  loans: Loan[]
+interface Loan {
+  id: string
+  loanDate: string
+  dueDate: string
+  returnDate: string | null
+  status: 'ACTIVE' | 'RETURNED' | 'OVERDUE' | 'CANCELLED'
+  user: {
+    id: string
+    firstName: string | null
+    lastName: string | null
+    username: string | null
+    name: string | null
+  }
+  lentBy: {
+    firstName: string | null
+    lastName: string | null
+  }
 }
 
-function LoanTimeline({ loans }: LoanTimelineProps) {
-  if (loans.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Lending History</h3>
-        <p className="text-muted-foreground">
-          This book hasn&apos;t been borrowed yet.
-        </p>
-      </div>
-    )
+export default function PhysicalLibraryBookPage() {
+  const params = useParams()
+  const router = useRouter()
+  const bookId = params.id as string
+  const [activeTab, setActiveTab] = useState('details')
+  const { user } = useAuth()
+
+  // Dialog states
+  const [isLendDialogOpen, setIsLendDialogOpen] = useState(false)
+
+  // QR Code state
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null)
+  const [qrCodeLoading, setQrCodeLoading] = useState(false)
+  const [qrCodeError, setQrCodeError] = useState<string | null>(null)
+
+  // Expand/collapse state for descriptions
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
+  // Toggle expand/collapse for a section
+  const toggleExpanded = (sectionId: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }))
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'ACTIVE':
-        return <Clock className="h-4 w-4 text-blue-500" />
-      case 'OVERDUE':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />
-      case 'RETURNED':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />
+  // Fetch book details
+  const { data: book, error, isLoading } = useSWR(
+    bookId ? `/api/public/books/${bookId}` : null,
+    async (url) => {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed to fetch book')
+      const json = await res.json()
+      return json.data?.book as Book
+    },
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    }
+  )
+
+  // Print QR code
+  const handlePrintQRCode = useCallback(() => {
+    if (!qrCodeData || !book) return
+
+    const printWindow = window.open('', '', 'width=800,height=600')
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>QR Code - ${book.name}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+                box-sizing: border-box;
+              }
+              .qr-label {
+                border: 2px solid #000;
+                padding: 20px;
+                text-align: center;
+                width: 350px;
+                page-break-inside: avoid;
+              }
+              .qr-label h2 {
+                margin: 0 0 10px 0;
+                font-size: 16px;
+                word-wrap: break-word;
+                line-height: 1.3;
+              }
+              .qr-label .meta {
+                margin: 5px 0;
+                font-size: 12px;
+                color: #666;
+              }
+              .qr-label .qr-image {
+                margin: 15px 0;
+                display: flex;
+                justify-content: center;
+              }
+              .qr-label .qr-image img {
+                width: 150px;
+                height: 150px;
+              }
+              .qr-label .instructions {
+                margin-top: 10px;
+                font-size: 10px;
+                color: #888;
+              }
+              @media print {
+                body { padding: 0; }
+                .qr-label { border: 2px solid #000; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="qr-label">
+              <h2>${book.name}</h2>
+              ${book.authors && book.authors.length > 0 ? `<p class="meta">by ${book.authors.map(a => a.name).join(', ')}</p>` : ''}
+              ${book.publication ? `<p class="meta">${book.publication.name}</p>` : ''}
+              <div class="qr-image">
+                <img src="${qrCodeData}" alt="QR Code" />
+              </div>
+              <p class="instructions">Scan to view book details</p>
+            </div>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.onload = function () {
+        printWindow.focus()
+        printWindow.print()
+        printWindow.close()
+      }
+    }
+  }, [qrCodeData, book])
+
+  // Download QR code
+  const handleDownloadQRCode = useCallback(() => {
+    if (!qrCodeData) return
+
+    const link = document.createElement('a')
+    link.href = qrCodeData
+    link.download = `qr-code-${bookId}.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }, [qrCodeData, bookId])
+
+  // Fetch QR code data - moved after book is declared
+  useEffect(() => {
+    if (bookId && book?.type === 'HARD_COPY') {
+      const fetchQRCode = async () => {
+        setQrCodeLoading(true)
+        setQrCodeError(null)
+        try {
+          console.log('[Physical Library] Fetching QR code for book:', bookId)
+          const response = await fetch(`/api/books/${bookId}/qr-code`, { method: 'POST' })
+          console.log('[Physical Library] QR code response status:', response.status)
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            console.error('[Physical Library] QR code error:', errorData)
+            throw new Error(errorData.error || 'Failed to generate QR code')
+          }
+
+          const data = await response.json()
+          console.log('[Physical Library] QR code data received')
+          setQrCodeData(data.qrCode)
+        } catch (err) {
+          console.error('[Physical Library] QR code fetch error:', err)
+          setQrCodeError(err instanceof Error ? err.message : 'Failed to load QR code')
+        } finally {
+          setQrCodeLoading(false)
+        }
+      }
+
+      fetchQRCode()
+    }
+  }, [bookId, book?.type])
+
+  // Fetch loan history
+  const { data: loans } = useSWR(
+    bookId ? `/api/books/${bookId}/loans` : null,
+    async (url) => {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed to fetch loans')
+      const json = await res.json()
+      return json.data?.loans as Loan[]
+    }
+  )
+
+  // Track page view
+  useEffect(() => {
+    if (bookId && book) {
+      fetch(`/api/books/${bookId}/view`, { method: 'POST' }).catch((err) => {
+        console.error('Failed to track view:', err)
+      })
+    }
+  }, [bookId, book])
+
+  const canManageLoans = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  const isAvailable = book && book.availableCopies > 0
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: book?.name,
+          url: window.location.href,
+        })
+      } catch (err) {
+        console.error('Error sharing:', err)
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+    }
+  }
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A'
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    } catch {
+      return 'N/A'
     }
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Badge variant="default" className="bg-blue-500">Borrowed</Badge>
-      case 'OVERDUE':
-        return <Badge variant="destructive">Overdue</Badge>
+        return <Badge className="bg-blue-500"><Clock className="h-3 w-3 mr-1" /> Active</Badge>
       case 'RETURNED':
-        return <Badge variant="outline" className="border-green-500 text-green-700">Returned</Badge>
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" /> Returned</Badge>
+      case 'OVERDUE':
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Overdue</Badge>
       case 'CANCELLED':
         return <Badge variant="secondary">Cancelled</Badge>
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge>{status}</Badge>
     }
   }
-
-  const getDaysRemaining = (dueDate: string, returnDate: string | null) => {
-    if (returnDate) {
-      const returned = new Date(returnDate)
-      const due = new Date(dueDate)
-      const diffTime = returned.getTime() - due.getTime()
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      return { text: `${diffDays > 0 ? '+' : ''}${diffDays} days`, isLate: diffTime > 0 }
-    }
-    const due = new Date(dueDate)
-    const now = new Date()
-    const diffTime = due.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return { text: `${diffDays} days left`, isLate: diffTime < 0 }
-  }
-
-  return (
-    <div className="relative">
-      {/* Timeline Line */}
-      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-
-      <div className="space-y-6">
-        {loans.map((loan, index) => (
-          <div key={loan.id} className="relative pl-12">
-            {/* Timeline Dot */}
-            <div className={cn(
-              "absolute left-0 top-1 w-8 h-8 rounded-full border-4 flex items-center justify-center",
-              loan.status === 'ACTIVE' && "border-blue-500 bg-background",
-              loan.status === 'OVERDUE' && "border-red-500 bg-background",
-              loan.status === 'RETURNED' && "border-green-500 bg-background",
-              loan.status === 'CANCELLED' && "border-gray-500 bg-background"
-            )}>
-              {getStatusIcon(loan.status)}
-            </div>
-
-            {/* Timeline Content */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      {loan.user.image ? (
-                        <AvatarImage src={loan.user.image} alt={getUserDisplayName({
-                          firstName: loan.user.firstName,
-                          lastName: loan.user.lastName,
-                          username: loan.user.username,
-                          name: '',
-                          email: loan.user.email
-                        })} />
-                      ) : (
-                        <AvatarFallback>
-                          <UserIcon className="h-5 w-5" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">
-                        {getUserDisplayName({
-                          firstName: loan.user.firstName,
-                          lastName: loan.user.lastName,
-                          username: loan.user.username,
-                          name: '',
-                          email: loan.user.email
-                        })}
-                      </div>
-                      <div className="text-sm text-muted-foreground">{loan.user.email}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(loan.status)}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-muted-foreground mb-1">Borrowed Date</div>
-                    <div className="font-medium flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(loan.loanDate), 'MMM d, yyyy')}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground mb-1">Due Date</div>
-                    <div className="font-medium flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(loan.dueDate), 'MMM d, yyyy')}
-                    </div>
-                  </div>
-                  {loan.returnDate && (
-                    <div>
-                      <div className="text-muted-foreground mb-1">Returned Date</div>
-                      <div className="font-medium flex items-center gap-1 text-green-600">
-                        <CheckCircle className="h-3 w-3" />
-                        {format(new Date(loan.returnDate), 'MMM d, yyyy')}
-                      </div>
-                    </div>
-                  )}
-                  <div>
-                    <div className="text-muted-foreground mb-1">Lent By</div>
-                    <div className="font-medium">
-                      {getUserDisplayName({
-                        firstName: loan.lentBy.firstName,
-                        lastName: loan.lentBy.lastName,
-                        username: '',
-                        name: '',
-                        email: loan.lentBy.email
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {loan.notes && (
-                  <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm italic">
-                    &ldquo;{loan.notes}&rdquo;
-                  </div>
-                )}
-
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {loan.status === 'ACTIVE' || loan.status === 'OVERDUE'
-                        ? getDaysRemaining(loan.dueDate, loan.returnDate).text
-                        : loan.status === 'RETURNED'
-                          ? `Returned ${getDaysRemaining(loan.dueDate, loan.returnDate).text}`
-                          : 'Cancelled'}
-                    </span>
-                    {loan.status === 'ACTIVE' || loan.status === 'OVERDUE' ? (
-                      <Link href={`/dashboard/loans`}>
-                        <Button variant="outline" size="sm">
-                          Manage Loan
-                        </Button>
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-export default function LibraryBookDetailsPage() {
-  const params = useParams()
-  const router = useRouter()
-  const { user } = useAuth()
-  const bookId = params.id as string
-
-  const [isLendDialogOpen, setIsLendDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'details' | 'history'>('details')
-
-  // Fetch book details
-  const { data: book, error, isLoading, mutate } = useSWR(
-    bookId ? `/api/books/${bookId}` : null,
-    async (url) => {
-      const res = await fetch(url)
-      if (!res.ok) throw new Error('Failed to fetch book')
-      const json = await res.json()
-      if (!json.success) throw new Error(json.message || 'Failed to fetch book')
-      return json.data.book as Book
-    }
-  )
-
-  // Fetch lending history
-  const { data: loansData } = useSWR(
-    bookId && user ? `/api/books/${bookId}/loans` : null,
-    async (url) => {
-      const res = await fetch(url)
-      if (!res.ok) return []
-      const json = await res.json()
-      return json.data.loans || []
-    }
-  )
-
-  const loans = loansData || []
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto p-4 py-8">
-          <BookDetailsSkeleton />
-        </main>
-      </div>
-    )
+    return <PhysicalLibraryBookSkeleton />
   }
 
   if (error || !book) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto p-4 py-8">
-          <div className="text-center py-12">
-            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Book Not Found</h2>
-            <p className="text-muted-foreground mb-6">
-              The book you&apos;re looking for doesn&apos;t exist or has been removed.
-            </p>
-            <Link href="/physical-library">
-              <Button>Back to Library</Button>
-            </Link>
-          </div>
-        </main>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="container mx-auto px-4 py-16">
+          <Card className="max-w-2xl mx-auto border-2">
+            <CardContent className="p-12 text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted">
+                <BookOpen className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold">Book Not Found</h1>
+                <p className="text-muted-foreground text-lg">
+                  We couldn&apos;t find the book you&apos;re looking for
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <Button asChild size="lg" className="w-full sm:w-auto">
+                  <Link href="/physical-library">
+                    <LibraryBig className="h-4 w-4 mr-2" />
+                    Browse Physical Library
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+                  <Link href="/">
+                    <Home className="h-4 w-4 mr-2" />
+                    Go to Homepage
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
-  const canManageLoans = user && user.role !== 'USER'
-  const isAvailable = book.availableCopies > 0
-
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto p-4 py-8">
+      {/* Book Details */}
+      <div className="container mx-auto px-4 py-8 pb-24 sm:pb-8">
         {/* Breadcrumb */}
         <NavigationBreadcrumb
+          className="mb-6"
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Physical Library', href: '/physical-library' },
+            { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
+            { label: 'Physical Library', href: '/physical-library', icon: <LibraryBig className="h-4 w-4" /> },
             { label: book.name },
           ]}
         />
 
-        {/* Back Button */}
-        <Link href="/physical-library">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Library
-          </Button>
-        </Link>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Book Cover and Actions */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24">
+              {/* Book Cover */}
+              <div className="relative mb-4 sm:mb-6 max-w-auto mx-auto lg:mx-0">
+                <div className="aspect-[3/4] overflow-hidden rounded-lg shadow-lg bg-muted">
+                  {book.image ? (
+                    <Image
+                      src={getProxiedImageUrl(book.image) || book.image}
+                      alt={book.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <BookOpen className="h-12 w-12" />
+                    </div>
+                  )}
+                </div>
 
-        {/* Book Header */}
-        <div className="flex flex-col md:flex-row gap-8 mb-8">
-          {/* Book Cover */}
-          <div className="flex-shrink-0">
-            <div className="w-64 mx-auto md:mx-0">
-              <div className="aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-lg">
-                {book.image ? (
-                  <img
-                    src={getProxiedImageUrl(book.image) || book.image}
-                    alt={book.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <BookOpen className="h-24 w-24 text-muted-foreground" />
+                {/* Type Badge - Top Left */}
+                <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <BookTypeBadge type="HARD_COPY" size="md" />
+                  <Badge variant={isAvailable ? 'default' : 'secondary'} className="text-xs">
+                    {isAvailable ? 'Available' : 'Unavailable'}
+                  </Badge>
+                </div>
+
+                {/* Action Icons - Top Right */}
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleShare}
+                    className="bg-background/80 hover:bg-background backdrop-blur-sm h-9 w-9"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {canManageLoans && (
+                  <Button
+                    onClick={() => setIsLendDialogOpen(true)}
+                    className="w-full"
+                    size="lg"
+                    disabled={!isAvailable}
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    {isAvailable ? 'Lend Book' : 'No Copies Available'}
+                  </Button>
+                )}
+
+                {/* QR Code */}
+                {qrCodeLoading && (
+                  <div className="flex justify-center p-4 border rounded-lg bg-muted/30">
+                    <div className="w-32 h-32 bg-muted animate-pulse rounded" />
+                  </div>
+                )}
+
+                {qrCodeError && (
+                  <div className="text-center py-2 px-4 border rounded-lg bg-destructive/10">
+                    <p className="text-xs text-destructive">{qrCodeError}</p>
+                  </div>
+                )}
+
+                {qrCodeData && !qrCodeLoading && (
+                  <div className="border rounded-lg p-4 bg-card space-y-3">
+                    <div className="flex justify-center bg-white p-3 rounded-lg">
+                      <img src={qrCodeData} alt="QR Code" className="w-32 h-32" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleDownloadQRCode} variant="outline" size="sm" className="flex-1">
+                        <Download className="h-3 w-3 mr-1" />
+                        Download
+                      </Button>
+                      <Button onClick={handlePrintQRCode} variant="outline" size="sm" className="flex-1">
+                        <Printer className="h-3 w-3 mr-1" />
+                        Print
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Book Info */}
-          <div className="flex-1">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-2">{book.name}</h1>
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  {book.authors.map((author) => (
-                    <Badge key={author.id} variant="outline">
-                      {author.name}
-                    </Badge>
+          {/* Book Information */}
+          <div className="lg:col-span-2">
+            <div className="mb-8">
+              {/* Title */}
+              <h1 className="text-xl lg:text-2xl font-bold mb-4">{book.name}</h1>
+
+              {/* Authors */}
+              {book.authors && book.authors.length > 0 && (
+                <div className="text-lg text-muted-foreground mb-4">
+                  by{' '}
+                  {book.authors.map((author, index) => (
+                    <span key={author.id}>
+                      <Link href={`/authors/${author.id}`} className="hover:text-primary hover:underline transition-colors font-medium">
+                        {author.name}
+                      </Link>
+                      {index < book.authors!.length - 1 && ', '}
+                    </span>
                   ))}
                 </div>
-              </div>
-            </div>
+              )}
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div>
-                <div className="text-sm text-muted-foreground">ISBN</div>
-                <div className="font-medium">{book.isbn || 'N/A'}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Pages</div>
-                <div className="font-medium">{book.pageNumber || 'N/A'}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Language</div>
-                <div className="font-medium">{book.language}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Published</div>
-                <div className="font-medium">
-                  {book.publishedDate ? format(new Date(book.publishedDate), 'yyyy') : 'N/A'}
+                {/* Publication */}
+                {book.publication && (
+                    <div className="text-sm text-muted-foreground mb-4">
+                        Published by{' '}
+                        <Link href={`/publications/${book.publication.id}`} className="hover:text-primary hover:underline transition-colors font-medium">
+                            {book.publication.name}
+                        </Link>
+                    </div>
+                )}
+
+              {/* Categories */}
+              {book.categories && book.categories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {book.categories.map((category) => (
+                    <Link key={category.id} href={`/categories/${category.id}`}>
+                      <Badge variant="outline" className="hover:bg-primary/10 hover:underline cursor-pointer">
+                        {category.name}
+                      </Badge>
+                    </Link>
+                  ))}
                 </div>
-              </div>
-            </div>
+              )}
 
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-              <Badge variant="secondary" className="text-sm">Hard Copy</Badge>
-              {book.categories.map((category) => (
-                <Badge key={category.id} variant="outline" className="text-sm">
-                  {category.name}
-                </Badge>
-              ))}
-            </div>
-
-            {/* Availability */}
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Availability</div>
-                    <div className="text-2xl font-bold">
-                      {book.availableCopies} / {book.totalCopies}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {isAvailable ? 'Available for borrowing' : 'Currently unavailable'}
-                    </div>
+              {/* Quick Stats */}
+              <div className="flex flex-wrap gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Total Copies</span>
+                  <span className="font-medium">{book.totalCopies}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Available</span>
+                  <span className="font-medium text-green-600">{book.availableCopies}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Borrowed</span>
+                  <span className="font-medium text-orange-600">{book.totalCopies - book.availableCopies}</span>
+                </div>
+                {book.pageNumber && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Pages</span>
+                    <span className="font-medium">{book.pageNumber}</span>
                   </div>
-                  {canManageLoans && isAvailable && (
-                    <Button onClick={() => setIsLendDialogOpen(true)}>
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Lend Book
-                    </Button>
-                  )}
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Language</span>
+                  <span className="font-medium capitalize">{book.language || 'N/A'}</span>
                 </div>
-              </CardContent>
-            </Card>
+                  {book.buyingPrice && (
+                      <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Price</span>
+                          <span className="font-medium">৳{book.buyingPrice}</span>
+                      </div>
+                  )}
+              </div>
+            </div>
+
+            {/* Detailed Information Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="history">Loan History</TabsTrigger>
+              </TabsList>
+
+              {/* Details Tab */}
+              <TabsContent value="details" className="mt-4 space-y-4">
+                {/* Description */}
+                {book.description && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">About This Book</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ExpandableDescription
+                        description={book.description}
+                        sectionId="book-description"
+                        isExpanded={expandedSections['book-description'] || false}
+                        onToggle={toggleExpanded}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Authors with Descriptions */}
+                {book.authors && book.authors.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">About the Author{book.authors.length > 1 ? 's' : ''}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {book.authors.map((author) => (
+                        <div key={author.id} className="flex gap-4">
+                          <Avatar className="h-16 w-16 flex-shrink-0">
+                            <AvatarImage
+                              src={author.image ? getProxiedImageUrl(author.image) || author.image : undefined}
+                              alt={author.name}
+                            />
+                            <AvatarFallback className="text-lg bg-primary/10">
+                              {author.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/authors/${author.id}`}>
+                              <h3 className="font-semibold text-lg hover:text-primary hover:underline transition-colors">
+                                {author.name}
+                              </h3>
+                            </Link>
+                            {author.description && (
+                              <div className="text-muted-foreground mt-1">
+                                <ExpandableDescription
+                                  description={author.description}
+                                  sectionId={`author-${author.id}`}
+                                  isExpanded={expandedSections[`author-${author.id}`] || false}
+                                  onToggle={toggleExpanded}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Publications */}
+                {book.publication && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">About the Publisher</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="flex gap-4">
+                        <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                          {book.publication.image ? (
+                            <Image
+                              src={getProxiedImageUrl(book.publication.image) || book.publication.image}
+                              alt={book.publication.name}
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                              unoptimized
+                            />
+                          ) : (
+                            <Building2 className="h-8 w-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/publications/${book.publication.id}`}>
+                            <h3 className="font-semibold text-lg text-primary hover:underline">
+                              {book.publication.name}
+                            </h3>
+                          </Link>
+                          {book.publication.description && (
+                            <div className="text-muted-foreground mt-1">
+                              <ExpandableDescription
+                                description={book.publication.description}
+                                sectionId={`publication-${book.publication.id}`}
+                                isExpanded={expandedSections[`publication-${book.publication.id}`] || false}
+                                onToggle={toggleExpanded}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* History Tab */}
+              <TabsContent value="history" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Loan History</CardTitle>
+                    <CardDescription>Track all borrows and returns for this book</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {!loans || loans.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p>No loan history available</p>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Borrower</TableHead>
+                            <TableHead>Lent By</TableHead>
+                            <TableHead>Borrowed On</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead>Returned On</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {loans.map((loan) => (
+                            <TableRow key={loan.id}>
+                              <TableCell className="font-medium">
+                                {loan.user.name ||
+                                  `${loan.user.firstName || ''} ${loan.user.lastName || ''}`.trim() ||
+                                  loan.user.username ||
+                                  'Unknown'}
+                              </TableCell>
+                              <TableCell>
+                                {loan.lentBy.firstName && loan.lentBy.lastName
+                                  ? `${loan.lentBy.firstName} ${loan.lentBy.lastName}`
+                                  : loan.lentBy.firstName || loan.lentBy.lastName || 'Unknown'}
+                              </TableCell>
+                              <TableCell>{formatDate(loan.loanDate)}</TableCell>
+                              <TableCell>{formatDate(loan.dueDate)}</TableCell>
+                              <TableCell>{loan.returnDate ? formatDate(loan.returnDate) : '-'}</TableCell>
+                              <TableCell>{getStatusBadge(loan.status)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList>
-            <TabsTrigger value="details">Description</TabsTrigger>
-            <TabsTrigger value="history">
-              Lending History
-              {user && loans.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {loans.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="details" className="mt-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="prose max-w-none">
-                  <MDXViewer content={book.description || 'No description available.'} />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-6">
-            {!user ? (
-              <Card>
-                <CardContent className="pt-12 pb-12">
-                  <div className="text-center">
-                    <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Please sign in to view the lending history of this book.
-                    </p>
-                    <Link href="/auth/sign-in">
-                      <Button>Sign In</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <LoanTimeline loans={loans} />
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* Lend Book Dialog */}
-        {canManageLoans && (
-          <LendBookDialog
-            open={isLendDialogOpen}
-            onOpenChange={setIsLendDialogOpen}
-            bookId={book.id}
-            bookName={book.name}
-            onSuccess={() => {
-              mutate()
-            }}
-          />
-        )}
-      </main>
+      {/* Lend Book Drawer */}
+      {canManageLoans && (
+        <LendBookDrawer
+          open={isLendDialogOpen}
+          onOpenChange={setIsLendDialogOpen}
+          bookId={bookId}
+          bookName={book.name}
+          onSuccess={() => {
+            // Refresh the page data
+            window.location.reload()
+          }}
+        />
+      )}
     </div>
   )
 }

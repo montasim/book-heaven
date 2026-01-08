@@ -53,10 +53,120 @@ export async function uploadFile(file: File, folderId: string | undefined): Prom
       }
     }
 
-    // For PDFs, we skip compression since aPDF.io cannot download from Google Drive URLs
-    // The PDF will be uploaded directly without compression
+    // For PDFs with compression enabled
+    if (isPdf && isPdfCompressionAvailable()) {
+      console.log('[Google Drive] Uploading PDF to Google Drive for compression...');
+
+      // Step 1: Upload original PDF to Google Drive
+      const buffer = Buffer.from(await fileToUpload.arrayBuffer());
+      const stream = Readable.from(buffer);
+
+      const response = await drive.files.create({
+        requestBody: {
+          name: fileToUpload.name,
+          mimeType: 'application/pdf',
+          parents: [folderId],
+        },
+        media: {
+          mimeType: 'application/pdf',
+          body: stream,
+        },
+        fields: 'id',
+      });
+
+      if (!response.data.id) {
+        throw new Error('PDF uploaded but no ID was returned.');
+      }
+
+      const originalFileId = response.data.id;
+
+      // Make file publicly readable (so compression service can access it)
+      await drive.permissions.create({
+        fileId: originalFileId,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone',
+        },
+      });
+
+      const originalDirectUrl = `https://drive.google.com/uc?export=download&id=${originalFileId}`;
+      console.log('[Google Drive] Original PDF uploaded, now compressing...');
+
+      // Step 2: Try to compress using the uploaded URL
+      try {
+        const compressed = await compressPdfFromUrl(originalDirectUrl, file.name);
+
+        console.log(`[Google Drive] Compression completed: ${(compressed.sourceSize / 1024).toFixed(2)} KB -> ${(compressed.compressedSize / 1024).toFixed(2)} KB`);
+
+        // Step 3: Upload compressed version
+        const compressedBuffer = Buffer.from(compressed.buffer);
+        const compressedStream = Readable.from(compressedBuffer);
+
+        const compressedResponse = await drive.files.create({
+          requestBody: {
+            name: fileToUpload.name,
+            mimeType: 'application/pdf',
+            parents: [folderId],
+          },
+          media: {
+            mimeType: 'application/pdf',
+            body: compressedStream,
+          },
+          fields: 'id',
+        });
+
+        if (!compressedResponse.data.id) {
+          throw new Error('Compressed PDF uploaded but no ID was returned.');
+        }
+
+        const compressedFileId = compressedResponse.data.id;
+
+        // Make compressed file publicly readable
+        await drive.permissions.create({
+          fileId: compressedFileId,
+          requestBody: {
+            role: 'reader',
+            type: 'anyone',
+          },
+        });
+
+        console.log('[Google Drive] Compressed PDF uploaded successfully');
+
+        // Step 4: Delete the original uncompressed file
+        console.log('[Google Drive] Deleting original uncompressed file...');
+        try {
+          await drive.files.delete({ fileId: originalFileId });
+          console.log('[Google Drive] Original file deleted successfully');
+        } catch (deleteError: any) {
+          console.warn('[Google Drive] Failed to delete original file:', deleteError.message);
+          // Continue even if delete fails
+        }
+
+        // Step 5: Return the compressed file URL
+        const compressedDirectUrl = `https://drive.google.com/uc?export=download&id=${compressedFileId}`;
+
+        return {
+          previewUrl: `https://drive.google.com/file/d/${compressedFileId}/preview`,
+          directUrl: compressedDirectUrl,
+          fileId: compressedFileId
+        };
+      } catch (compressError: any) {
+        // Fallback: If compression fails, keep the original file
+        console.warn('[Google Drive] PDF compression failed, keeping original file:', compressError.message);
+
+        const originalDirectUrl = `https://drive.google.com/uc?export=download&id=${originalFileId}`;
+
+        return {
+          previewUrl: `https://drive.google.com/file/d/${originalFileId}/preview`,
+          directUrl: originalDirectUrl,
+          fileId: originalFileId
+        };
+      }
+    }
+
+    // Fallback: Upload PDF directly without compression if compression service is not available
     if (isPdf) {
-      console.log('[Google Drive] Uploading PDF to Google Drive (compression disabled for Google Drive URLs)...');
+      console.log('[Google Drive] Compression service not available, uploading PDF directly...');
 
       const buffer = Buffer.from(await fileToUpload.arrayBuffer());
       const stream = Readable.from(buffer);
@@ -90,7 +200,7 @@ export async function uploadFile(file: File, folderId: string | undefined): Prom
       });
 
       const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-      console.log('[Google Drive] PDF uploaded successfully');
+      console.log('[Google Drive] PDF uploaded successfully (uncompressed)');
 
       return {
         previewUrl: `https://drive.google.com/file/d/${fileId}/preview`,
@@ -98,117 +208,6 @@ export async function uploadFile(file: File, folderId: string | undefined): Prom
         fileId: fileId
       };
     }
-
-    // Old compression code (disabled because aPDF.io cannot download from Google Drive)
-    // TODO: Find alternative PDF compression solution that works with Google Drive URLs
-    /*
-    if (isPdf && isPdfCompressionAvailable()) {
-      console.log('[Google Drive] Uploading PDF to Google Drive first...');
-
-      // Step 1: Upload original PDF to Google Drive
-      const buffer = Buffer.from(await fileToUpload.arrayBuffer());
-      const stream = Readable.from(buffer);
-
-      const response = await drive.files.create({
-        requestBody: {
-          name: fileToUpload.name,
-          mimeType: 'application/pdf',
-          parents: [folderId],
-        },
-        media: {
-          mimeType: 'application/pdf',
-          body: stream,
-        },
-        fields: 'id',
-      });
-
-      if (!response.data.id) {
-        throw new Error('PDF uploaded but no ID was returned.');
-      }
-
-      const fileId = response.data.id;
-
-      // Make file publicly readable (so aPDF.io can access it)
-      await drive.permissions.create({
-        fileId,
-        requestBody: {
-          role: 'reader',
-          type: 'anyone',
-        },
-      });
-
-      const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-      console.log('[Google Drive] PDF uploaded successfully, now compressing...');
-
-      // Step 2: Compress using the uploaded URL
-      try {
-        const compressed = await compressPdfFromUrl(directUrl, file.name);
-
-        // Step 3: If compression is successful and smaller, replace the file
-        if (compressed.compressedSize < compressed.sourceSize) {
-          console.log('[Google Drive] Compression successful, replacing original with compressed version...');
-
-          // Delete original file (so only one file exists)
-          await drive.files.delete({ fileId });
-
-          // Upload compressed version
-          const compressedBuffer = Buffer.from(compressed.buffer);
-          const compressedStream = Readable.from(compressedBuffer);
-
-          const compressedResponse = await drive.files.create({
-            requestBody: {
-              name: fileToUpload.name,
-              mimeType: 'application/pdf',
-              parents: [folderId],
-            },
-            media: {
-              mimeType: 'application/pdf',
-              body: compressedStream,
-            },
-            fields: 'id',
-          });
-
-          if (!compressedResponse.data.id) {
-            throw new Error('Compressed PDF uploaded but no ID was returned.');
-          }
-
-          const newFileId = compressedResponse.data.id;
-
-          // Make new file publicly readable
-          await drive.permissions.create({
-            fileId: newFileId,
-            requestBody: {
-              role: 'reader',
-              type: 'anyone',
-            },
-          });
-
-          const newDirectUrl = `https://drive.google.com/uc?export=download&id=${newFileId}`;
-
-          console.log('[Google Drive] Compressed PDF uploaded successfully');
-          console.log(`[Google Drive] Original: ${(compressed.sourceSize / 1024).toFixed(2)} KB -> Compressed: ${(compressed.compressedSize / 1024).toFixed(2)} KB`);
-
-          return {
-            previewUrl: `https://drive.google.com/file/d/${newFileId}/preview`,
-            directUrl: newDirectUrl,
-            fileId: newFileId
-          };
-        } else {
-          console.log('[Google Drive] Compression did not reduce size, keeping original');
-        }
-      } catch (compressError: any) {
-        console.warn('[Google Drive] PDF compression failed, keeping original:', compressError.message);
-        // Keep the original uploaded file if compression fails
-      }
-
-      // Return original file URL if compression failed or didn't reduce size
-      return {
-        previewUrl: `https://drive.google.com/file/d/${fileId}/preview`,
-        directUrl: directUrl,
-        fileId: fileId
-      };
-    }
-    */
 
     // Regular upload for non-PDFs (images, etc.)
     const uploadBuffer = Buffer.from(await fileToUpload.arrayBuffer())

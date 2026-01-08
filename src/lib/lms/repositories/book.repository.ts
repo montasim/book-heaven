@@ -7,6 +7,7 @@
 
 import { prisma } from '../../prisma'
 import { BookType, BindingType } from '@prisma/client'
+import { invalidateBookCache, invalidateBooksCache, invalidateRelatedEntitiesCache } from '@/lib/cache/redis'
 
 // ============================================================================
 // BOOK QUERIES
@@ -366,6 +367,10 @@ export async function createBook(data: {
       },
     })
 
+    // Invalidate cache for new book and all book listings
+    await invalidateBooksCache()
+    await invalidateRelatedEntitiesCache()
+
     return bookWithRelations
   })
 }
@@ -571,6 +576,10 @@ export async function updateBook(
     }
   )
 
+  // Invalidate cache for updated book and all book listings
+  await invalidateBookCache(id)
+  await invalidateRelatedEntitiesCache()
+
   // Fetch and return the updated book with all relationships outside the transaction
   return await getBookById(id)
 }
@@ -579,7 +588,7 @@ export async function updateBook(
  * Delete a book (cascades to relationships)
  */
 export async function deleteBook(id: string) {
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // Delete all related records first (explicit deletion to avoid foreign key issues)
 
     // Delete series relationships
@@ -631,6 +640,12 @@ export async function deleteBook(id: string) {
       throw error
     }
   })
+
+  // Invalidate cache for deleted book and all book listings
+  await invalidateBookCache(id)
+  await invalidateRelatedEntitiesCache()
+
+  return result
 }
 
 // ============================================================================
@@ -715,7 +730,7 @@ export async function updateBookExtractedContent(
     extractionStatus: string
   }
 ) {
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id },
     data: {
       ...data,
@@ -723,13 +738,18 @@ export async function updateBookExtractedContent(
       contentVersion: { increment: 1 }
     }
   })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
 }
 
 /**
  * Clear book extracted content (for re-extraction)
  */
 export async function clearBookExtractedContent(id: string) {
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id },
     data: {
       extractedContent: null,
@@ -737,6 +757,11 @@ export async function clearBookExtractedContent(id: string) {
       extractionStatus: 'pending',
     }
   })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
 }
 
 /**
@@ -749,10 +774,15 @@ export async function updateBookMetadata(
     language?: string | null
   }
 ) {
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id },
     data
   })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
 }
 
 // ============================================================================
@@ -769,13 +799,18 @@ export async function updateBookAISummary(
     aiSummaryStatus: string
   }
 ) {
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id },
     data: {
       ...data,
       aiSummaryGeneratedAt: new Date(),
     }
   })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
 }
 
 /**
@@ -788,13 +823,18 @@ export async function updateBookAIOverview(
     aiOverviewStatus: string
   }
 ) {
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id },
     data: {
       ...data,
       aiOverviewGeneratedAt: new Date(),
     }
   })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
 }
 
 /**
@@ -856,10 +896,15 @@ export async function updateQuestionsStatus(
     questionsGeneratedAt?: Date
   }
 ) {
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id },
     data
   })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
 }
 
 // ============================================================================

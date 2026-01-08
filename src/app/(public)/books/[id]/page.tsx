@@ -193,6 +193,19 @@ export default function BookDetailsPage() {
     { revalidateOnFocus: false }
   )
 
+  // Redirect hard copy books to physical library page - MUST be before early returns
+  const isHardCopy = book?.type === 'HARD_COPY'
+  useEffect(() => {
+    if (isHardCopy && bookId) {
+      router.push(`/physical-library/${bookId}`)
+    }
+  }, [isHardCopy, bookId, router])
+
+  // Don't render if it's a hard copy (will redirect)
+  if (isHardCopy) {
+    return null
+  }
+
   if (isLoading) {
     return <BookDetailsSkeleton />
   }
@@ -259,7 +272,6 @@ export default function BookDetailsPage() {
 
   const isEbook = book.type === 'EBOOK'
   const isAudio = book.type === 'AUDIO'
-  const isHardCopy = book.type === 'HARD_COPY'
 
   const handleReadBook = () => {
     if (book.canAccess) {

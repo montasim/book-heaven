@@ -6,11 +6,93 @@ import { getSession } from '@/lib/auth/session';
 import { findUserById } from '@/lib/user/repositories/user.repository';
 import { randomBytes } from 'node:crypto';
 import { chatMessageSchema, validateRequest } from '@/lib/validation';
+import { prisma } from '@/lib/prisma';
 
 interface RouteContext {
   params: Promise<{
     id: string;
   }>;
+}
+
+interface BookWithDetails {
+  id: string;
+  name: string;
+  type: string;
+  fileUrl: string | null;
+  directFileUrl: string | null;
+  isPublic: boolean;
+  requiresPremium: boolean;
+  authors: Array<{ author: { name: string } }>;
+  categories: Array<{ category: { name: string } }>;
+}
+
+interface UserAccess {
+  canAccess: boolean;
+  reason?: string;
+}
+
+/**
+ * Helper function to fetch book and check user access
+ */
+async function fetchBookWithAccess(bookId: string, userId: string): Promise<{
+  book: BookWithDetails | null;
+  userAccess: UserAccess;
+}> {
+  // Fetch book with relations
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      fileUrl: true,
+      directFileUrl: true,
+      isPublic: true,
+      requiresPremium: true,
+      authors: {
+        select: {
+          author: {
+            select: { name: true }
+          }
+        }
+      },
+      categories: {
+        select: {
+          category: {
+            select: { name: true }
+          }
+        }
+      }
+    }
+  });
+
+  if (!book) {
+    return { book: null, userAccess: { canAccess: false, reason: 'Book not found' } };
+  }
+
+  // Check user access
+  let canAccess = false;
+  let reason = '';
+
+  // Check if user is admin
+  const user = await findUserById(userId);
+  const isPremium = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+
+  if (book.isPublic) {
+    canAccess = true;
+  } else if (book.requiresPremium && isPremium) {
+    canAccess = true;
+  } else if (book.requiresPremium && !isPremium) {
+    canAccess = false;
+    reason = 'This book requires premium access';
+  } else if (!book.isPublic) {
+    canAccess = isPremium;
+    reason = isPremium ? '' : 'This book requires premium access';
+  } else {
+    canAccess = true;
+  }
+
+  return { book, userAccess: { canAccess, reason } };
 }
 
 /**
@@ -67,24 +149,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       finalSessionId = randomBytes(16).toString('hex');
     }
 
-    // Fetch book details from public API
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL || 'http://localhost:3000';
-    const bookResponse = await fetch(`${baseUrl}/api/public/books/${bookId}`);
-
-    console.log('[Chat API] Book API response status:', bookResponse.status);
-
-    if (!bookResponse.ok) {
-      return NextResponse.json(
-        { error: 'Book not found' },
-        { status: 404 }
-      );
-    }
-
-    const bookData = await bookResponse.json();
-    const book = bookData.data?.book;
+    // Fetch book details and check access directly from database
+    console.log('[Chat API] Fetching book from database:', bookId);
+    const { book, userAccess } = await fetchBookWithAccess(bookId, user.id);
 
     if (!book) {
-      console.error('[Chat API] Book data not found in response');
+      console.error('[Chat API] Book not found');
       return NextResponse.json(
         { error: 'Book not found' },
         { status: 404 }
@@ -102,16 +172,15 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     }
 
     // Check if user has access
-    const userAccess = bookData.data?.userAccess;
-    if (!userAccess?.canAccess) {
+    if (!userAccess.canAccess) {
       return NextResponse.json(
-        { error: 'You do not have access to this book. Premium access may be required.' },
+        { error: userAccess.reason || 'You do not have access to this book. Premium access may be required.' },
         { status: 403 }
       );
     }
 
     // Check if file URL exists
-    if (!book.fileUrl) {
+    if (!book.fileUrl && !book.directFileUrl) {
       return NextResponse.json(
         { error: 'Book file is not available for chat' },
         { status: 400 }
@@ -154,19 +223,19 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     // Safely extract authors and categories
     const authorNames = book.authors && Array.isArray(book.authors)
-      ? book.authors.map((a: any) => a.name)
+      ? book.authors.map((a) => a.author.name)
       : [];
 
     const categoryNames = book.categories && Array.isArray(book.categories)
-      ? book.categories.map((c: any) => c.name)
+      ? book.categories.map((c) => c.category.name)
       : [];
 
     const result = await chatWithUnifiedProvider({
       bookId: book.id,
       bookName: book.name,
       bookType: book.type,
-      pdfUrl: book.fileUrl,
-      pdfDirectUrl: book.directFileUrl,
+      pdfUrl: book.fileUrl || book.directFileUrl || '',
+      pdfDirectUrl: book.directFileUrl || book.fileUrl || '',
       authors: authorNames,
       categories: categoryNames,
       messages
@@ -224,18 +293,28 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const { id: bookId } = await params;
 
-    // Fetch book details
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL || 'http://localhost:3000';
-    const bookResponse = await fetch(`${baseUrl}/api/public/books/${bookId}`);
-
-    if (!bookResponse.ok) {
+    // Get user session
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json(
-        { available: false, reason: 'Book not found' }
+        { available: false, reason: 'Authentication required' },
+        { status: 401 }
       );
     }
 
-    const bookData = await bookResponse.json();
-    const book = bookData.data?.book;
+    // Fetch book details from database
+    const book = await prisma.book.findUnique({
+      where: { id: bookId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        fileUrl: true,
+        directFileUrl: true,
+        isPublic: true,
+        requiresPremium: true,
+      }
+    });
 
     if (!book) {
       return NextResponse.json(
@@ -243,10 +322,14 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       );
     }
 
+    // Check user access
+    const user = await findUserById(session.userId);
+    const isPremium = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+    const hasAccess = book.isPublic || (book.requiresPremium && isPremium);
+
     // Check availability
     const isEbookOrAudio = book.type === 'EBOOK' || book.type === 'AUDIO';
-    const hasFile = !!book.fileUrl;
-    const hasAccess = bookData.data?.userAccess?.canAccess;
+    const hasFile = !!(book.fileUrl || book.directFileUrl);
 
     return NextResponse.json({
       available: isEbookOrAudio && hasFile && hasAccess,

@@ -99,6 +99,27 @@ export async function invalidateBooksCache(): Promise<void> {
 }
 
 /**
+ * Invalidate cache for a specific book and all related listings
+ */
+export async function invalidateBookCache(bookId: string): Promise<void> {
+  try {
+    const redis = getRedisClient()
+    const keys = await redis.keys(`books:*`)
+
+    // Also invalidate the specific book detail cache
+    const bookDetailKey = `book:${bookId}`
+    keys.push(bookDetailKey)
+
+    if (keys.length > 0) {
+      await redis.del(...keys)
+      console.log(`[Redis Cache] Invalidated ${keys.length} keys for book: ${bookId}`)
+    }
+  } catch (error) {
+    console.error('[Redis Cache] Failed to invalidate book cache:', error)
+  }
+}
+
+/**
  * Generate cache key for books query
  */
 export function generateBooksCacheKey(params: {
@@ -125,4 +146,31 @@ export function generateBooksCacheKey(params: {
   if (params.sortOrder) parts.push(`order:${params.sortOrder}`)
 
   return parts.join(':')
+}
+
+/**
+ * Generate cache key for a single book detail
+ */
+export function generateBookDetailCacheKey(bookId: string): string {
+  return `book:${bookId}`
+}
+
+/**
+ * Invalidate cache for related entities (authors, publications, categories)
+ */
+export async function invalidateRelatedEntitiesCache(): Promise<void> {
+  try {
+    const redis = getRedisClient()
+    const patterns = ['authors:*', 'publications:*', 'categories:*']
+
+    for (const pattern of patterns) {
+      const keys = await redis.keys(pattern)
+      if (keys.length > 0) {
+        await redis.del(...keys)
+      }
+    }
+    console.log('[Redis Cache] Invalidated related entities cache')
+  } catch (error) {
+    console.error('[Redis Cache] Failed to invalidate related entities cache:', error)
+  }
 }

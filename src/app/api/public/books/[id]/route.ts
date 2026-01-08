@@ -10,10 +10,15 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth/session'
 import { BookType } from '@prisma/client'
 import type { Book, Author, Category, Publication, Series } from '@prisma/client'
+import { setCache, getCache, generateBookDetailCacheKey } from '@/lib/cache/redis'
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+// Cache configuration - Cache results for 1 year (books data rarely changes)
+// Cache will be invalidated when books are created, updated, or deleted
+const CACHE_REVALIDATE_SECONDS = 365 * 24 * 60 * 60 // 1 year in seconds
 
 interface BookWithRelations extends Book {
     entryBy: {
@@ -108,10 +113,31 @@ export async function GET(
             }, { status: 400 })
         }
 
+        // Generate cache key for book detail
+        const cacheKey = generateBookDetailCacheKey(bookId)
+
         // Check user authentication and premium status
         const userSession = await getSession()
         const userHasPremium = userSession ? (userSession.role === 'USER' ? false : userSession.role === 'ADMIN') : false
         const isAuthenticated = !!userSession
+
+        // Try to get from Redis cache first (skip if authenticated to get user-specific reading progress)
+        let cachedData: any = null
+        if (!isAuthenticated) {
+            cachedData = await getCache<{
+                success: boolean
+                data: any
+                message: string
+            }>(cacheKey)
+        }
+
+        if (cachedData) {
+            // Return cached response with cache headers
+            const response = NextResponse.json(cachedData)
+            response.headers.set('X-Cache', 'HIT')
+            response.headers.set('Cache-Control', `public, s-maxage=${CACHE_REVALIDATE_SECONDS}, stale-while-revalidate=120`)
+            return response
+        }
 
         // Find the book
         const book = await prisma.book.findUnique({
@@ -256,6 +282,14 @@ export async function GET(
                 message: 'The requested book does not exist'
             }, { status: 404 })
         }
+
+        // Count active loans for hard copy books
+        const activeLoansCount = book.type === 'HARD_COPY' ? await prisma.bookLoan.count({
+            where: {
+                bookId,
+                status: 'ACTIVE'
+            }
+        }) : 0
 
         // Fetch series neighbors (previous/next books) for each series
         const seriesNeighbors = await Promise.all(
@@ -572,6 +606,7 @@ export async function GET(
             id: book.id,
             name: book.name,
             summary: book.summary,
+            description: book.summary, // Alias for summary (used by physical library page)
             aiSummary: book.aiSummary,
             aiSummaryGeneratedAt: book.aiSummaryGeneratedAt,
             aiOverview: book.aiOverview,
@@ -579,6 +614,8 @@ export async function GET(
             aiOverviewStatus: book.aiOverviewStatus,
             language: book.language,
             type: book.type,
+            isbn: null, // Field doesn't exist in Book model
+            publishedDate: null, // Field doesn't exist in Book model
             // User who uploaded the book (only if public and user role is USER)
             entryBy: book.isPublic && book.entryBy?.role === 'USER' ? {
                 id: book.entryBy.id,
@@ -595,6 +632,9 @@ export async function GET(
             buyingPrice: book.buyingPrice,
             sellingPrice: book.sellingPrice,
             numberOfCopies: book.numberOfCopies,
+            // For hard copy books, calculate totalCopies and availableCopies
+            totalCopies: book.type === 'HARD_COPY' ? book.numberOfCopies || 0 : null,
+            availableCopies: book.type === 'HARD_COPY' ? (book.numberOfCopies || 0) - activeLoansCount : null,
             purchaseDate: book.purchaseDate,
             entryDate: book.entryDate,
             image: book.image,
@@ -623,6 +663,11 @@ export async function GET(
                 description: bp.publication.description,
                 image: bp.publication.image,
             })),
+            // Single publication for physical library page
+            publication: book.publications.length > 0 ? {
+                id: book.publications[0].publication.id,
+                name: book.publications[0].publication.name,
+            } : null,
             // Series with neighbors
             series: seriesNeighbors.map(sn => ({
                 seriesId: sn.seriesId,
@@ -690,8 +735,8 @@ export async function GET(
             recommendationReasons
         }
 
-        // Return response
-        return NextResponse.json({
+        // Prepare response data
+        const responseData = {
             success: true,
             data: {
                 book: transformedBook,
@@ -707,7 +752,21 @@ export async function GET(
                 }
             },
             message: 'Book details retrieved successfully'
-        })
+        }
+
+        // Cache the response for non-authenticated users
+        if (!isAuthenticated) {
+            await setCache(cacheKey, responseData, CACHE_REVALIDATE_SECONDS)
+        }
+
+        // Create response with cache headers
+        const response = NextResponse.json(responseData)
+        response.headers.set('X-Cache', 'MISS')
+        response.headers.set('Cache-Control', `public, s-maxage=${CACHE_REVALIDATE_SECONDS}, stale-while-revalidate=120`)
+        response.headers.set('CDN-Cache-Control', `public, s-maxage=${CACHE_REVALIDATE_SECONDS}`)
+        response.headers.set('Vary', 'Cookie, Authorization')
+
+        return response
 
     } catch (error) {
         console.error('Get book details error:', error)
