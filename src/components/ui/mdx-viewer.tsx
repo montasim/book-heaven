@@ -15,7 +15,9 @@ export function MDXViewer({ content, className = '' }: MDXViewerProps) {
 
   return (
     <div className={className}>
-      <MDXViewerComp source={content} />
+      <div className="mdx-content [&_ul]:ml-6 [&_ol]:ml-6 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_ul_ul]:ml-4 [&_ul_ol]:ml-4 [&_ol_ul]:ml-4 [&_ol_ol]:ml-4">
+        <MDXViewerComp source={content} />
+      </div>
     </div>
   );
 }

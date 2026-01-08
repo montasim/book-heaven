@@ -88,6 +88,13 @@ export interface Book {
   aiOverview?: string | null
   aiOverviewGeneratedAt?: string | null
   aiOverviewStatus?: string | null
+  audiobookUrl?: string | null
+  audiobookDirectUrl?: string | null
+  audiobookDriveFileId?: string | null
+  audiobookDuration?: number | null
+  audiobookGeneratedAt?: string | null
+  audiobookStatus?: string | null
+  audiobookError?: string | null
   suggestedQuestions?: Array<{
     id: string
     question: string

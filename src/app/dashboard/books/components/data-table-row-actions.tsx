@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { Row } from '@tanstack/react-table'
-import { IconTrash, IconEdit, IconEye, IconSparkles, IconList, IconDatabase, IconBook } from '@tabler/icons-react'
+import { IconTrash, IconEdit, IconEye, IconSparkles, IconList, IconDatabase, IconBook, IconVolume } from '@tabler/icons-react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +32,7 @@ export function DataTableRowActions<TData>({
   const [isRegeneratingSummary, setIsRegeneratingSummary] = useState(false)
   const [isRegeneratingOverview, setIsRegeneratingOverview] = useState(false)
   const [isRegeneratingQuestions, setIsRegeneratingQuestions] = useState(false)
+  const [isRegeneratingAudiobook, setIsRegeneratingAudiobook] = useState(false)
   const [isRegeneratingEmbeddings, setIsRegeneratingEmbeddings] = useState(false)
 
   const handleRegenerateSummary = async () => {
@@ -115,6 +116,34 @@ export function DataTableRowActions<TData>({
       })
     } finally {
       setIsRegeneratingQuestions(false)
+    }
+  }
+
+  const handleRegenerateAudiobook = async () => {
+    setIsRegeneratingAudiobook(true)
+    try {
+      const response = await fetch(`/api/books/${book.id}/regenerate-audiobook`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate audiobook')
+      }
+
+      toast({
+        title: 'Audiobook regeneration started',
+        description: 'The audiobook will be regenerated shortly via PDF processor.',
+      })
+    } catch (error: any) {
+      console.error('Error regenerating audiobook:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to regenerate audiobook. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsRegeneratingAudiobook(false)
     }
   }
 
@@ -231,6 +260,24 @@ export function DataTableRowActions<TData>({
               Regenerate Questions
               <DropdownMenuShortcut>
                 <IconList size={16} />
+              </DropdownMenuShortcut>
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleRegenerateAudiobook}
+          disabled={isRegeneratingAudiobook}
+        >
+          {isRegeneratingAudiobook ? (
+            <>
+              <Loader2 className='h-4 w-4 animate-spin' />
+              Generating...
+            </>
+          ) : (
+            <>
+              Regenerate Audiobook
+              <DropdownMenuShortcut>
+                <IconVolume size={16} />
               </DropdownMenuShortcut>
             </>
           )}

@@ -151,7 +151,6 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
         </Badge>
       )
     },
-    meta: { className: 'w-24' },
   },
   {
     id: 'processing',

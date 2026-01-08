@@ -200,6 +200,15 @@ model Book {
   aiOverviewGeneratedAt        DateTime?         // When overview was generated
   aiOverviewStatus             String?           // 'pending', 'completed', 'failed'
 
+  // AI-generated audiobook
+  audiobookUrl                 String?           // Google Drive URL to the audio file
+  audiobookDirectUrl           String?           // Direct download URL from Google Drive
+  audiobookDriveFileId         String?           // Google Drive file ID for management
+  audiobookDuration            Int?              // Duration in seconds
+  audiobookGeneratedAt         DateTime?         // When audiobook was generated
+  audiobookStatus              String?           // 'pending', 'generating', 'completed', 'failed'
+  audiobookError               String?           @db.Text // Error message if generation failed
+
   // Question generation tracking
   questionsGeneratedAt         DateTime?         // When questions were generated
   questionsStatus              String?           // 'pending', 'completed', 'failed'

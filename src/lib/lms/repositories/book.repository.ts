@@ -838,6 +838,32 @@ export async function updateBookAIOverview(
 }
 
 /**
+ * Update book audiobook
+ */
+export async function updateBookAudiobook(
+  id: string,
+  data: {
+    audiobookUrl?: string | null
+    audiobookDirectUrl?: string | null
+    audiobookDriveFileId?: string | null
+    audiobookDuration?: number | null
+    audiobookStatus?: string
+    audiobookGeneratedAt?: Date
+    audiobookError?: string | null
+  }
+) {
+  const book = await prisma.book.update({
+    where: { id },
+    data,
+  })
+
+  // Invalidate cache for updated book
+  await invalidateBookCache(id)
+
+  return book
+}
+
+/**
  * Get book with AI summary
  */
 export async function getBookWithAISummary(id: string) {

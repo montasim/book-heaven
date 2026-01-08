@@ -30,6 +30,7 @@ import { BookDetailsSkeleton } from '@/components/books/book-details-skeleton'
 import { BookReviewForm } from '@/components/books/book-review-form'
 import { BookReviewsList } from '@/components/books/book-reviews-list'
 import { LendBookDialog } from '@/components/books/lend-book-dialog'
+import { AudiobookPlayer } from '@/components/books/audiobook-player'
 import {
     BookOpen,
     LibraryBig,
@@ -46,6 +47,7 @@ import {
     ChevronUp,
     ChevronDown,
     List,
+    Volume2,
 } from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 
@@ -739,14 +741,34 @@ export default function BookDetailsPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['ai-overview'] !== false && (
                     <CardContent>
                       <ExpandableDescription
                         description={book.aiOverview}
                         isExpanded={expandedSections['ai-overview'] || false}
                       />
                     </CardContent>
-                    )}
+                  </Card>
+                )}
+
+                {/* Audiobook Player */}
+                {book.aiOverview && book.audiobookDirectUrl && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Volume2 className="h-5 w-5 text-primary" />
+                        Audiobook
+                      </CardTitle>
+                      <CardDescription>
+                        {book.audiobookGeneratedAt && `Generated on ${new Date(book.audiobookGeneratedAt).toLocaleString()}`}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <AudiobookPlayer
+                        audioUrl={book.audiobookDirectUrl}
+                        title={`${book.name} - Audiobook`}
+                        duration={book.audiobookDuration || undefined}
+                      />
+                    </CardContent>
                   </Card>
                 )}
 
