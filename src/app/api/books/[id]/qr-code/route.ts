@@ -53,6 +53,8 @@ export async function POST(request: NextRequest, { params }: Props) {
   try {
     const { id } = await params;
 
+    console.log('[QR Code API] Generating QR code for book:', id);
+
     // Verify the book exists
     const book = await prisma.book.findUnique({
       where: { id },
@@ -70,13 +72,23 @@ export async function POST(request: NextRequest, { params }: Props) {
       },
     });
 
-    if (!book || book.type !== 'HARD_COPY') {
+    console.log('[QR Code API] Book found:', book ? { id: book.id, name: book.name, type: book.type } : null);
+
+    if (!book) {
+      console.error('[QR Code API] Book not found');
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+    }
+
+    if (book.type !== 'HARD_COPY') {
+      console.error('[QR Code API] Book is not hard copy, type:', book.type);
+      return NextResponse.json({ error: 'QR codes are only available for hard copy books' }, { status: 400 });
     }
 
     // Get the base URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     const qrUrl = `${baseUrl}/qr/${id}`;
+
+    console.log('[QR Code API] QR URL:', qrUrl);
 
     // Generate QR code as data URL
     const qrCodeDataUrl = await QRCode.toDataURL(qrUrl, {
@@ -87,6 +99,8 @@ export async function POST(request: NextRequest, { params }: Props) {
         light: '#FFFFFF',
       },
     });
+
+    console.log('[QR Code API] QR code generated successfully');
 
     // Return printable data
     return NextResponse.json({
@@ -100,7 +114,7 @@ export async function POST(request: NextRequest, { params }: Props) {
       url: qrUrl,
     });
   } catch (error) {
-    console.error('Error generating QR code data:', error);
+    console.error('[QR Code API] Error generating QR code data:', error);
     return NextResponse.json({ error: 'Failed to generate QR code data' }, { status: 500 });
   }
 }

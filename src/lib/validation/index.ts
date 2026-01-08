@@ -448,7 +448,7 @@ export const createNoticeSchema = z.object({
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   isActive: z.boolean().default(true),
   expiresAt: z.string().datetime().optional(),
-  targetRole: z.enum(['USER', 'ADMIN', 'SUPERADMIN', 'ALL']).optional()
+  targetRole: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN', 'ALL']).optional()
 })
 
 export const updateNoticeSchema = createNoticeSchema.partial()
@@ -516,7 +516,7 @@ export const bulkActionSchema = z.object({
 
 export const updateUserRoleSchema = z.object({
   userId: objectIdSchema,
-  role: z.enum(['USER', 'ADMIN', 'SUPERADMIN']),
+  role: z.enum(['USER', 'ADMIN', 'SUPER_ADMIN']),
   reason: z.string().min(10).max(500).trim()
 })
 

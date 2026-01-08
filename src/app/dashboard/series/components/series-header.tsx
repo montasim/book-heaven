@@ -9,7 +9,7 @@ export function SeriesHeader() {
   const { user } = useAuth()
   const { setOpen } = useSeriesContext()
 
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN'
+  const canCreate = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   return (
     <>

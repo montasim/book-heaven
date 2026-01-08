@@ -104,7 +104,7 @@ export default function SeriesDetailPage() {
   }
 
   const series = data.data
-  const hasPremium = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN'
+  const hasPremium = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   return (
     <div className="min-h-screen">

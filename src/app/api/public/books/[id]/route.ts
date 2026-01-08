@@ -667,6 +667,8 @@ export async function GET(
             publication: book.publications.length > 0 ? {
                 id: book.publications[0].publication.id,
                 name: book.publications[0].publication.name,
+                description: book.publications[0].publication.description,
+                image: book.publications[0].publication.image,
             } : null,
             // Series with neighbors
             series: seriesNeighbors.map(sn => ({

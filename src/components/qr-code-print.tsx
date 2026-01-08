@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Loader2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface QRCodePrintProps {
   bookId: string;
@@ -31,13 +31,21 @@ export function QRCodePrint({ bookId, open, onOpenChange }: QRCodePrintProps) {
     setLoading(true);
     setError(null);
     try {
+      console.log('[QRCodePrint] Fetching QR code for book:', bookId);
       const response = await fetch(`/api/books/${bookId}/qr-code`, { method: 'POST' });
+      console.log('[QRCodePrint] Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to generate QR code');
+        const errorData = await response.json();
+        console.error('[QRCodePrint] Error response:', errorData);
+        throw new Error(errorData.error || 'Failed to generate QR code');
       }
+
       const qrData = await response.json();
+      console.log('[QRCodePrint] QR code data received:', qrData);
       setData(qrData);
     } catch (err) {
+      console.error('[QRCodePrint] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load QR code');
     } finally {
       setLoading(false);
@@ -132,6 +140,9 @@ export function QRCodePrint({ bookId, open, onOpenChange }: QRCodePrintProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Print QR Code</DialogTitle>
+          <DialogDescription>
+            Generate and print a QR code label for this physical book
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -142,10 +153,13 @@ export function QRCodePrint({ bookId, open, onOpenChange }: QRCodePrintProps) {
             </div>
           )}
 
-          {error && (
-            <div className="text-center py-4">
-              <p className="text-sm text-destructive">{error}</p>
-              <Button onClick={fetchQRCode} variant="outline" className="mt-2">
+          {error && !loading && (
+            <div className="text-center py-4 space-y-3">
+              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                <p className="text-sm text-destructive font-medium">Error</p>
+                <p className="text-xs text-destructive mt-1">{error}</p>
+              </div>
+              <Button onClick={fetchQRCode} variant="outline" size="sm">
                 Try Again
               </Button>
             </div>

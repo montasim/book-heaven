@@ -200,7 +200,7 @@ export default function SeriesPage() {
       <SeriesMutateDrawer
         key="series-create"
         open={open === 'create'}
-        onOpenChange={() => setOpen('create')}
+        onOpenChange={(open) => setOpen(open ? 'create' : null)}
         onSuccess={refreshSeries}
       />
 
