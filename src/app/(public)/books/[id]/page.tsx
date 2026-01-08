@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import useSWR from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -136,6 +137,9 @@ export default function BookDetailsPage() {
 
   // Get user for auth
   const { user } = useAuth()
+
+  // Get query client for invalidating queries
+  const queryClient = useQueryClient()
 
   // Fetch book details using the dedicated API endpoint
   const { data: responseData, isLoading, error } = useBook({ id: bookId })
@@ -301,6 +305,22 @@ export default function BookDetailsPage() {
       }
     } else {
       navigator.clipboard.writeText(window.location.href)
+    }
+  }
+
+  // Handle reader modal close and refresh book data
+  const handleReaderModalClose = () => {
+    setIsReaderModalOpen(false)
+    // Invalidate book query to fetch latest reading progress
+    queryClient.invalidateQueries({ queryKey: ['book', bookId] })
+    // Also invalidate progress chart data if on progress tab
+    if (activeTab === 'progress') {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0] as string
+          return typeof key === 'string' && key.includes('/api/user/progress-history/')
+        }
+      })
     }
   }
 
@@ -1278,7 +1298,7 @@ export default function BookDetailsPage() {
       {book && book.fileUrl && (
         <PDFReaderModal
           isOpen={isReaderModalOpen}
-          onClose={() => setIsReaderModalOpen(false)}
+          onClose={handleReaderModalClose}
           bookId={bookId}
           fileUrl={book.fileUrl}
           directFileUrl={book.directFileUrl}
