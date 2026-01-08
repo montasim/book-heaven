@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { chatWithZhipuAI } from '@/lib/ai/zhipu-chat';
+import { chatWithUnifiedProvider } from '@/lib/ai/unified-chat';
 import { generatePreFilledQuery } from '@/lib/ai/query-generator';
 import { saveChatMessage, getNextMessageIndex } from '@/lib/lms/repositories/book-chat.repository';
 import { getSession } from '@/lib/auth/session';
@@ -127,14 +127,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     let userMessage = '';
 
-    // Generate pre-filled query for first message
-    if (generatePrefilled || messages.length === 0) {
-      const preFilledQuery = await generatePreFilledQuery(book);
-      userMessage = preFilledQuery;
-      messages = [
-        { role: 'user', content: userMessage }
-      ];
-    } else if (message) {
+    // Always use the user's actual message (no more pre-filled overview question)
+    if (message) {
       userMessage = message;
       messages.push({ role: 'user', content: userMessage });
     }
@@ -155,8 +149,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       // Continue anyway - don't block chat for logging errors
     }
 
-    // Call Zhipu AI
-    console.log('[Chat API] Calling Zhipu AI service...');
+    // Call unified chat with automatic provider fallback
+    console.log('[Chat API] Calling unified chat service (z.ai primary, Gemini fallback)...');
 
     // Safely extract authors and categories
     const authorNames = book.authors && Array.isArray(book.authors)
@@ -167,7 +161,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       ? book.categories.map((c: any) => c.name)
       : [];
 
-    const result = await chatWithZhipuAI({
+    const result = await chatWithUnifiedProvider({
       bookId: book.id,
       bookName: book.name,
       bookType: book.type,
@@ -178,7 +172,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       messages
     });
 
-    console.log('[Chat API] Zhipu AI response received, length:', result.response.length);
+    console.log('[Chat API] Chat response received, provider:', result.provider, 'model:', result.model, 'method:', result.method);
 
     // Add assistant response to history
     messages.push({ role: 'assistant', content: result.response });
@@ -203,7 +197,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       response: result.response,
       conversationHistory: messages,
       sessionId: finalSessionId,
-      usage: result.usage
+      usage: result.usage,
+      provider: result.provider,
+      model: result.model,
+      method: result.method
     });
 
   } catch (error: any) {

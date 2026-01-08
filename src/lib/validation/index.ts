@@ -276,8 +276,7 @@ export const updateOfferStatusSchema = z.object({
  */
 export const chatMessageSchema = z.object({
   message: z.string()
-    .min(1, 'Message cannot be empty')
-    .max(2000, 'Message is too long')
+    .max(5000, 'Message is too long')
     .transform((val) => {
       // Remove any HTML tags
       return val.replace(/<[^>]*>/g, '')
@@ -290,10 +289,11 @@ export const chatMessageSchema = z.object({
       // Remove event handlers
       return val.replace(/on\w+\s*=/gi, '')
     })
-    .transform((val) => val.trim()),
+    .transform((val) => val.trim())
+    .optional(),
   conversationHistory: z.array(z.object({
     role: z.enum(['user', 'assistant', 'system']),
-    content: z.string().max(2000)
+    content: z.string().max(20000) // Increased for AI responses
   })).max(50, 'Too much conversation history').optional(),
   sessionId: z.string().optional()
 })

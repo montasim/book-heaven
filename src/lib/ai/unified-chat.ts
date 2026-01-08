@@ -1,0 +1,387 @@
+import { generateEmbedding } from './gemini-embeddings'
+import { searchSimilarChunks, hasBookEmbeddings } from '@/lib/lms/repositories/book-embedding.repository'
+import { getBookWithExtractedContent } from '@/lib/lms/repositories/book.repository'
+import { config } from '@/config'
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+export interface ChatRequest {
+  bookId: string
+  bookName: string
+  bookType: string
+  pdfUrl: string
+  pdfDirectUrl?: string | null
+  authors: string[]
+  categories: string[]
+  messages: ChatMessage[]
+}
+
+export interface ChatResponse {
+  response: string
+  model: string
+  provider: 'zhipu' | 'gemini'
+  method: 'embedding' | 'full-content' | 'fallback'
+  usage: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
+}
+
+/**
+ * Format retrieved chunks for AI context
+ */
+function formatChunksForAI(chunks: Array<{ chunkText: string; pageNumber: number | null; similarity: number }>, maxChunks = 10): string {
+  return chunks
+    .slice(0, maxChunks)
+    .map((chunk, index) => {
+      const pageRef = chunk.pageNumber !== null ? ` (Page ${chunk.pageNumber})` : ''
+      const similarityPct = Math.round(chunk.similarity * 100)
+      return `[Excerpt ${index + 1}${pageRef} - Relevance: ${similarityPct}%]\n${chunk.chunkText}`
+    })
+    .join('\n\n---\n\n')
+}
+
+/**
+ * Generate chat response using Zhipu AI (GLM-4.7)
+ */
+async function generateZhipuResponse(messages: ChatMessage[]): Promise<{ content: string; usage: any }> {
+  const { generateZhipuToken } = await import('./zhipu')
+  const apiKey = config.zhipuAiApiKey
+
+  if (!apiKey) {
+    throw new Error('ZHIPU_AI_API_KEY is not configured')
+  }
+
+  const token = await generateZhipuToken(apiKey)
+  const model = config.zhipuAiModel
+
+  const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      temperature: 0.3,
+      top_p: 0.7,
+      max_tokens: 8000,
+      stream: false
+    })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[Zhipu Chat] API Error Response:', errorText)
+
+    // Parse error to identify quota/rate limit errors
+    try {
+      const errorData = JSON.parse(errorText)
+      const errorCode = errorData.error?.code
+      const errorMessage = errorData.error?.message
+
+      // Error codes that indicate we should fall back to another provider
+      if (errorCode === '4006' ||
+          errorMessage?.includes('quota') ||
+          errorMessage?.includes('limit') ||
+          errorMessage?.includes('rate limit') ||
+          response.status === 429) {
+        const fallbackError = new Error(`Zhipu AI quota/limit exceeded: ${errorMessage}`)
+        ;(fallbackError as any).code = 'PROVIDER_LIMIT_EXCEEDED'
+        throw fallbackError
+      }
+
+      throw new Error(`Zhipu AI API error (${errorCode || response.status}): ${errorMessage || errorText}`)
+    } catch (parseError) {
+      if ((parseError as any).code === 'PROVIDER_LIMIT_EXCEEDED') {
+        throw parseError
+      }
+      throw new Error(`Zhipu AI API error (${response.status}): ${errorText}`)
+    }
+  }
+
+  const data = await response.json()
+
+  if (!data.choices || data.choices.length === 0) {
+    throw new Error('No response from Zhipu AI')
+  }
+
+  const message = data.choices[0].message
+  const content = message?.content || message?.reasoning_content || ''
+
+  return {
+    content,
+    usage: {
+      promptTokens: data.usage?.prompt_tokens || 0,
+      completionTokens: data.usage?.completion_tokens || 0,
+      totalTokens: data.usage?.total_tokens || 0,
+    }
+  }
+}
+
+/**
+ * Generate chat response using Gemini AI
+ */
+async function generateGeminiResponse(messages: ChatMessage[]): Promise<{ content: string; usage: any }> {
+  const apiKey = config.geminiApiKey
+
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured')
+  }
+
+  const model = config.geminiChatModel
+
+  // Convert messages to Gemini format
+  // Gemini doesn't use system message, so we prepend it to the first user message
+  const systemMessage = messages.find(m => m.role === 'system')
+  const chatMessages = messages.filter(m => m.role !== 'system')
+
+  let contents: any[] = []
+
+  if (systemMessage) {
+    contents.push({
+      role: 'user',
+      parts: [{ text: `${systemMessage.content}\n\n${chatMessages[0]?.content || ''}` }]
+    })
+    contents = contents.concat(
+      chatMessages.slice(1).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }))
+    )
+  } else {
+    contents = chatMessages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.3,
+          topP: 0.8,
+          maxOutputTokens: 8000,
+        },
+      }),
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[Gemini Chat] API Error Response:', errorText)
+
+    // Parse error to identify quota/rate limit errors
+    try {
+      const errorData = JSON.parse(errorText)
+      if (errorData.error?.code === 429 ||
+          errorData.error?.message?.includes('quota') ||
+          errorData.error?.message?.includes('limit')) {
+        const fallbackError = new Error(`Gemini quota/limit exceeded: ${errorData.error.message}`)
+        ;(fallbackError as any).code = 'PROVIDER_LIMIT_EXCEEDED'
+        throw fallbackError
+      }
+    } catch {}
+
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`)
+  }
+
+  const data = await response.json()
+
+  if (!data.candidates || data.candidates.length === 0) {
+    throw new Error('No response from Gemini')
+  }
+
+  const candidate = data.candidates[0]
+  const content = candidate.content?.parts?.[0]?.text || ''
+
+  return {
+    content,
+    usage: {
+      promptTokens: data.usageMetadata?.totalTokenCount || 0,
+      completionTokens: 0,
+      totalTokens: data.usageMetadata?.totalTokenCount || 0,
+    }
+  }
+}
+
+/**
+ * Main unified chat function with automatic provider fallback
+ * 1. Try Zhipu AI first (premium quality, you already have API key)
+ * 2. On quota/limit error, fall back to Gemini automatically
+ * 3. Use RAG (embeddings) if available, otherwise full content
+ */
+export async function chatWithUnifiedProvider(request: ChatRequest): Promise<ChatResponse> {
+  console.log('[Unified Chat] Starting chat for book:', request.bookId)
+
+  // Get the last user message for embedding generation
+  const lastUserMessage = request.messages
+    .filter(m => m.role === 'user')
+    .pop()
+
+  if (!lastUserMessage) {
+    throw new Error('No user message found in conversation history')
+  }
+
+  // Check if embeddings exist for this book
+  const hasEmbeddings = await hasBookEmbeddings(request.bookId)
+
+  let bookContent = ''
+  let method: 'embedding' | 'full-content' | 'fallback' = 'fallback'
+
+  if (hasEmbeddings) {
+    console.log('[Unified Chat] Embeddings found, using RAG approach')
+    try {
+      // Generate embedding for the user's query
+      const queryEmbedding = await generateEmbedding(lastUserMessage.content)
+      console.log('[Unified Chat] Generated query embedding, dimension:', queryEmbedding.length)
+
+      // Search for similar chunks (get top 10 most relevant chunks)
+      const similarChunks = await searchSimilarChunks(request.bookId, queryEmbedding, 10)
+      console.log('[Unified Chat] Found', similarChunks.length, 'relevant chunks')
+      console.log('[Unified Chat] Similarity scores:', similarChunks.map(c => c.similarity.toFixed(3)).join(', '))
+
+      if (similarChunks.length > 0) {
+        // Check if chunks have actual content
+        const totalContentLength = similarChunks.reduce((sum, c) => sum + (c.chunkText?.length || 0), 0)
+        console.log('[Unified Chat] Total content length across all chunks:', totalContentLength)
+
+        if (totalContentLength === 0) {
+          console.log('[Unified Chat] Chunks are empty, falling back to full content')
+          const bookWithContent = await getBookWithExtractedContent(request.bookId)
+          if (bookWithContent?.extractedContent) {
+            bookContent = bookWithContent.extractedContent.slice(0, 50000)
+            method = 'full-content'
+          }
+        } else {
+          // Format chunks for AI context
+          bookContent = formatChunksForAI(similarChunks)
+          method = 'embedding'
+          console.log('[Unified Chat] Using', similarChunks.length, 'chunks as context')
+        }
+      } else {
+        console.log('[Unified Chat] No chunks found, falling back to full content')
+        const bookWithContent = await getBookWithExtractedContent(request.bookId)
+        if (bookWithContent?.extractedContent) {
+          bookContent = bookWithContent.extractedContent.slice(0, 50000)
+          method = 'full-content'
+        }
+      }
+    } catch (error) {
+      console.error('[Unified Chat] Embedding search failed:', error)
+      const bookWithContent = await getBookWithExtractedContent(request.bookId)
+      if (bookWithContent?.extractedContent) {
+        bookContent = bookWithContent.extractedContent.slice(0, 50000)
+        method = 'full-content'
+      }
+    }
+  } else {
+    console.log('[Unified Chat] No embeddings found, using full content')
+    const bookWithContent = await getBookWithExtractedContent(request.bookId)
+    if (bookWithContent?.extractedContent) {
+      bookContent = bookWithContent.extractedContent.slice(0, 50000)
+      method = 'full-content'
+    }
+  }
+
+  // Build system prompt
+  const authors = request.authors.join(', ')
+  const categories = request.categories.join(', ')
+
+  const systemPrompt = `You are a knowledgeable AI assistant for a digital library platform.
+
+Your task is to answer questions about the book "${request.bookName}" by ${authors} (${categories}).
+
+**CRITICAL LANGUAGE RULE - MANDATORY:**
+**YOU MUST RESPOND IN THE EXACT SAME LANGUAGE AS THE USER'S QUESTION!**
+
+- If user asks in Bengali (বাংলা) → Respond ONLY in Bengali (বাংলা)
+- If user asks in English → Respond ONLY in English
+- Check the LAST user message language FIRST before writing your response
+- This is NOT optional - it is a mandatory requirement
+
+**EXAMPLE:**
+- User asks: "সানজু কোন রাজ্যের অধিবাসী ছিলেন?" → You MUST answer in Bengali
+- User asks: "Which state was Sanju from?" → You MUST answer in English
+
+**CRITICAL RULES:**
+1. Base ALL answers ONLY on the book content provided below
+2. If information is not found in the book content, explicitly say so IN THE USER'S LANGUAGE
+3. Provide specific examples and quotes from the book when possible
+4. Reference page numbers when citing specific content
+5. Be concise yet comprehensive
+6. Maintain a conversational, helpful tone
+7. If asked about topics not covered in the book, politely redirect to what IS available (IN USER'S LANGUAGE)
+8. **Always match your response language to the user's question language - THIS IS MANDATORY**
+
+${bookContent ? `**BOOK CONTENT TO USE:**
+${bookContent}` : '**BOOK CONTENT:** [No content available]'}
+
+**BOOK METADATA:**
+- Title: ${request.bookName}
+- Authors: ${authors}
+- Categories: ${categories}
+- Type: ${request.bookType}
+
+**IMPORTANT:** Before responding, identify the user's question language and respond in that same language. This is your most important instruction.`
+
+  // Prepare messages for API
+  const apiMessages: ChatMessage[] = [
+    { role: 'system', content: systemPrompt },
+    ...request.messages
+  ]
+
+  // Try Zhipu AI first (premium model, you have API key)
+  console.log('[Unified Chat] Trying Zhipu AI first (provider: zhipu, model:', config.zhipuAiModel + ')')
+
+  try {
+    const { content: responseContent, usage } = await generateZhipuResponse(apiMessages)
+
+    console.log('[Unified Chat] Zhipu AI response successful')
+
+    return {
+      response: responseContent,
+      model: config.zhipuAiModel,
+      provider: 'zhipu',
+      method,
+      usage,
+    }
+  } catch (error: any) {
+    // Check if this is a quota/limit error that requires fallback
+    if (error.code === 'PROVIDER_LIMIT_EXCEEDED' || error.message.includes('quota') || error.message.includes('limit')) {
+      console.log('[Unified Chat] Zhipu AI quota/limit exceeded, falling back to Gemini')
+
+      try {
+        const { content: responseContent, usage } = await generateGeminiResponse(apiMessages)
+
+        console.log('[Unified Chat] Gemini fallback successful')
+
+        return {
+          response: responseContent,
+          model: config.geminiChatModel,
+          provider: 'gemini',
+          method,
+          usage,
+        }
+      } catch (geminiError: any) {
+        console.error('[Unified Chat] Both providers failed:', geminiError)
+        throw new Error(`Both AI providers are unavailable. Zhipu: ${error.message}, Gemini: ${geminiError.message}`)
+      }
+    }
+
+    // If not a quota error, just throw the original error
+    throw error
+  }
+}

@@ -116,7 +116,32 @@ export async function GET(
         // Find the book
         const book = await prisma.book.findUnique({
             where: { id: bookId },
-            include: {
+            select: {
+                id: true,
+                name: true,
+                summary: true,
+                aiSummary: true,
+                aiSummaryGeneratedAt: true,
+                aiOverview: true,
+                aiOverviewGeneratedAt: true,
+                aiOverviewStatus: true,
+                type: true,
+                image: true,
+                directImageUrl: true,
+                bindingType: true,
+                pageNumber: true,
+                language: true,
+                fileUrl: true,
+                directFileUrl: true,
+                isPublic: true,
+                requiresPremium: true,
+                buyingPrice: true,
+                sellingPrice: true,
+                numberOfCopies: true,
+                purchaseDate: true,
+                entryDate: true,
+                createdAt: true,
+                updatedAt: true,
                 entryBy: {
                     select: {
                         id: true,
@@ -131,7 +156,8 @@ export async function GET(
                     }
                 },
                 authors: {
-                    include: {
+                    select: {
+                        authorId: true,
                         author: {
                             select: {
                                 id: true,
@@ -143,7 +169,8 @@ export async function GET(
                     }
                 },
                 categories: {
-                    include: {
+                    select: {
+                        categoryId: true,
                         category: {
                             select: {
                                 id: true,
@@ -155,7 +182,8 @@ export async function GET(
                     }
                 },
                 publications: {
-                    include: {
+                    select: {
+                        publicationId: true,
                         publication: {
                             select: {
                                 id: true,
@@ -167,7 +195,9 @@ export async function GET(
                     }
                 },
                 series: {
-                    include: {
+                    select: {
+                        seriesId: true,
+                        order: true,
                         series: {
                             select: {
                                 id: true,
@@ -544,6 +574,10 @@ export async function GET(
             summary: book.summary,
             aiSummary: book.aiSummary,
             aiSummaryGeneratedAt: book.aiSummaryGeneratedAt,
+            aiOverview: book.aiOverview,
+            aiOverviewGeneratedAt: book.aiOverviewGeneratedAt,
+            aiOverviewStatus: book.aiOverviewStatus,
+            language: book.language,
             type: book.type,
             // User who uploaded the book (only if public and user role is USER)
             entryBy: book.isPublic && book.entryBy?.role === 'USER' ? {

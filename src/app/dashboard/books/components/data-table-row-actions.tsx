@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { Row } from '@tanstack/react-table'
-import { IconTrash, IconEdit, IconEye, IconSparkles, IconList } from '@tabler/icons-react'
+import { IconTrash, IconEdit, IconEye, IconSparkles, IconList, IconDatabase, IconBook } from '@tabler/icons-react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,18 +30,11 @@ export function DataTableRowActions<TData>({
   const router = useRouter()
   const { setOpen, setCurrentRow } = useBooksContext()
   const [isRegeneratingSummary, setIsRegeneratingSummary] = useState(false)
+  const [isRegeneratingOverview, setIsRegeneratingOverview] = useState(false)
   const [isRegeneratingQuestions, setIsRegeneratingQuestions] = useState(false)
+  const [isRegeneratingEmbeddings, setIsRegeneratingEmbeddings] = useState(false)
 
   const handleRegenerateSummary = async () => {
-    if (!book.extractedContent) {
-      toast({
-        title: 'Cannot regenerate summary',
-        description: 'Book content must be extracted first.',
-        variant: 'destructive',
-      })
-      return
-    }
-
     setIsRegeneratingSummary(true)
     try {
       const response = await fetch(`/api/books/${book.id}/regenerate-summary`, {
@@ -49,18 +42,19 @@ export function DataTableRowActions<TData>({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to regenerate summary')
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate summary')
       }
 
       toast({
         title: 'Summary regeneration started',
-        description: 'The AI summary will be regenerated shortly.',
+        description: 'The AI summary will be regenerated shortly via PDF processor.',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error regenerating summary:', error)
       toast({
         title: 'Error',
-        description: 'Failed to regenerate summary. Please try again.',
+        description: error.message || 'Failed to regenerate summary. Please try again.',
         variant: 'destructive',
       })
     } finally {
@@ -68,16 +62,35 @@ export function DataTableRowActions<TData>({
     }
   }
 
-  const handleRegenerateQuestions = async () => {
-    if (!book.extractedContent) {
+  const handleRegenerateOverview = async () => {
+    setIsRegeneratingOverview(true)
+    try {
+      const response = await fetch(`/api/books/${book.id}/regenerate-overview`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate overview')
+      }
+
       toast({
-        title: 'Cannot regenerate questions',
-        description: 'Book content must be extracted first.',
+        title: 'Overview regeneration started',
+        description: 'The AI overview will be regenerated shortly via PDF processor.',
+      })
+    } catch (error: any) {
+      console.error('Error regenerating overview:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to regenerate overview. Please try again.',
         variant: 'destructive',
       })
-      return
+    } finally {
+      setIsRegeneratingOverview(false)
     }
+  }
 
+  const handleRegenerateQuestions = async () => {
     setIsRegeneratingQuestions(true)
     try {
       const response = await fetch(`/api/books/${book.id}/regenerate-questions`, {
@@ -85,22 +98,51 @@ export function DataTableRowActions<TData>({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to regenerate questions')
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate questions')
       }
 
       toast({
         title: 'Questions regeneration started',
-        description: 'The suggested questions will be regenerated shortly.',
+        description: 'The suggested questions will be regenerated shortly via PDF processor.',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error regenerating questions:', error)
       toast({
         title: 'Error',
-        description: 'Failed to regenerate questions. Please try again.',
+        description: error.message || 'Failed to regenerate questions. Please try again.',
         variant: 'destructive',
       })
     } finally {
       setIsRegeneratingQuestions(false)
+    }
+  }
+
+  const handleRegenerateEmbeddings = async () => {
+    setIsRegeneratingEmbeddings(true)
+    try {
+      const response = await fetch(`/api/books/${book.id}/regenerate-embeddings`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate embeddings')
+      }
+
+      toast({
+        title: 'Embeddings regeneration started',
+        description: 'The embeddings will be regenerated shortly via PDF processor.',
+      })
+    } catch (error: any) {
+      console.error('Error regenerating embeddings:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to regenerate embeddings. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsRegeneratingEmbeddings(false)
     }
   }
 
@@ -141,7 +183,7 @@ export function DataTableRowActions<TData>({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleRegenerateSummary}
-          disabled={isRegeneratingSummary || !book.extractedContent}
+          disabled={isRegeneratingSummary}
         >
           {isRegeneratingSummary ? (
             <>
@@ -158,8 +200,26 @@ export function DataTableRowActions<TData>({
           )}
         </DropdownMenuItem>
         <DropdownMenuItem
+          onClick={handleRegenerateOverview}
+          disabled={isRegeneratingOverview}
+        >
+          {isRegeneratingOverview ? (
+            <>
+              <Loader2 className='h-4 w-4 animate-spin' />
+              Generating...
+            </>
+          ) : (
+            <>
+              Regenerate Overview
+              <DropdownMenuShortcut>
+                <IconBook size={16} />
+              </DropdownMenuShortcut>
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={handleRegenerateQuestions}
-          disabled={isRegeneratingQuestions || !book.extractedContent}
+          disabled={isRegeneratingQuestions}
         >
           {isRegeneratingQuestions ? (
             <>
@@ -171,6 +231,24 @@ export function DataTableRowActions<TData>({
               Regenerate Questions
               <DropdownMenuShortcut>
                 <IconList size={16} />
+              </DropdownMenuShortcut>
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleRegenerateEmbeddings}
+          disabled={isRegeneratingEmbeddings}
+        >
+          {isRegeneratingEmbeddings ? (
+            <>
+              <Loader2 className='h-4 w-4 animate-spin' />
+              Regenerating...
+            </>
+          ) : (
+            <>
+              Regenerate Embeddings
+              <DropdownMenuShortcut>
+                <IconDatabase size={16} />
               </DropdownMenuShortcut>
             </>
           )}

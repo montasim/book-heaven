@@ -709,25 +709,25 @@ export default function BookDetailsPage() {
 
               {/* Description Tab - Book Description and Author Info */}
               <TabsContent value="description" className="mt-4 space-y-4">
-                {/* AI Summary */}
-                {book.aiSummary && (
+                {/* AI Overview */}
+                {book.aiOverview && (
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-primary" />
-                        AI Summary
+                        Book Overview
                       </CardTitle>
-                      {book.aiSummaryGeneratedAt && (
+                      {book.aiOverviewGeneratedAt && (
                         <p className="text-xs text-muted-foreground">
-                          Generated {new Date(book.aiSummaryGeneratedAt).toLocaleDateString()}
+                          Generated {new Date(book.aiOverviewGeneratedAt).toLocaleDateString()}
                         </p>
                       )}
                     </CardHeader>
                     <CardContent>
                       <ExpandableDescription
-                        description={book.aiSummary}
-                        sectionId="ai-summary"
-                        isExpanded={expandedSections['ai-summary'] || false}
+                        description={book.aiOverview}
+                        sectionId="ai-overview"
+                        isExpanded={expandedSections['ai-overview'] || false}
                         onToggle={toggleExpanded}
                       />
                     </CardContent>

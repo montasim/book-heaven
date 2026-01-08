@@ -739,6 +739,22 @@ export async function clearBookExtractedContent(id: string) {
   })
 }
 
+/**
+ * Update book metadata (page number, language, etc.)
+ */
+export async function updateBookMetadata(
+  id: string,
+  data: {
+    pageNumber?: number | null
+    language?: string | null
+  }
+) {
+  return prisma.book.update({
+    where: { id },
+    data
+  })
+}
+
 // ============================================================================
 // AI SUMMARY MANAGEMENT
 // ============================================================================
@@ -758,6 +774,25 @@ export async function updateBookAISummary(
     data: {
       ...data,
       aiSummaryGeneratedAt: new Date(),
+    }
+  })
+}
+
+/**
+ * Update book AI overview
+ */
+export async function updateBookAIOverview(
+  id: string,
+  data: {
+    aiOverview: string
+    aiOverviewStatus: string
+  }
+) {
+  return prisma.book.update({
+    where: { id },
+    data: {
+      ...data,
+      aiOverviewGeneratedAt: new Date(),
     }
   })
 }
@@ -851,6 +886,12 @@ export async function getBookWithCompleteDetails(id: string) {
       aiSummary: true,
       aiSummaryGeneratedAt: true,
       aiSummaryStatus: true,
+      aiOverview: true,
+      aiOverviewGeneratedAt: true,
+      aiOverviewStatus: true,
+      questionsGeneratedAt: true,
+      questionsStatus: true,
+      language: true,
       contentHash: true,
       contentPageCount: true,
       contentWordCount: true,

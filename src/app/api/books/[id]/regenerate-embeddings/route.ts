@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBookWithExtractedContent } from '@/lib/lms/repositories/book.repository';
 import { config } from '@/config';
 import { prisma } from '@/lib/prisma';
 
@@ -7,14 +8,14 @@ interface RouteContext {
 }
 
 /**
- * POST /api/books/[id]/regenerate-summary
- * Regenerate AI summary for a book using the PDF Processor service
+ * POST /api/books/[id]/regenerate-embeddings
+ * Regenerate embeddings for a book using the PDF Processor service
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
 
-    console.log('[Regenerate Summary API] Starting regeneration for book:', id);
+    console.log('[Regenerate Embeddings API] Starting regeneration for book:', id);
 
     // Get book with authors for PDF processor
     const book = await prisma.book.findUnique({
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
+    // Check if book has a file URL
     if (!book.fileUrl) {
       return NextResponse.json(
         { error: 'Book does not have a file associated with it' },
@@ -53,6 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     // Get author names
     const authorNames = book.authors.map((a) => a.author.name).filter(Boolean);
 
+    // First, check if job exists
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -61,17 +64,20 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       headers['Authorization'] = `Bearer ${pdfProcessorApiKey}`;
     }
 
-    // First, check if job exists
+    // Check if job exists
     const jobCheckUrl = `${pdfProcessorUrl}/api/job/${id}`;
-    console.log('[Regenerate Summary API] Checking if job exists:', jobCheckUrl);
+    console.log('[Regenerate Embeddings API] Checking if job exists:', jobCheckUrl);
 
-    const jobCheckResponse = await fetch(jobCheckUrl, { headers });
+    const jobCheckResponse = await fetch(jobCheckUrl, {
+      headers,
+    });
+
     let result;
 
     if (jobCheckResponse.ok) {
-      // Job exists, trigger selective summary regeneration
-      console.log('[Regenerate Summary API] Job exists, triggering summary regeneration');
-      const regenerateUrl = `${pdfProcessorUrl}/api/job/${id}/regenerate-summary`;
+      // Job exists, trigger selective embeddings regeneration
+      console.log('[Regenerate Embeddings API] Job exists, triggering embeddings regeneration');
+      const regenerateUrl = `${pdfProcessorUrl}/api/job/${id}/regenerate-embeddings`;
 
       const regenerateResponse = await fetch(regenerateUrl, {
         method: 'POST',
@@ -80,7 +86,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
       if (!regenerateResponse.ok) {
         const errorText = await regenerateResponse.text();
-        console.error('[Regenerate Summary API] PDF processor regenerate error:', errorText);
+        console.error('[Regenerate Embeddings API] PDF processor regenerate error:', errorText);
         return NextResponse.json(
           { error: 'Failed to trigger regeneration', details: errorText },
           { status: regenerateResponse.status }
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       result = await regenerateResponse.json();
     } else {
       // Job doesn't exist, create new job
-      console.log('[Regenerate Summary API] Job does not exist, creating new job');
+      console.log('[Regenerate Embeddings API] Job does not exist, creating new job');
       const processUrl = `${pdfProcessorUrl}/api/process-pdf`;
 
       const processResponse = await fetch(processUrl, {
@@ -107,7 +113,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
       if (!processResponse.ok) {
         const errorText = await processResponse.text();
-        console.error('[Regenerate Summary API] PDF processor process error:', errorText);
+        console.error('[Regenerate Embeddings API] PDF processor process error:', errorText);
         return NextResponse.json(
           { error: 'Failed to create processing job', details: errorText },
           { status: processResponse.status }
@@ -117,17 +123,17 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       result = await processResponse.json();
     }
 
-    console.log('[Regenerate Summary API] PDF processor response:', result);
+    console.log('[Regenerate Embeddings API] PDF processor response:', result);
 
     return NextResponse.json({
-      message: 'Summary regeneration triggered successfully',
+      message: 'Embeddings regeneration triggered successfully',
       status: 'pending',
       pdfProcessorResponse: result,
     });
   } catch (error: any) {
-    console.error('[Regenerate Summary API] Error:', error);
+    console.error('[Regenerate Embeddings API] Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to regenerate summary' },
+      { error: error.message || 'Failed to regenerate embeddings' },
       { status: 500 }
     );
   }

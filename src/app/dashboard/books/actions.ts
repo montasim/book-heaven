@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, unstable_noStore } from 'next/cache'
 import { requireAuth } from '@/lib/auth/session'
 import { z } from 'zod'
 import { uploadFile, deleteFile } from '@/lib/google-drive'
@@ -10,6 +10,7 @@ import { ActivityAction, ActivityResourceType } from '@prisma/client'
 import { validateRequest, sanitizeUserContent } from '@/lib/validation'
 import { sendBookUploadNotificationEmail, sendBookPublishedNotificationEmail } from '@/lib/auth/email'
 import { notifyPdfProcessor } from '@/lib/pdf-processor/notifier'
+import { invalidateBooksCache } from '@/lib/cache/redis'
 
 // Repository imports
 import {
@@ -218,6 +219,9 @@ export type UpdateBookData = z.infer<typeof updateBookSchema>
  * Get paginated books
  */
 export async function getBooks(options?: { page?: number; pageSize?: number }) {
+  // Disable caching to always get fresh data
+  unstable_noStore()
+
   // Capture pageSize for use in catch block
   const { page = 1, pageSize: defaultPageSize = 10 } = options || {}
 
@@ -879,7 +883,7 @@ export async function deleteBook(id: string) {
 export async function getSeriesForSelect() {
   try {
     const { prisma } = await import('@/lib/prisma')
-    
+
     const series = await prisma.series.findMany({
       select: {
         id: true,
@@ -897,5 +901,33 @@ export async function getSeriesForSelect() {
   } catch (error) {
     console.error('Error fetching series:', error)
     return []
+  }
+}
+
+/**
+ * Invalidate all books cache
+ */
+export async function invalidateCache() {
+  try {
+    const session = await requireAuth()
+
+    await invalidateBooksCache()
+
+    // Log cache invalidation activity (non-blocking)
+    logActivity({
+      userId: session.userId,
+      userRole: session.role as any,
+      action: ActivityAction.BOOK_UPDATED,
+      resourceType: ActivityResourceType.BOOK,
+      resourceId: 'all',
+      resourceName: 'All Books Cache',
+      description: 'Invalidated all books cache',
+      endpoint: '/dashboard/books/actions',
+    }).catch(console.error)
+
+    return { message: 'Books cache invalidated successfully' }
+  } catch (error) {
+    console.error('Error invalidating cache:', error)
+    throw new Error('Failed to invalidate cache')
   }
 }

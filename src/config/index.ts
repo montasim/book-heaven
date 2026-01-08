@@ -20,6 +20,14 @@ const serverConfig = {
   zhipuAiApiKey: process.env.ZHIPU_AI_API_KEY, // z.ai api key
   zhipuAiModel: process.env.ZHIPU_AI_MODEL || 'glm-4.7',
 
+  // Gemini AI (for embeddings and chat)
+  geminiApiKey: process.env.GEMINI_API_KEY,
+  geminiEmbeddingModel: process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004',
+  geminiChatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-2.0-flash',
+
+  // Embeddings database (separate pgvector database)
+  embeddingDatabaseUrl: process.env.EMBEDDING_DATABASE_URL,
+
   // Image Compression (Tinify)
   tinifyApiKey: process.env.TINIFY_API_KEY,
 
@@ -53,6 +61,12 @@ const serverConfig = {
   socketServer: {
     url: process.env.SOCKET_SERVER_URL || 'http://localhost:3001',
     webhookApiKey: process.env.WEBHOOK_API_KEY || '',
+  },
+
+  // PDF Processor Service
+  pdfProcessor: {
+    url: process.env.PDF_PROCESSOR_URL || 'http://localhost:3002',
+    apiKey: process.env.PDF_PROCESSOR_API_KEY || '',
   },
 } as const
 

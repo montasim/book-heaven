@@ -63,6 +63,7 @@ export default function AdminBookDetailsPage() {
 
   // AI Summary state
   const [isRegeneratingSummary, setIsRegeneratingSummary] = useState(false)
+  const [isRegeneratingOverview, setIsRegeneratingOverview] = useState(false)
   const [isRegeneratingQuestions, setIsRegeneratingQuestions] = useState(false)
   const [pollCount, setPollCount] = useState(0)
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -160,6 +161,49 @@ export default function AdminBookDetailsPage() {
     }
   }
 
+  // Handle regenerate AI overview
+  const handleRegenerateOverview = async () => {
+    setIsRegeneratingOverview(true)
+    setPollCount(0)
+    try {
+      const response = await fetch(`/api/books/${bookId}/regenerate-overview`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate overview')
+      }
+
+      toast({
+        title: 'Overview regeneration started',
+        description: 'The AI overview is being generated in the background. You can navigate away and come back.',
+      })
+
+      // Start polling for updates
+      pollIntervalRef.current = setInterval(() => {
+        setPollCount(prev => prev + 1)
+        mutate(`/api/admin/books/${bookId}/details`)
+      }, 10000) // Poll every 10 seconds
+
+      // Auto-stop polling after 5 minutes
+      setTimeout(() => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current)
+          pollIntervalRef.current = null
+          setIsRegeneratingOverview(false)
+        }
+      }, 300000) // 5 minutes
+    } catch (error: any) {
+      toast({
+        title: 'Failed to regenerate overview',
+        description: error.message || 'An error occurred',
+        variant: 'destructive',
+      })
+      setIsRegeneratingOverview(false)
+    }
+  }
+
   // Handle regenerate AI questions
   const handleRegenerateQuestions = async () => {
     setIsRegeneratingQuestions(true)
@@ -220,6 +264,19 @@ export default function AdminBookDetailsPage() {
 
   const book = bookData?.data
 
+  // Debug logging to check overview
+  useEffect(() => {
+    if (book) {
+      console.log('[BookDetails] Book data:', {
+        id: book.id,
+        name: book.name,
+        hasAiOverview: !!book.aiOverview,
+        aiOverviewStatus: book.aiOverviewStatus,
+        aiOverview: book.aiOverview?.substring(0, 50) + '...',
+      })
+    }
+  }, [book])
+
   // Stop polling when summary is ready or failed
   useEffect(() => {
     if (book && isRegeneratingSummary) {
@@ -249,6 +306,36 @@ export default function AdminBookDetailsPage() {
       }
     }
   }, [book, isRegeneratingSummary])
+
+  // Stop polling when overview is ready or failed
+  useEffect(() => {
+    if (book && isRegeneratingOverview) {
+      if (book.aiOverviewStatus === 'completed' && book.aiOverview) {
+        // Overview is ready
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current)
+          pollIntervalRef.current = null
+        }
+        setIsRegeneratingOverview(false)
+        toast({
+          title: 'Overview generated successfully',
+          description: 'The AI overview has been generated.',
+        })
+      } else if (book.aiOverviewStatus === 'failed') {
+        // Generation failed
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current)
+          pollIntervalRef.current = null
+        }
+        setIsRegeneratingOverview(false)
+        toast({
+          title: 'Overview generation failed',
+          description: 'Failed to generate the overview. Please try again.',
+          variant: 'destructive',
+        })
+      }
+    }
+  }, [book, isRegeneratingOverview])
 
   // Stop polling when questions are ready or failed
   useEffect(() => {
@@ -498,6 +585,61 @@ export default function AdminBookDetailsPage() {
                   <div className="text-center py-8 text-muted-foreground">
                     <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No AI summary available yet.</p>
+                    <p className="text-xs mt-1">Click the button above to generate one.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* AI Overview */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    AI Overview
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRegenerateOverview}
+                    disabled={isRegeneratingOverview}
+                  >
+                    {isRegeneratingOverview ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        {book.aiOverview ? 'Regenerate' : 'Generate'} Overview
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <CardDescription>
+                  {isRegeneratingOverview && (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Generating overview... Polling {pollCount > 0 ? `(${pollCount})` : ''}
+                    </span>
+                  )}
+                  {!isRegeneratingOverview && book.aiOverviewStatus === 'pending' && 'Overview is being generated...'}
+                  {!isRegeneratingOverview && book.aiOverviewStatus === 'failed' && 'Failed to generate overview. Please try again.'}
+                  {!isRegeneratingOverview && book.aiOverviewStatus === 'completed' && `Generated on ${book.aiOverviewGeneratedAt ? new Date(book.aiOverviewGeneratedAt).toLocaleString() : 'recently'}`}
+                  {!isRegeneratingOverview && !book.aiOverviewStatus && 'Generate an AI overview of this book'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {book.aiOverview ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">{book.aiOverview}</div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No AI overview available yet.</p>
                     <p className="text-xs mt-1">Click the button above to generate one.</p>
                   </div>
                 )}

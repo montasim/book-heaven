@@ -168,6 +168,7 @@ model Book {
   isPublic            Boolean           @default(false)
   featured            Boolean           @default(false)
   pageNumber          Int?
+  language            String?
   requiresPremium     Boolean           @default(false)
   summary             String?
   authors             BookAuthor[]
@@ -193,6 +194,11 @@ model Book {
   aiSummary                    String?           // ~200 word AI summary
   aiSummaryGeneratedAt         DateTime?         // When summary was generated
   aiSummaryStatus              String?           // 'pending', 'completed', 'failed'
+
+  // AI-generated overview (detailed book overview with topics and themes)
+  aiOverview                   String?           @db.Text // Detailed book overview with topics and themes
+  aiOverviewGeneratedAt        DateTime?         // When overview was generated
+  aiOverviewStatus             String?           // 'pending', 'completed', 'failed'
 
   // Question generation tracking
   questionsGeneratedAt         DateTime?         // When questions were generated
@@ -1727,6 +1733,9 @@ model BookChatContext {
   @@index([bookId, chunkIndex])
   @@map("book_chat_contexts")
 }
+
+// Note: BookEmbedding model is in the separate embeddings database (EMBEDDING_DATABASE_URL)
+// which has pgvector support. It's not defined here since it uses a different database.
 
 // Processing Status Enum
 enum ProcessingStatus {

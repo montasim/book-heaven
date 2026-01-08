@@ -7,14 +7,14 @@ interface RouteContext {
 }
 
 /**
- * POST /api/books/[id]/regenerate-summary
- * Regenerate AI summary for a book using the PDF Processor service
+ * POST /api/books/[id]/regenerate-overview
+ * Regenerate AI overview for a book using the PDF Processor service
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
 
-    console.log('[Regenerate Summary API] Starting regeneration for book:', id);
+    console.log('[Regenerate Overview API] Starting regeneration for book:', id);
 
     // Get book with authors for PDF processor
     const book = await prisma.book.findUnique({
@@ -63,15 +63,15 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     // First, check if job exists
     const jobCheckUrl = `${pdfProcessorUrl}/api/job/${id}`;
-    console.log('[Regenerate Summary API] Checking if job exists:', jobCheckUrl);
+    console.log('[Regenerate Overview API] Checking if job exists:', jobCheckUrl);
 
     const jobCheckResponse = await fetch(jobCheckUrl, { headers });
     let result;
 
     if (jobCheckResponse.ok) {
-      // Job exists, trigger selective summary regeneration
-      console.log('[Regenerate Summary API] Job exists, triggering summary regeneration');
-      const regenerateUrl = `${pdfProcessorUrl}/api/job/${id}/regenerate-summary`;
+      // Job exists, trigger selective overview regeneration
+      console.log('[Regenerate Overview API] Job exists, triggering overview regeneration');
+      const regenerateUrl = `${pdfProcessorUrl}/api/job/${id}/regenerate-overview`;
 
       const regenerateResponse = await fetch(regenerateUrl, {
         method: 'POST',
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
       if (!regenerateResponse.ok) {
         const errorText = await regenerateResponse.text();
-        console.error('[Regenerate Summary API] PDF processor regenerate error:', errorText);
+        console.error('[Regenerate Overview API] PDF processor regenerate error:', errorText);
         return NextResponse.json(
           { error: 'Failed to trigger regeneration', details: errorText },
           { status: regenerateResponse.status }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       result = await regenerateResponse.json();
     } else {
       // Job doesn't exist, create new job
-      console.log('[Regenerate Summary API] Job does not exist, creating new job');
+      console.log('[Regenerate Overview API] Job does not exist, creating new job');
       const processUrl = `${pdfProcessorUrl}/api/process-pdf`;
 
       const processResponse = await fetch(processUrl, {
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
       if (!processResponse.ok) {
         const errorText = await processResponse.text();
-        console.error('[Regenerate Summary API] PDF processor process error:', errorText);
+        console.error('[Regenerate Overview API] PDF processor process error:', errorText);
         return NextResponse.json(
           { error: 'Failed to create processing job', details: errorText },
           { status: processResponse.status }
@@ -117,17 +117,17 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       result = await processResponse.json();
     }
 
-    console.log('[Regenerate Summary API] PDF processor response:', result);
+    console.log('[Regenerate Overview API] PDF processor response:', result);
 
     return NextResponse.json({
-      message: 'Summary regeneration triggered successfully',
+      message: 'Overview regeneration triggered successfully',
       status: 'pending',
       pdfProcessorResponse: result,
     });
   } catch (error: any) {
-    console.error('[Regenerate Summary API] Error:', error);
+    console.error('[Regenerate Overview API] Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to regenerate summary' },
+      { error: error.message || 'Failed to regenerate overview' },
       { status: 500 }
     );
   }

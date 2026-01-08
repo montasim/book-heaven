@@ -85,6 +85,9 @@ export interface Book {
   aiSummary?: string | null
   aiSummaryGeneratedAt?: string | null
   aiSummaryStatus?: string | null
+  aiOverview?: string | null
+  aiOverviewGeneratedAt?: string | null
+  aiOverviewStatus?: string | null
   suggestedQuestions?: Array<{
     id: string
     question: string

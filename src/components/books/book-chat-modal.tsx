@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { MDXViewer } from '@/components/ui/mdx-viewer'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,7 +29,7 @@ interface BookChatModalProps {
 /**
  * Chat modal for asking AI questions about a book
  * Displays conversation history and allows follow-up questions
- * Shows progress indicator while book content is being extracted
+ * Shows user guide when no messages are present
  */
 export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) {
   const { user } = useAuth()
@@ -38,7 +39,6 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
   const [conversationHistory, setConversationHistory] = useState<any[]>([])
   const [extractionStatus, setExtractionStatus] = useState<ExtractionStatus>('checking')
   const [extractionProgress, setExtractionProgress] = useState<string>('')
-  const [suggestedQuestions, setSuggestedQuestions] = useState<Array<{id: string, question: string}>>([])
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -48,77 +48,6 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, 100)
   }, [])
-
-  const handleInitialChat = useCallback(async () => {
-    if (!user) return
-
-    setIsLoading(true)
-
-    try {
-      const response = await fetch(`/api/books/${book.id}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          generatePrefilled: true
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to start chat')
-      }
-
-      const data = await response.json()
-
-      // Get the actual user query that was generated
-      const userQuery = data.conversationHistory[0]?.content || 'Tell me about this book...'
-
-      setMessages([
-        {
-          role: 'user',
-          content: userQuery,
-          timestamp: new Date()
-        },
-        {
-          role: 'assistant',
-          content: data.response,
-          timestamp: new Date()
-        }
-      ])
-
-      setConversationHistory(data.conversationHistory)
-      scrollToBottom()
-    } catch (error: any) {
-      console.error('Error starting chat:', error)
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to start chat. Please try again.',
-        variant: 'destructive'
-      })
-      setMessages([
-        {
-          role: 'assistant',
-          content: 'Sorry, I couldn\'t start the chat. Please make sure you have access to this book and try again.',
-          timestamp: new Date()
-        }
-      ])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [user, book.id, scrollToBottom])
-
-  const fetchSuggestedQuestions = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/books/${book.id}/suggested-questions`)
-      const data = await response.json()
-
-      if (data.questions && data.questions.length > 0) {
-        setSuggestedQuestions(data.questions)
-      }
-    } catch (error) {
-      console.error('Failed to fetch suggested questions:', error)
-    }
-  }, [book.id])
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -131,6 +60,8 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       // Reset state when closing
       setExtractionStatus('checking')
       setExtractionProgress('')
+      setMessages([])
+      setConversationHistory([])
       return
     }
 
@@ -141,7 +72,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       return
     }
 
-    // Check extraction status
+    // Check extraction status and fetch reference content
     const checkExtractionStatus = async () => {
       try {
         const response = await fetch(`/api/books/${book.id}/extract-content`)
@@ -164,11 +95,6 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
                 setExtractionStatus('ready')
                 setExtractionProgress(`Book content ready! (${pollData.wordCount?.toLocaleString()} words, ${pollData.pageCount} pages)`)
                 clearInterval(pollInterval)
-
-                // Auto-start chat when ready
-                if (messages.length === 0 && user) {
-                  handleInitialChat()
-                }
               }
             } catch (error) {
               console.error('Error polling extraction status:', error)
@@ -189,21 +115,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
     }
 
     checkExtractionStatus()
-  }, [open, book.id, book.type, handleInitialChat, messages.length, user])
-
-  // Generate pre-filled query on first open (only when content is ready)
-  useEffect(() => {
-    if (open && messages.length === 0 && user && extractionStatus === 'ready') {
-      handleInitialChat()
-    }
-  }, [open, extractionStatus, user, messages.length, handleInitialChat])
-
-  // Fetch suggested questions when extraction is ready
-  useEffect(() => {
-    if (open && extractionStatus === 'ready') {
-      fetchSuggestedQuestions()
-    }
-  }, [open, extractionStatus, fetchSuggestedQuestions])
+  }, [open, book.id, book.type])
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return
@@ -263,15 +175,6 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       e.preventDefault()
       handleSendMessage()
     }
-  }
-
-  const handleQuestionClick = (question: string) => {
-    setInputValue(question)
-    // Focus the input after setting the value
-    setTimeout(() => {
-      const input = document.querySelector('input[type="text"]') as HTMLInputElement
-      input?.focus()
-    }, 100)
   }
 
   if (!user) {
@@ -339,86 +242,92 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
               </div>
             )}
 
-            {/* Suggested Questions */}
-            {extractionStatus === 'ready' && suggestedQuestions.length > 0 && messages.length === 0 && !isLoading && (
-              <div className="mb-6">
-                <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Suggested questions
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {suggestedQuestions.slice(0, 6).map((sq) => (
-                    <Button
-                      key={sq.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuestionClick(sq.question)}
-                      className="text-left justify-start h-auto py-2 px-3 text-xs"
-                    >
-                      {sq.question}
-                    </Button>
-                  ))}
+            {/* User Guide */}
+            {messages.length === 0 && extractionStatus === 'ready' && (
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-sm">How to use AI Chat</span>
+                </div>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>Ask me anything about this book! Here are some examples:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>What are the main themes of this book?</li>
+                    <li>Explain the key concepts from chapter 3</li>
+                    <li>Who are the main characters and their relationships?</li>
+                    <li>What did the author say about [topic]?</li>
+                    <li>Summarize the book's conclusion</li>
+                  </ul>
+                  <p className="text-xs mt-3">AI answers based on this book&apos;s content only. Responses may not be 100% accurate.</p>
                 </div>
               </div>
             )}
 
-            {messages.length === 0 && isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-4">
-                  <div className="relative">
-                    <Bot className="h-12 w-12 text-muted-foreground mx-auto" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-                    </div>
+            {/* Messages */}
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex gap-3",
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                )}
+              >
+                {message.role === 'assistant' && (
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4" />
                   </div>
-                  <p className="text-muted-foreground">AI is analyzing the book...</p>
-                </div>
-              </div>
-            ) : (
-              messages.map((message, index) => (
+                )}
                 <div
-                  key={index}
                   className={cn(
-                    "flex gap-3",
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                    "rounded-lg px-4 py-3 max-w-[80%]",
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
                   )}
                 >
-                  {message.role === 'assistant' && (
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4" />
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      "rounded-lg px-4 py-3 max-w-[80%]",
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    )}
-                  >
+                  {message.role === 'assistant' ? (
+                    <MDXViewer
+                      content={message.content}
+                      className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none
+                        prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-4
+                        prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+                        prose-p:mb-2 prose-p:last:mb-0
+                        prose-ul:mb-3 prose-ml-6 prose-list-disc prose-ul:list-outside
+                        prose-ol:mb-3 prose-ml-6 prose-list-decimal prose-ol:list-outside
+                        prose-li:my-1 prose-li:marker:text-muted-foreground
+                        prose-strong:font-semibold
+                        prose-em:italic
+                        prose-code:bg-muted-foreground/20 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                        prose-pre:bg-muted-foreground/10 prose-pre:p-2 prose-pre:rounded prose-pre:text-sm prose-pre:overflow-x-auto
+                        prose-blockquote:border-l-4 prose-blockquote:border-muted-foreground/30 prose-blockquote:pl-3 prose-blockquote:italic
+                        prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                      "
+                    />
+                  ) : (
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </p>
-                    <p className={cn(
-                      "text-xs mt-1 opacity-70",
-                      message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                    )}>
-                      {new Date(message.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  {message.role === 'user' && (
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-semibold text-primary-foreground">
-                        {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                      </span>
-                    </div>
                   )}
+                  <p className={cn(
+                    "text-xs mt-1 opacity-70",
+                    message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                  )}>
+                    {new Date(message.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
                 </div>
-              ))
-            )}
+                {message.role === 'user' && (
+                  <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-semibold text-primary-foreground">
+                      {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+
             {isLoading && messages.length > 0 && (
               <div className="flex gap-3">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
