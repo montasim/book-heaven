@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatWithUnifiedProvider } from '@/lib/ai/unified-chat';
 import { generatePreFilledQuery } from '@/lib/ai/query-generator';
-import { saveChatMessage, getNextMessageIndex } from '@/lib/lms/repositories/book-chat.repository';
+import { saveChatMessage, getNextMessageIndex, getUserChatSessions, getChatSessionMessages } from '@/lib/lms/repositories/book-chat.repository';
 import { getSession } from '@/lib/auth/session';
 import { findUserById } from '@/lib/user/repositories/user.repository';
 import { randomBytes } from 'node:crypto';
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
 /**
  * GET /api/books/[id]/chat
- * Returns chat availability info
+ * Returns chat availability info and recent chat history for authenticated user
  */
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
@@ -331,6 +331,30 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const isEbookOrAudio = book.type === 'EBOOK' || book.type === 'AUDIO';
     const hasFile = !!(book.fileUrl || book.directFileUrl);
 
+    // Fetch user's recent chat sessions for this book (get most recent session)
+    let recentMessages: any[] = [];
+    let recentSessionId: string | null = null;
+
+    try {
+      const sessions = await getUserChatSessions(bookId, session.userId);
+
+      if (sessions.length > 0) {
+        // Get the most recent session
+        recentSessionId = sessions[0].sessionId;
+        const messages = await getChatSessionMessages(bookId, recentSessionId);
+
+        // Format messages for frontend
+        recentMessages = messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.createdAt,
+        }));
+      }
+    } catch (error) {
+      console.error('[Chat API] Error fetching chat history:', error);
+      // Continue without chat history
+    }
+
     return NextResponse.json({
       available: isEbookOrAudio && hasFile && hasAccess,
       bookType: book.type,
@@ -339,7 +363,10 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       reason: !isEbookOrAudio ? 'Chat is only available for ebooks and audiobooks' :
               !hasFile ? 'Book file is not available' :
               !hasAccess ? 'You do not have access to this book' :
-              null
+              null,
+      // Chat history
+      sessionId: recentSessionId,
+      conversationHistory: recentMessages,
     });
 
   } catch (error: any) {

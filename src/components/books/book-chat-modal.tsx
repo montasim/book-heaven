@@ -37,6 +37,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [conversationHistory, setConversationHistory] = useState<any[]>([])
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const [extractionStatus, setExtractionStatus] = useState<ExtractionStatus>('checking')
   const [extractionProgress, setExtractionProgress] = useState<string>('')
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -54,7 +55,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Check extraction status when modal opens
+  // Check extraction status when modal opens and fetch chat history
   useEffect(() => {
     if (!open) {
       // Reset state when closing
@@ -62,6 +63,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       setExtractionProgress('')
       setMessages([])
       setConversationHistory([])
+      setSessionId(null)
       return
     }
 
@@ -72,15 +74,33 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       return
     }
 
-    // Check extraction status and fetch reference content
-    const checkExtractionStatus = async () => {
+    // Fetch chat history and check extraction status
+    const initializeChat = async () => {
       try {
-        const response = await fetch(`/api/books/${book.id}/extract-content`)
-        const data = await response.json()
+        // Fetch chat history in parallel with extraction status check
+        const [chatResponse, extractResponse] = await Promise.all([
+          fetch(`/api/books/${book.id}/chat`),
+          fetch(`/api/books/${book.id}/extract-content`)
+        ])
 
-        if (data.hasContent) {
+        const chatData = await chatResponse.json()
+        const extractData = await extractResponse.json()
+
+        // Load chat history if available
+        if (chatData.sessionId && chatData.conversationHistory && chatData.conversationHistory.length > 0) {
+          setSessionId(chatData.sessionId)
+          setConversationHistory(chatData.conversationHistory)
+          setMessages(chatData.conversationHistory.map((m: any) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.timestamp)
+          })))
+        }
+
+        // Check extraction status
+        if (extractData.hasContent) {
           setExtractionStatus('ready')
-          setExtractionProgress(`Book content ready (${data.wordCount?.toLocaleString()} words, ${data.pageCount} pages)`)
+          setExtractionProgress(`Book content ready (${extractData.wordCount?.toLocaleString()} words, ${extractData.pageCount} pages)`)
         } else {
           setExtractionStatus('processing')
           setExtractionProgress('Preparing book content for AI chat...')
@@ -108,13 +128,13 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
           return () => clearInterval(pollInterval)
         }
       } catch (error) {
-        console.error('Error checking extraction status:', error)
+        console.error('Error initializing chat:', error)
         setExtractionStatus('failed')
-        setExtractionProgress('Unable to check book content status.')
+        setExtractionProgress('Unable to initialize chat.')
       }
     }
 
-    checkExtractionStatus()
+    initializeChat()
   }, [open, book.id, book.type])
 
   const handleSendMessage = async () => {
@@ -137,7 +157,8 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage.content,
-          conversationHistory
+          conversationHistory,
+          sessionId
         })
       })
 
@@ -147,6 +168,11 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       }
 
       const data = await response.json()
+
+      // Update sessionId if it's a new session
+      if (data.sessionId && !sessionId) {
+        setSessionId(data.sessionId)
+      }
 
       setMessages(prev => [...prev, {
         role: 'assistant',
