@@ -1,5 +1,5 @@
 import { generateEmbedding } from './gemini-embeddings'
-import { searchSimilarChunks, hasBookEmbeddings } from '@/lib/lms/repositories/book-embedding.repository'
+import { searchSimilarChunks, hasBookEmbeddings, getBookChunkCount } from '@/lib/lms/repositories/book-embedding.repository'
 import { getBookWithExtractedContent } from '@/lib/lms/repositories/book.repository'
 import { config } from '@/config'
 
@@ -29,6 +29,49 @@ export interface ChatResponse {
     completionTokens: number
     totalTokens: number
   }
+}
+
+/**
+ * Filter chunks by similarity threshold
+ * Only includes chunks that meet minimum relevance criteria
+ */
+function filterChunksByRelevance(
+  chunks: Array<{ chunkText: string; pageNumber: number | null; similarity: number }>,
+  minSimilarity: number = 0.3
+): Array<{ chunkText: string; pageNumber: number | null; similarity: number }> {
+  return chunks.filter(chunk => chunk.similarity >= minSimilarity)
+}
+
+/**
+ * Calculate optimal chunk limit based on available chunks
+ * Uses adaptive strategy to avoid always using 10 chunks
+ */
+function calculateOptimalChunkLimit(availableChunks: number, chunksLength: number): number {
+  // Get total number of chunks available for this book
+  const totalChunks = chunksLength
+
+  // Adaptive strategy:
+  // - For books with few chunks: use most relevant ones
+  // - For books with many chunks: use percentage but cap at reasonable number
+  let optimalLimit: number
+
+  if (totalChunks <= 10) {
+    // Small books: use most chunks (all if very relevant)
+    optimalLimit = Math.min(availableChunks, totalChunks)
+  } else if (totalChunks <= 30) {
+    // Medium-small books: use up to 40% of chunks, max 8
+    optimalLimit = Math.min(availableChunks, Math.max(5, Math.ceil(totalChunks * 0.4)), 8)
+  } else if (totalChunks <= 100) {
+    // Medium books: use up to 25% of chunks, max 10
+    optimalLimit = Math.min(availableChunks, Math.max(6, Math.ceil(totalChunks * 0.25)), 10)
+  } else {
+    // Large books: use up to 15% of chunks, max 15
+    optimalLimit = Math.min(availableChunks, Math.max(8, Math.ceil(totalChunks * 0.15)), 15)
+  }
+
+  console.log(`[Unified Chat] Book has ${totalChunks} total chunks, using optimal limit: ${optimalLimit}`)
+
+  return optimalLimit
 }
 
 /**
@@ -248,9 +291,19 @@ export async function chatWithUnifiedProvider(request: ChatRequest): Promise<Cha
       const queryEmbedding = await generateEmbedding(lastUserMessage.content)
       console.log('[Unified Chat] Generated query embedding, dimension:', queryEmbedding.length)
 
-      // Search for similar chunks (get top 10 most relevant chunks)
-      const similarChunks = await searchSimilarChunks(request.bookId, queryEmbedding, 10)
-      console.log('[Unified Chat] Found', similarChunks.length, 'relevant chunks')
+      // Get total chunk count for this book to calculate optimal limit
+      const totalChunks = await getBookChunkCount(request.bookId)
+      console.log('[Unified Chat] Total chunks available for book:', totalChunks)
+
+      // Calculate optimal chunk limit based on book size
+      const optimalLimit = calculateOptimalChunkLimit(totalChunks, totalChunks)
+
+      // Minimum similarity threshold to filter out irrelevant chunks
+      const minSimilarity = 0.25
+
+      // Search for similar chunks with adaptive limit and similarity threshold
+      const similarChunks = await searchSimilarChunks(request.bookId, queryEmbedding, optimalLimit, minSimilarity)
+      console.log('[Unified Chat] Found', similarChunks.length, 'relevant chunks (limit:', optimalLimit, ', minSimilarity:', minSimilarity + ')')
       console.log('[Unified Chat] Similarity scores:', similarChunks.map(c => c.similarity.toFixed(3)).join(', '))
 
       if (similarChunks.length > 0) {
@@ -269,7 +322,7 @@ export async function chatWithUnifiedProvider(request: ChatRequest): Promise<Cha
           // Format chunks for AI context
           bookContent = formatChunksForAI(similarChunks)
           method = 'embedding'
-          console.log('[Unified Chat] Using', similarChunks.length, 'chunks as context')
+          console.log('[Unified Chat] Using', similarChunks.length, 'chunks as context (avg similarity:', (similarChunks.reduce((sum, c) => sum + c.similarity, 0) / similarChunks.length).toFixed(3) + ')')
         }
       } else {
         console.log('[Unified Chat] No chunks found, falling back to full content')
