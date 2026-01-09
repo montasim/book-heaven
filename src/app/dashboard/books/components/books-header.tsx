@@ -38,20 +38,35 @@ export function BooksHeader() {
                   Manage books in your library system
               </p>
           </div>
-          <div className='flex gap-2'>
+          <div className='flex flex-wrap gap-2'>
               <Button className='space-x-1' onClick={handleAddBook}>
-                  <span>Add Book</span> <Plus size={18} />
+                  <span className='hidden sm:inline'>Add Book</span> <Plus size={18} />
               </Button>
-              <Button className='space-x-1' onClick={() => setBulkImportOpen(true)} variant='outline'>
+              <Button onClick={() => setBulkImportOpen(true)} variant='outline' size='icon' className='sm:hidden'>
+                  <Upload className="h-4 w-4" />
+              </Button>
+              <Button className='space-x-1 hidden sm:flex' onClick={() => setBulkImportOpen(true)} variant='outline'>
                   <Upload className="h-4 w-4 mr-2" />
                   Bulk Import
               </Button>
-              <Button className='space-x-1' onClick={() => refreshBooks?.()} variant='outline'>
+              <Button onClick={() => refreshBooks?.()} variant='outline' size='icon' className='sm:hidden'>
+                  <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button className='space-x-1 hidden sm:flex' onClick={() => refreshBooks?.()} variant='outline'>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
               </Button>
               <Button
-                  className='space-x-1'
+                  onClick={handleInvalidateCache}
+                  variant='outline'
+                  disabled={isInvalidating}
+                  size='icon'
+                  className='sm:hidden'
+              >
+                  <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button
+                  className='space-x-1 hidden sm:flex'
                   onClick={handleInvalidateCache}
                   variant='outline'
                   disabled={isInvalidating}

@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, HelpCircle, Plus, Trash2, Save, Pencil, GripVertical, AlertTriangle } from 'lucide-react'
+import { Crown, HelpCircle, Plus, Trash2, Save, Pencil, GripVertical, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { ROUTES } from '@/lib/routes/client-routes'
+import { cn } from '@/lib/utils'
 
 // Pricing Types
 interface PricingFeature {
@@ -76,6 +77,50 @@ function AdminContentPageWrapper() {
   // Dialog State
   const [pricingSeedDialogOpen, setPricingSeedDialogOpen] = useState(false)
   const [faqSeedDialogOpen, setFaqSeedDialogOpen] = useState(false)
+
+  // Expand/Collapse State
+  const [expandedPricingCards, setExpandedPricingCards] = useState<Set<string>>(new Set())
+  const [expandedFaqCards, setExpandedFaqCards] = useState<Set<number>>(new Set())
+
+  const togglePricingCard = (plan: string) => {
+    setExpandedPricingCards(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(plan)) {
+        newSet.delete(plan)
+      } else {
+        newSet.add(plan)
+      }
+      return newSet
+    })
+  }
+
+  const togglePricingAll = () => {
+    if (expandedPricingCards.size === editedTiers.length) {
+      setExpandedPricingCards(new Set())
+    } else {
+      setExpandedPricingCards(new Set(editedTiers.map(t => t.plan)))
+    }
+  }
+
+  const toggleFaqCard = (index: number) => {
+    setExpandedFaqCards(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) {
+        newSet.delete(index)
+      } else {
+        newSet.add(index)
+      }
+      return newSet
+    })
+  }
+
+  const toggleFaqAll = () => {
+    if (expandedFaqCards.size === faqs.length) {
+      setExpandedFaqCards(new Set())
+    } else {
+      setExpandedFaqCards(new Set(Array.from({ length: faqs.length }, (_, i) => i)))
+    }
+  }
 
   useEffect(() => {
     fetchPricingTiers()
@@ -281,7 +326,7 @@ function AdminContentPageWrapper() {
   }
 
   return (
-    <div className="pb-safe-bottom">
+    <>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Pricing Page Content</h1>
@@ -291,7 +336,8 @@ function AdminContentPageWrapper() {
         </div>
       </div>
 
-      <Tabs value={activeTab} className="space-y-4">
+      <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+        <Tabs value={activeTab} className="space-y-4">
         <div className="w-full overflow-x-auto">
           <div className="flex items-center justify-between gap-4">
             <TabsList>
@@ -304,20 +350,28 @@ function AdminContentPageWrapper() {
             </TabsList>
             <div className="flex gap-2 flex-shrink-0">
               {activeTab === 'pricing' && (
-                <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline">
-                  Seed Pricing
-                </Button>
+                <>
+                  <Button onClick={togglePricingAll} variant="outline" size="sm">
+                    {expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All'}
+                  </Button>
+                  <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline" size="sm">
+                    Seed Pricing
+                  </Button>
+                </>
               )}
               {activeTab === 'faq' && (
                 <>
-                  <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline">
+                  <Button onClick={toggleFaqAll} variant="outline" size="sm">
+                    {expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All'}
+                  </Button>
+                  <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline" size="sm">
                     Seed FAQ
                   </Button>
-                  <Button onClick={addFAQ} variant="outline">
+                  <Button onClick={addFAQ} variant="outline" size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Add FAQ
                   </Button>
-                  <Button onClick={handleSaveFAQs} disabled={saving}>
+                  <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
                     <Save className="h-4 w-4 mr-2" />
                     Save All
                   </Button>
@@ -378,9 +432,23 @@ function AdminContentPageWrapper() {
               <Card key={tier.plan}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{tier.name}</CardTitle>
-                      <CardDescription>{tier.plan}</CardDescription>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => togglePricingCard(tier.plan)}
+                      >
+                        {expandedPricingCards.has(tier.plan) ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <div>
+                        <CardTitle>{tier.name}</CardTitle>
+                        <CardDescription>{tier.plan}</CardDescription>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {editingPlan === tier.plan ? (
@@ -408,7 +476,12 @@ function AdminContentPageWrapper() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setEditingPlan(tier.plan)}
+                          onClick={() => {
+                            setEditingPlan(tier.plan)
+                            if (!expandedPricingCards.has(tier.plan)) {
+                              setExpandedPricingCards(prev => new Set([...prev, tier.plan]))
+                            }
+                          }}
                         >
                           <Pencil className="h-4 w-4 mr-1" />
                           Edit
@@ -417,6 +490,7 @@ function AdminContentPageWrapper() {
                     </div>
                   </div>
                 </CardHeader>
+                {expandedPricingCards.has(tier.plan) && (
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -543,6 +617,7 @@ function AdminContentPageWrapper() {
                     </div>
                   </div>
                 </CardContent>
+                )}
               </Card>
             ))
           )}
@@ -606,8 +681,21 @@ function AdminContentPageWrapper() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => toggleFaqCard(index)}
+                        >
+                          {expandedFaqCards.has(index) ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
                         <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
                         <CardDescription>#{index + 1}</CardDescription>
+                        <span className="text-sm font-medium">{faq.question || 'Untitled FAQ'}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
@@ -636,6 +724,7 @@ function AdminContentPageWrapper() {
                       </div>
                     </div>
                   </CardHeader>
+                  {expandedFaqCards.has(index) && (
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label>Category</Label>
@@ -681,12 +770,14 @@ function AdminContentPageWrapper() {
                       </div>
                     </div>
                   </CardContent>
+                  )}
                 </Card>
               ))}
             </div>
           )}
         </TabsContent>
       </Tabs>
+      </div>
 
       {/* Pricing Seed Confirmation Dialog */}
       <AlertDialog open={pricingSeedDialogOpen} onOpenChange={setPricingSeedDialogOpen}>
@@ -719,7 +810,7 @@ function AdminContentPageWrapper() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }
 
@@ -727,21 +818,17 @@ function AdminContentPageWrapper() {
 export default function AdminContentPage() {
   return (
     <Suspense fallback={
-      <div className="pb-safe-bottom">
+      <>
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-2">
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-96" />
           </div>
         </div>
-        <div className="w-full overflow-x-auto">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-10 w-32" />
-          </div>
+        <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+          <Skeleton className="h-64 w-full" />
         </div>
-        <Skeleton className="h-64 w-full" />
-      </div>
+      </>
     }>
       <AdminContentPageWrapper />
     </Suspense>
