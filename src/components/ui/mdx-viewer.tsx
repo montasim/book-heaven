@@ -10,7 +10,7 @@ interface MDXViewerProps {
 
 export function MDXViewer({ content, className = '' }: MDXViewerProps) {
   if (!content) {
-    return <div className={`text-muted-foreground ${className}`}>No content to display</div>;
+    return null;
   }
 
   return (

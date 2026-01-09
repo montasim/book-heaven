@@ -3,6 +3,12 @@ import { searchSimilarChunks, hasBookEmbeddings, getBookChunkCount } from '@/lib
 import { getBookWithExtractedContent } from '@/lib/lms/repositories/book.repository'
 import { config } from '@/config'
 
+export interface StreamingChatOptions {
+  onChunk?: (chunk: string) => void
+  onDone?: (fullResponse: string) => void
+  onError?: (error: Error) => void
+}
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -438,3 +444,470 @@ ${bookContent}` : '**BOOK CONTENT:** [No content available]'}
     throw error
   }
 }
+
+/**
+ * Generate streaming chat response using Zhipu AI (GLM-4.7)
+ */
+async function* generateZhipuResponseStream(
+  messages: ChatMessage[],
+  options: StreamingChatOptions = {}
+): AsyncGenerator<string, { usage: any; model: string }, unknown> {
+  const { generateZhipuToken } = await import('./zhipu')
+  const apiKey = config.zhipuAiApiKey
+
+  if (!apiKey) {
+    throw new Error('ZHIPU_AI_API_KEY is not configured')
+  }
+
+  const token = await generateZhipuToken(apiKey)
+  const model = config.zhipuAiModel
+
+  const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      temperature: 0.3,
+      top_p: 0.7,
+      max_tokens: 8000,
+      stream: true
+    })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[Zhipu Chat Stream] API Error Response:', errorText)
+
+    try {
+      const errorData = JSON.parse(errorText)
+      const errorCode = errorData.error?.code
+      const errorMessage = errorData.error?.message
+
+      if (errorCode === '4006' ||
+          errorMessage?.includes('quota') ||
+          errorMessage?.includes('limit') ||
+          errorMessage?.includes('rate limit') ||
+          response.status === 429) {
+        const fallbackError = new Error(`Zhipu AI quota/limit exceeded: ${errorMessage}`)
+        ;(fallbackError as any).code = 'PROVIDER_LIMIT_EXCEEDED'
+        throw fallbackError
+      }
+
+      throw new Error(`Zhipu AI API error (${errorCode || response.status}): ${errorMessage || errorText}`)
+    } catch (parseError: any) {
+      if ((parseError as any).code === 'PROVIDER_LIMIT_EXCEEDED') {
+        throw parseError
+      }
+      throw new Error(`Zhipu AI API error (${response.status}): ${errorText}`)
+    }
+  }
+
+  // Parse the streaming response
+  const reader = response.body?.getReader()
+  const decoder = new TextDecoder()
+
+  if (!reader) {
+    throw new Error('No response body')
+  }
+
+  let buffer = ''
+  let usage: any = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data:')) continue
+
+        const data = trimmed.slice(5).trim()
+
+        if (data === '[DONE]') {
+          return { usage, model }
+        }
+
+        try {
+          const parsed = JSON.parse(data)
+          const chunk = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.message?.reasoning_content || ''
+
+          if (chunk) {
+            options.onChunk?.(chunk)
+            yield chunk
+          }
+
+          // Update usage from streaming chunks
+          if (parsed.usage) {
+            usage = {
+              promptTokens: parsed.usage.prompt_tokens || usage.promptTokens,
+              completionTokens: parsed.usage.completion_tokens || usage.completionTokens,
+              totalTokens: parsed.usage.total_tokens || usage.totalTokens,
+            }
+          }
+        } catch (e) {
+          // Skip invalid JSON
+          console.debug('[Zhipu Chat Stream] Failed to parse chunk:', data)
+        }
+      }
+    }
+  } catch (error) {
+    options.onError?.(error as Error)
+    throw error
+  }
+
+  return { usage, model }
+}
+
+/**
+ * Generate streaming chat response using Gemini AI
+ */
+async function* generateGeminiResponseStream(
+  messages: ChatMessage[],
+  options: StreamingChatOptions = {}
+): AsyncGenerator<string, { usage: any; model: string }, unknown> {
+  const apiKey = config.geminiApiKey
+
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured')
+  }
+
+  const model = config.geminiChatModel
+
+  // Convert messages to Gemini format
+  const systemMessage = messages.find(m => m.role === 'system')
+  const chatMessages = messages.filter(m => m.role !== 'system')
+
+  let contents: any[] = []
+
+  if (systemMessage) {
+    contents.push({
+      role: 'user',
+      parts: [{ text: `${systemMessage.content}\n\n${chatMessages[0]?.content || ''}` }]
+    })
+    contents = contents.concat(
+      chatMessages.slice(1).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }))
+    )
+  } else {
+    contents = chatMessages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.3,
+          topP: 0.8,
+          maxOutputTokens: 8000,
+        },
+      }),
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[Gemini Chat Stream] API Error Response:', errorText)
+
+    try {
+      const errorData = JSON.parse(errorText)
+      if (errorData.error?.code === 429 ||
+          errorData.error?.message?.includes('quota') ||
+          errorData.error?.message?.includes('limit')) {
+        const fallbackError = new Error(`Gemini quota/limit exceeded: ${errorData.error.message}`)
+        ;(fallbackError as any).code = 'PROVIDER_LIMIT_EXCEEDED'
+        throw fallbackError
+      }
+    } catch {}
+
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`)
+  }
+
+  // Parse the SSE response
+  const reader = response.body?.getReader()
+  const decoder = new TextDecoder()
+
+  if (!reader) {
+    throw new Error('No response body')
+  }
+
+  let buffer = ''
+  let usage: any = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed.startsWith('data:')) continue
+
+        const data = trimmed.slice(5).trim()
+
+        try {
+          const parsed = JSON.parse(data)
+          const chunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+          if (chunk) {
+            options.onChunk?.(chunk)
+            yield chunk
+          }
+
+          // Update usage from streaming chunks
+          if (parsed.usageMetadata) {
+            usage = {
+              promptTokens: parsed.usageMetadata.promptTokenCount || usage.promptTokens,
+              completionTokens: parsed.usageMetadata.candidatesTokenCount || usage.completionTokens,
+              totalTokens: parsed.usageMetadata.totalTokenCount || usage.totalTokens,
+            }
+          }
+        } catch (e) {
+          // Skip invalid JSON
+          console.debug('[Gemini Chat Stream] Failed to parse chunk:', data)
+        }
+      }
+    }
+  } catch (error) {
+    options.onError?.(error as Error)
+    throw error
+  }
+
+  return { usage, model }
+}
+
+/**
+ * Build system prompt for chat
+ */
+function buildSystemPrompt(request: ChatRequest, bookContent: string): string {
+  const authors = request.authors.join(', ')
+  const categories = request.categories.join(', ')
+
+  return `You are a knowledgeable AI assistant for a digital library platform.
+
+Your task is to answer questions about the book "${request.bookName}" by ${authors} (${categories}).
+
+**CRITICAL LANGUAGE RULE - MANDATORY:**
+**YOU MUST RESPOND IN THE EXACT SAME LANGUAGE AS THE USER'S QUESTION!**
+
+- If user asks in Bengali (বাংলা) → Respond ONLY in Bengali (বাংলা)
+- If user asks in English → Respond ONLY in English
+- Check the LAST user message language FIRST before writing your response
+- This is NOT optional - it is a mandatory requirement
+
+**EXAMPLE:**
+- User asks: "সানজু কোন রাজ্যের অধিবাসী ছিলেন?" → You MUST answer in Bengali
+- User asks: "Which state was Sanju from?" → You MUST answer in English
+
+**CRITICAL RULES:**
+1. Base ALL answers ONLY on the book content provided below
+2. If information is not found in the book content, explicitly say so IN THE USER'S LANGUAGE
+3. Provide specific examples and quotes from the book when possible
+4. Reference page numbers when citing specific content
+5. Be concise yet comprehensive
+6. Maintain a conversational, helpful tone
+7. If asked about topics not covered in the book, politely redirect to what IS available (IN USER'S LANGUAGE)
+8. **Always match your response language to the user's question language - THIS IS MANDATORY**
+
+${bookContent ? `**BOOK CONTENT TO USE:**
+${bookContent}` : '**BOOK CONTENT:** [No content available]'}
+
+**BOOK METADATA:**
+- Title: ${request.bookName}
+- Authors: ${authors}
+- Categories: ${categories}
+- Type: ${request.bookType}
+
+**IMPORTANT:** Before responding, identify the user's question language and respond in that same language. This is your most important instruction.`
+}
+
+/**
+ * Main streaming chat function with automatic provider fallback
+ * Returns an async generator that yields chunks of the response
+ */
+export async function* chatWithUnifiedProviderStream(
+  request: ChatRequest,
+  options: StreamingChatOptions = {}
+): AsyncGenerator<
+  { chunk: string; provider: 'zhipu' | 'gemini' },
+  { response: string; model: string; provider: 'zhipu' | 'gemini'; method: 'embedding' | 'full-content' | 'fallback'; usage: any },
+  unknown
+> {
+  console.log('[Unified Chat Stream] Starting chat for book:', request.bookId)
+
+  // Get the last user message for embedding generation
+  const lastUserMessage = request.messages
+    .filter(m => m.role === 'user')
+    .pop()
+
+  if (!lastUserMessage) {
+    throw new Error('No user message found in conversation history')
+  }
+
+  // Check if embeddings exist for this book
+  const hasEmbeddings = await hasBookEmbeddings(request.bookId)
+
+  let bookContent = ''
+  let method: 'embedding' | 'full-content' | 'fallback' = 'fallback'
+
+  if (hasEmbeddings) {
+    console.log('[Unified Chat Stream] Embeddings found, using RAG approach')
+    try {
+      // Generate embedding for the user's query
+      const queryEmbedding = await generateEmbedding(lastUserMessage.content)
+      console.log('[Unified Chat Stream] Generated query embedding, dimension:', queryEmbedding.length)
+
+      // Get total chunk count for this book to calculate optimal limit
+      const totalChunks = await getBookChunkCount(request.bookId)
+      console.log('[Unified Chat Stream] Total chunks available for book:', totalChunks)
+
+      // Calculate optimal chunk limit based on book size
+      const optimalLimit = calculateOptimalChunkLimit(totalChunks, totalChunks)
+
+      // Minimum similarity threshold to filter out irrelevant chunks
+      const minSimilarity = 0.25
+
+      // Search for similar chunks with adaptive limit and similarity threshold
+      const similarChunks = await searchSimilarChunks(request.bookId, queryEmbedding, optimalLimit, minSimilarity)
+      console.log('[Unified Chat Stream] Found', similarChunks.length, 'relevant chunks')
+      console.log('[Unified Chat Stream] Similarity scores:', similarChunks.map(c => c.similarity.toFixed(3)).join(', '))
+
+      if (similarChunks.length > 0) {
+        const totalContentLength = similarChunks.reduce((sum, c) => sum + (c.chunkText?.length || 0), 0)
+        console.log('[Unified Chat Stream] Total content length across all chunks:', totalContentLength)
+
+        if (totalContentLength === 0) {
+          console.log('[Unified Chat Stream] Chunks are empty, falling back to full content')
+          const bookWithContent = await getBookWithExtractedContent(request.bookId)
+          if (bookWithContent?.extractedContent) {
+            bookContent = bookWithContent.extractedContent.slice(0, 50000)
+            method = 'full-content'
+          }
+        } else {
+          // Format chunks for AI context
+          bookContent = formatChunksForAI(similarChunks)
+          method = 'embedding'
+          console.log('[Unified Chat Stream] Using', similarChunks.length, 'chunks as context (avg similarity:', (similarChunks.reduce((sum, c) => sum + c.similarity, 0) / similarChunks.length).toFixed(3) + ')')
+        }
+      } else {
+        console.log('[Unified Chat Stream] No chunks found, falling back to full content')
+        const bookWithContent = await getBookWithExtractedContent(request.bookId)
+        if (bookWithContent?.extractedContent) {
+          bookContent = bookWithContent.extractedContent.slice(0, 50000)
+          method = 'full-content'
+        }
+      }
+    } catch (error) {
+      console.error('[Unified Chat Stream] Embedding search failed:', error)
+      const bookWithContent = await getBookWithExtractedContent(request.bookId)
+      if (bookWithContent?.extractedContent) {
+        bookContent = bookWithContent.extractedContent.slice(0, 50000)
+        method = 'full-content'
+      }
+    }
+  } else {
+    console.log('[Unified Chat Stream] No embeddings found, using full content')
+    const bookWithContent = await getBookWithExtractedContent(request.bookId)
+    if (bookWithContent?.extractedContent) {
+      bookContent = bookWithContent.extractedContent.slice(0, 50000)
+      method = 'full-content'
+    }
+  }
+
+  // Build system prompt
+  const systemPrompt = buildSystemPrompt(request, bookContent)
+
+  // Prepare messages for API
+  const apiMessages: ChatMessage[] = [
+    { role: 'system', content: systemPrompt },
+    ...request.messages
+  ]
+
+  // Try Zhipu AI first (premium model, you have API key)
+  console.log('[Unified Chat Stream] Trying Zhipu AI first (provider: zhipu, model:', config.zhipuAiModel + ')')
+
+  try {
+    let fullResponse = ''
+    const stream = generateZhipuResponseStream(apiMessages, options)
+
+    for await (const chunk of stream) {
+      fullResponse += chunk
+      yield { chunk, provider: 'zhipu' }
+    }
+
+    const result = await stream.next()
+    const finalValue = result.value
+    const { usage, model } = typeof finalValue === 'object' ? finalValue : { usage: {}, model: config.zhipuAiModel }
+
+    console.log('[Unified Chat Stream] Zhipu AI response successful')
+
+    return {
+      response: fullResponse,
+      model,
+      provider: 'zhipu',
+      method,
+      usage,
+    }
+  } catch (error: any) {
+    // Check if this is a quota/limit error that requires fallback
+    if (error.code === 'PROVIDER_LIMIT_EXCEEDED' || error.message.includes('quota') || error.message.includes('limit')) {
+      console.log('[Unified Chat Stream] Zhipu AI quota/limit exceeded, falling back to Gemini')
+
+      try {
+        let fullResponse = ''
+        const stream = generateGeminiResponseStream(apiMessages, options)
+
+        for await (const chunk of stream) {
+          fullResponse += chunk
+          yield { chunk, provider: 'gemini' }
+        }
+
+        const result = await stream.next()
+        const finalValue = result.value
+        const { usage, model } = typeof finalValue === 'object' ? finalValue : { usage: {}, model: config.geminiChatModel }
+
+        console.log('[Unified Chat Stream] Gemini fallback successful')
+
+        return {
+          response: fullResponse,
+          model,
+          provider: 'gemini',
+          method,
+          usage,
+        }
+      } catch (geminiError: any) {
+        console.error('[Unified Chat Stream] Both providers failed:', geminiError)
+        throw new Error(`Both AI providers are unavailable. Zhipu: ${error.message}, Gemini: ${geminiError.message}`)
+      }
+    }
+
+    // If not a quota error, just throw the original error
+    throw error
+  }
+}
+

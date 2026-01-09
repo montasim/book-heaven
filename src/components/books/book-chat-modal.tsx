@@ -16,6 +16,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  isStreaming?: boolean
 }
 
 type ExtractionStatus = 'checking' | 'ready' | 'processing' | 'failed'
@@ -42,6 +43,8 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
   const [extractionProgress, setExtractionProgress] = useState<string>('')
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const streamingContentRef = useRef<string>('')
+  const streamingMessageIndexRef = useRef<number>(-1)
 
   // Helper functions defined first to avoid "before initialization" errors
   const scrollToBottom = useCallback(() => {
@@ -146,13 +149,25 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       timestamp: new Date()
     }
 
+    const previousMessages = [...messages]
+    streamingContentRef.current = ''
+    streamingMessageIndexRef.current = messages.length + 1
+
     setMessages(prev => [...prev, userMessage])
-    const previousMessages = [...messages, userMessage]
     setInputValue('')
+
+    // Immediately add assistant message with streaming flag
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isStreaming: true
+    }])
     setIsLoading(true)
 
     try {
-      const response = await fetch(`/api/books/${book.id}/chat`, {
+      // Use streaming endpoint
+      const response = await fetch(`/api/books/${book.id}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,24 +178,98 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to send message')
+        const errorText = await response.text()
+        throw new Error(errorText || 'Failed to send message')
       }
 
-      const data = await response.json()
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
 
-      // Update sessionId if it's a new session
-      if (data.sessionId && !sessionId) {
-        setSessionId(data.sessionId)
+      if (!reader) {
+        throw new Error('No response body')
       }
 
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date()
-      }])
+      let buffer = ''
+      let fullResponse = ''
+      let currentSessionId = sessionId
 
-      setConversationHistory(data.conversationHistory)
+      // Parse SSE stream
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed.startsWith('data:')) continue
+
+          const data = trimmed.slice(5).trim()
+
+          if (!data) continue
+
+          try {
+            const parsed = JSON.parse(data)
+
+            if (parsed.type === 'start') {
+              // Update sessionId from stream
+              if (parsed.sessionId) {
+                currentSessionId = parsed.sessionId
+                setSessionId(parsed.sessionId)
+              }
+            } else if (parsed.type === 'chunk') {
+              // Append chunk to current message and update immediately
+              fullResponse += parsed.content
+              streamingContentRef.current = fullResponse
+
+              // Update UI immediately for each chunk
+              setMessages(prev => {
+                const updated = [...prev]
+                const idx = streamingMessageIndexRef.current
+                if (idx >= 0 && idx < updated.length && updated[idx]?.role === 'assistant') {
+                  updated[idx] = {
+                    ...updated[idx],
+                    content: fullResponse
+                  }
+                }
+                return updated
+              })
+              scrollToBottom()
+            } else if (parsed.type === 'done') {
+              // Stream complete, update with final metadata
+              setSessionId(currentSessionId)
+              setConversationHistory([
+                ...conversationHistory,
+                { role: 'user', content: userMessage.content },
+                { role: 'assistant', content: fullResponse }
+              ])
+
+              // Final update to ensure all content is displayed
+              setMessages(prev => {
+                const updated = [...prev]
+                const idx = streamingMessageIndexRef.current
+                if (idx >= 0 && idx < updated.length && updated[idx]?.role === 'assistant') {
+                  updated[idx] = {
+                    ...updated[idx],
+                    content: fullResponse,
+                    isStreaming: false
+                  }
+                }
+                return updated
+              })
+            } else if (parsed.type === 'error') {
+              throw new Error(parsed.error || 'Stream error')
+            }
+          } catch (e) {
+            // Skip invalid JSON
+            console.debug('Failed to parse SSE data:', data)
+          }
+        }
+      }
+
       scrollToBottom()
     } catch (error: any) {
       console.error('Error sending message:', error)
@@ -193,6 +282,8 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
       setMessages(previousMessages)
     } finally {
       setIsLoading(false)
+      streamingContentRef.current = ''
+      streamingMessageIndexRef.current = -1
     }
   }
 
@@ -290,80 +381,85 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
             )}
 
             {/* Messages */}
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "flex gap-3",
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                )}
-              >
-                {message.role === 'assistant' && (
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                )}
+            {messages.map((message, index) => {
+              return (
                 <div
+                  key={index}
                   className={cn(
-                    "rounded-lg px-4 py-3 max-w-[80%]",
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                    "flex gap-3",
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
-                  {message.role === 'assistant' ? (
-                    <MDXViewer
-                      content={message.content}
-                      className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none
-                        prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-4
-                        prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
-                        prose-p:mb-2 prose-p:last:mb-0
-                        prose-ul:mb-3 prose-ml-6 prose-list-disc prose-ul:list-outside
-                        prose-ol:mb-3 prose-ml-6 prose-list-decimal prose-ol:list-outside
-                        prose-li:my-1 prose-li:marker:text-muted-foreground
-                        prose-strong:font-semibold
-                        prose-em:italic
-                        prose-code:bg-muted-foreground/20 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-                        prose-pre:bg-muted-foreground/10 prose-pre:p-2 prose-pre:rounded prose-pre:text-sm prose-pre:overflow-x-auto
-                        prose-blockquote:border-l-4 prose-blockquote:border-muted-foreground/30 prose-blockquote:pl-3 prose-blockquote:italic
-                        prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                      "
-                    />
-                  ) : (
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                  {message.role === 'assistant' && (
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-4 w-4" />
+                    </div>
                   )}
-                  <p className={cn(
-                    "text-xs mt-1 opacity-70",
-                    message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                  )}>
-                    {new Date(message.timestamp).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-                {message.role === 'user' && (
-                  <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-semibold text-primary-foreground">
-                      {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                    </span>
+                  <div
+                    className={cn(
+                      "rounded-lg px-4 py-3 max-w-[80%]",
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    )}
+                  >
+                    {message.role === 'assistant' ? (
+                      !message.content ? (
+                        // Show typing indicator while waiting for first chunk
+                        <div className="flex items-center gap-1 h-5">
+                          <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" />
+                        </div>
+                      ) : message.isStreaming ? (
+                        // Show plain text during streaming to avoid markdown re-parsing flicker
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      ) : (
+                        // Show full markdown rendering when complete
+                        <MDXViewer
+                          content={message.content}
+                          className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none
+                            prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-4
+                            prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+                            prose-p:mb-2 prose-p:last:mb-0
+                            prose-ul:mb-3 prose-ml-6 prose-list-disc prose-ul:list-outside
+                            prose-ol:mb-3 prose-ml-6 prose-list-decimal prose-ol:list-outside
+                            prose-li:my-1 prose-li:marker:text-muted-foreground
+                            prose-strong:font-semibold
+                            prose-em:italic
+                            prose-code:bg-muted-foreground/20 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                            prose-pre:bg-muted-foreground/10 prose-pre:p-2 prose-pre:rounded prose-pre:text-sm prose-pre:overflow-x-auto
+                            prose-blockquote:border-l-4 prose-blockquote:border-muted-foreground/30 prose-blockquote:pl-3 prose-blockquote:italic
+                            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                          "
+                        />
+                      )
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    )}
+                    <p className={cn(
+                      "text-xs mt-1 opacity-70",
+                      message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    )}>
+                      {new Date(message.timestamp).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
                   </div>
-                )}
-              </div>
-            ))}
+                  {message.role === 'user' && (
+                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-semibold text-primary-foreground">
+                        {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
 
-            {isLoading && messages.length > 0 && (
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4" />
-                </div>
-                <div className="bg-muted rounded-lg px-4 py-3">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
