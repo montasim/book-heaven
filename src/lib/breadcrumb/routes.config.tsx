@@ -141,12 +141,6 @@ export const breadcrumbRoutes: BreadcrumbRoute[] = [
     icon: Brain,
     parent: '/',
   },
-  {
-    path: '/user-dashboard',
-    name: 'Dashboard',
-    icon: LayoutDashboard,
-    parent: '/',
-  },
 
   // Dashboard Routes
   {
