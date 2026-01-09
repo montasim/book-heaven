@@ -12,6 +12,7 @@ import { GeneralTab } from './components/general-tab'
 import { BrandingTab } from './components/branding-tab'
 import { SEOTab } from './components/seo-tab'
 import { ContactTab } from './components/contact-tab'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface SiteSettings {
   id: string
@@ -192,25 +193,25 @@ function SiteSettingsPageWrapper() {
         <div className="flex items-center justify-between gap-4">
           <div className="w-full overflow-x-auto">
             <TabsList>
-              <Link href="/dashboard/site-settings?tab=general">
+              <Link href={`${ROUTES.siteSettings.href}?tab=general`}>
                 <TabsTrigger value="general" className="flex items-center gap-2">
                   <Construction className="h-4 w-4" />
                   <span className="hidden sm:inline">General</span>
                 </TabsTrigger>
               </Link>
-              <Link href="/dashboard/site-settings?tab=branding">
+              <Link href={`${ROUTES.siteSettings.href}?tab=branding`}>
                 <TabsTrigger value="branding" className="flex items-center gap-2">
                   <Palette className="h-4 w-4" />
                   <span className="hidden sm:inline">Branding</span>
                 </TabsTrigger>
               </Link>
-              <Link href="/dashboard/site-settings?tab=seo">
+              <Link href={`${ROUTES.siteSettings.href}?tab=seo`}>
                 <TabsTrigger value="seo" className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
                   <span className="hidden sm:inline">SEO</span>
                 </TabsTrigger>
               </Link>
-              <Link href="/dashboard/site-settings?tab=contact">
+              <Link href={`${ROUTES.siteSettings.href}?tab=contact`}>
                 <TabsTrigger value="contact" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   <span className="hidden sm:inline">Contact</span>

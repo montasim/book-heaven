@@ -16,6 +16,7 @@ import {
   Zap,
   Trophy,
 } from 'lucide-react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 async function getFeaturedBooks() {
   try {
@@ -135,13 +136,13 @@ export default async function HomePage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Button asChild size="lg" className="w-full sm:w-auto text-base h-12 px-8">
-                <Link href="/sign-up">
+                <Link href={ROUTES.signUpSimple.href}>
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-base h-12 px-8">
-                <Link href="/books">Browse Books</Link>
+                <Link href={ROUTES.books.href}>Browse Books</Link>
               </Button>
             </div>
 
@@ -242,7 +243,7 @@ export default async function HomePage() {
               <p className="text-muted-foreground">Check out our latest additions</p>
             </div>
             <Button asChild variant="outline" className="hidden sm:flex">
-              <Link href="/books">
+              <Link href={ROUTES.books.href}>
                 View All Books
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -276,7 +277,7 @@ export default async function HomePage() {
 
           <div className="mt-8 text-center sm:hidden">
             <Button asChild variant="outline" className="w-full sm:w-auto">
-              <Link href="/books">
+              <Link href={ROUTES.books.href}>
                 View All Books
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -311,7 +312,7 @@ export default async function HomePage() {
 
                 <div className="pt-4">
                   <Button asChild size="lg" className="group">
-                    <Link href="/sign-up">
+                    <Link href={ROUTES.signUpSimple.href}>
                       Start Your Journey
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
@@ -382,7 +383,7 @@ export default async function HomePage() {
                   variant="secondary"
                   className="w-full sm:w-auto text-base h-12 px-8"
                 >
-                  <Link href="/sign-up">
+                  <Link href={ROUTES.signUpSimple.href}>
                     Create Free Account
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
@@ -393,7 +394,7 @@ export default async function HomePage() {
                   variant="outline"
                   className="w-full sm:w-auto text-base h-12 px-8 bg-transparent text-white border-white/30 hover:bg-white/10 hover:text-white"
                 >
-                  <Link href="/auth/sign-in">Sign In</Link>
+                  <Link href={ROUTES.signIn.href}>Sign In</Link>
                 </Button>
               </div>
 
@@ -433,27 +434,27 @@ export default async function HomePage() {
             <div>
               <h4 className="font-semibold mb-4">Explore</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/books" className="hover:text-foreground transition-colors">Books</Link></li>
-                <li><Link href="/categories" className="hover:text-foreground transition-colors">Categories</Link></li>
-                <li><Link href="/authors" className="hover:text-foreground transition-colors">Authors</Link></li>
+                <li><Link href={ROUTES.books.href} className="hover:text-foreground transition-colors">Books</Link></li>
+                <li><Link href={ROUTES.categories.href} className="hover:text-foreground transition-colors">Categories</Link></li>
+                <li><Link href={ROUTES.authors.href} className="hover:text-foreground transition-colors">Authors</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold mb-4">Community</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/quiz" className="hover:text-foreground transition-colors">Quizzes</Link></li>
-                <li><Link href="/library" className="hover:text-foreground transition-colors">Library</Link></li>
-                <li><Link href="/premium" className="hover:text-foreground transition-colors">Premium</Link></li>
+                <li><Link href={ROUTES.quiz.href} className="hover:text-foreground transition-colors">Quizzes</Link></li>
+                <li><Link href={ROUTES.library.href} className="hover:text-foreground transition-colors">Library</Link></li>
+                <li><Link href={ROUTES.premium.href} className="hover:text-foreground transition-colors">Premium</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold mb-4">Account</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/auth/sign-in" className="hover:text-foreground transition-colors">Sign In</Link></li>
-                <li><Link href="/auth/sign-up" className="hover:text-foreground transition-colors">Sign Up</Link></li>
-                <li><Link href="/dashboard/settings" className="hover:text-foreground transition-colors">Settings</Link></li>
+                <li><Link href={ROUTES.signIn.href} className="hover:text-foreground transition-colors">Sign In</Link></li>
+                <li><Link href={ROUTES.signUp.href} className="hover:text-foreground transition-colors">Sign Up</Link></li>
+                <li><Link href={ROUTES.settings.href} className="hover:text-foreground transition-colors">Settings</Link></li>
               </ul>
             </div>
           </div>

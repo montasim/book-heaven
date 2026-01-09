@@ -36,6 +36,7 @@ import { getUserBooks } from '@/app/(user)/library/actions'
 import { Book } from '@/app/dashboard/books/data/schema'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { calculateReadingTime, calculateReadingTimeHours } from '@/lib/utils/reading-time'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface LibraryStats {
   completedBooks: number
@@ -366,7 +367,7 @@ function UserDashboard() {
                 Track your reading journey and discover your next great read.
               </p>
             </div>
-            <Link href="/books">
+            <Link href={ROUTES.books.href}>
               <Button>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Browse Books
@@ -434,7 +435,7 @@ function UserDashboard() {
               Track your reading journey and discover your next great read.
             </p>
           </div>
-          <Link href="/books" className='mt-4'>
+          <Link href={ROUTES.books.href} className='mt-4'>
             <Button>
               <BookOpen className="h-4 w-4 mr-2" />
               Browse Books
@@ -496,7 +497,7 @@ function UserDashboard() {
         <div className="md:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Continue Reading</h2>
-            <Link href="/library?tab=my-uploads">
+            <Link href={`${ROUTES.library.href}?tab=my-uploads`}>
               <Button variant="outline" size="sm">
                 View All
               </Button>
@@ -511,7 +512,7 @@ function UserDashboard() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Start reading a book to see it here
                 </p>
-                <Link href="/library?tab=my-uploads">
+                <Link href={`${ROUTES.library.href}?tab=my-uploads`}>
                   <Button>Browse Your Books</Button>
                 </Link>
               </CardContent>
@@ -648,7 +649,7 @@ function UserDashboard() {
                   )
                 })}
                 {currentlyReadingBooks.length > 3 && (
-                  <Link href="/library?tab=my-uploads" className="block">
+                  <Link href={`${ROUTES.library.href}?tab=my-uploads`} className="block">
                     <Button variant="outline" className="w-full">
                       View All Books ({currentlyReadingBooks.length})
                     </Button>
@@ -663,19 +664,19 @@ function UserDashboard() {
         <div className="hidden md:block lg:col-span-1">
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            <Link href="/books" className="block">
+            <Link href={ROUTES.books.href} className="block">
               <Button variant="outline" className="w-full justify-start">
                 <Library className="h-4 w-4 mr-2" />
                 Browse Library
               </Button>
             </Link>
-            <Link href="/library" className="block">
+            <Link href={ROUTES.library.href} className="block">
               <Button variant="outline" className="w-full justify-start">
                 <Award className="h-4 w-4 mr-2" />
                 Library
               </Button>
             </Link>
-            <Link href="/premium" className="block">
+            <Link href={ROUTES.premium.href} className="block">
               <Button variant="outline" className="w-full justify-start">
                 <Star className="h-4 w-4 mr-2" />
                 Upgrade to Premium

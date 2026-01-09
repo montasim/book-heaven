@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import AuthLayout from '@/components/auth-layout'
 import SignUpForm from './components/sign-up-form'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function SignUp() {
     return (
@@ -13,14 +14,14 @@ export default function SignUp() {
                 <p className='mt-4 px-8 text-center text-sm text-muted-foreground'>
                     By creating an account, you agree to our{' '}
                     <Link
-                        href='/terms'
+                        href={ROUTES.terms.href}
                         className='underline underline-offset-4 hover:text-primary'
                     >
                         Terms of Service
                     </Link>{' '}
                     and{' '}
                     <Link
-                        href='/privacy'
+                        href={ROUTES.privacy.href}
                         className='underline underline-offset-4 hover:text-primary'
                     >
                         Privacy Policy

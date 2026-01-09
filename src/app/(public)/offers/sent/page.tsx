@@ -26,6 +26,7 @@ import {
 import Link from 'next/link'
 import { formatPrice, formatDistanceToNow, getInitials } from '@/lib/utils'
 import { OfferStatus } from '@prisma/client'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // ============================================================================
 // TYPES
@@ -168,7 +169,7 @@ function OffersSentPageContent() {
         <div className="min-h-screen bg-background">
             <main className="container mx-auto p-4 pb-24 lg:pb-8">
                 {/* Back Button */}
-                <Link href="/marketplace" className="inline-block mb-6">
+                <Link href={ROUTES.marketplace.href} className="inline-block mb-6">
                     <Button variant="ghost" size="sm">
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Marketplace
@@ -302,7 +303,7 @@ function OffersSentPageContent() {
                                     : 'Make offers on listings to track them here.'}
                             </p>
                             {!searchQuery && filterStatus === 'all' && (
-                                <Link href="/marketplace">
+                                <Link href={ROUTES.marketplace.href}>
                                     <Button>Browse Marketplace</Button>
                                 </Link>
                             )}

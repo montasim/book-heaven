@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // Expandable description component with MDX support (defined outside component to avoid recreation)
 interface ExpandableDescriptionProps {
@@ -356,13 +357,13 @@ export default function PhysicalLibraryBookPage() {
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/physical-library">
+                  <Link href={ROUTES.physicalLibrary.href}>
                     <LibraryBig className="h-4 w-4 mr-2" />
                     Browse Physical Library
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/">
+                  <Link href={ROUTES.home.href}>
                     <Home className="h-4 w-4 mr-2" />
                     Go to Homepage
                   </Link>
@@ -383,8 +384,8 @@ export default function PhysicalLibraryBookPage() {
         <NavigationBreadcrumb
           className="mb-6"
           items={[
-            { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
-            { label: 'Physical Library', href: '/physical-library', icon: <LibraryBig className="h-4 w-4" /> },
+            { label: 'Home', href: ROUTES.home.href, icon: <Home className="h-4 w-4" /> },
+            { label: 'Physical Library', href: ROUTES.physicalLibrary.href, icon: <LibraryBig className="h-4 w-4" /> },
             { label: book.name },
           ]}
         />

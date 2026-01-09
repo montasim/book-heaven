@@ -26,6 +26,7 @@ import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, Shopp
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface UserTopbarProps {
   className?: string
@@ -125,19 +126,19 @@ export function UserTopbar({
               {/* Navigation Section */}
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                  <Link href="/books" className="w-full cursor-pointer lg:hidden">
+                  <Link href={ROUTES.books.href} className="w-full cursor-pointer lg:hidden">
                     <BookOpen className="mr-2 h-4 w-4" />
                     Browse Books
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/marketplace" className="w-full cursor-pointer lg:hidden">
+                  <Link href={ROUTES.marketplace.href} className="w-full cursor-pointer lg:hidden">
                     <ShoppingBag className="mr-2 h-4 w-4" />
                     Marketplace
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/quiz" className="w-full cursor-pointer lg:hidden">
+                  <Link href={ROUTES.quiz.href} className="w-full cursor-pointer lg:hidden">
                     <Brain className="mr-2 h-4 w-4" />
                     Quiz Game
                   </Link>
@@ -175,7 +176,7 @@ export function UserTopbar({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/messages" className="w-full cursor-pointer">
+                    <Link href={ROUTES.messages.href} className="w-full cursor-pointer">
                         <MessageSquare className="mr-2 h-4 w-4" />
                         Messages
                     </Link>
@@ -186,16 +187,16 @@ export function UserTopbar({
                   Profile
                 </DropdownMenuItem>
                 {
-                    !isAdmin && <DropdownMenuItem onClick={() => handleNavigation('/library')}>
+                    !isAdmin && <DropdownMenuItem onClick={() => handleNavigation(ROUTES.library.href)}>
                         <BookOpen className="mr-2 h-4 w-4" />
                         My Library
                     </DropdownMenuItem>
                 }
-                <DropdownMenuItem onClick={() => handleNavigation('/settings/account')}>
+                <DropdownMenuItem onClick={() => handleNavigation(ROUTES.settingsBilling.href)}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   Billing
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleNavigation('/settings')}>
+                <DropdownMenuItem onClick={() => handleNavigation(ROUTES.settings.href)}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
@@ -210,10 +211,10 @@ export function UserTopbar({
         ) : (
           /* User is not logged in - show sign in/up buttons */
           <>
-            <Link href="/auth/sign-in">
+            <Link href={ROUTES.signIn.href}>
               <Button variant="outline">Sign In</Button>
             </Link>
-            <Link href="/sign-up">
+            <Link href={ROUTES.signUpSimple.href}>
               <Button>Sign Up</Button>
             </Link>
           </>
@@ -241,7 +242,7 @@ export function UserTopbar({
         {/* Logo for public pages */}
         {!showSidebarToggle && (
           <div className="flex items-center space-x-2">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href={ROUTES.home.href} className="flex items-center space-x-2">
               <BookOpen className="h-6 w-6 text-primary" />
               <h1 className="text-lg font-bold hidden sm:block">{siteName}</h1>
             </Link>
@@ -252,7 +253,7 @@ export function UserTopbar({
         {!showSidebarToggle && user && (
           <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link
-              href="/books"
+              href={ROUTES.books.href}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
                 pathname?.startsWith('/books')
@@ -264,7 +265,7 @@ export function UserTopbar({
               <span>Books</span>
             </Link>
             <Link
-              href="/marketplace"
+              href={ROUTES.marketplace.href}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
                 pathname?.startsWith('/marketplace')
@@ -276,7 +277,7 @@ export function UserTopbar({
               <span>Marketplace</span>
             </Link>
             <Link
-              href="/quiz"
+              href={ROUTES.quiz.href}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
                 pathname?.startsWith('/quiz')

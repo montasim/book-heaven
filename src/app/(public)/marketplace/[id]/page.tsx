@@ -31,6 +31,7 @@ import { BookCondition, SellPostStatus } from '@prisma/client'
 import { formatPrice, formatDistanceToNow, getInitials } from '@/lib/utils'
 import { useMarketplaceSocket } from '@/hooks/use-marketplace-socket'
 import { playNotificationSound, showBrowserNotification } from '@/lib/sounds'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // ============================================================================
 // TYPES
@@ -304,7 +305,7 @@ function SellPostDetailContent() {
 
     const handleMakeOffer = async () => {
         if (!isAuthenticated) {
-            router.push('/auth/sign-in')
+            router.push(ROUTES.signIn.href)
             return
         }
 
@@ -347,7 +348,7 @@ function SellPostDetailContent() {
 
     const handleSendMessage = async () => {
         if (!isAuthenticated) {
-            router.push('/auth/sign-in')
+            router.push(ROUTES.signIn.href)
             return
         }
 
@@ -451,13 +452,13 @@ function SellPostDetailContent() {
                             {/* Action buttons */}
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                                 <Button asChild size="lg" className="w-full sm:w-auto">
-                                    <Link href="/marketplace">
+                                    <Link href={ROUTES.marketplace.href}>
                                         <ShoppingBag className="h-4 w-4 mr-2" />
                                         Browse Marketplace
                                     </Link>
                                 </Button>
                                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                                    <Link href="/">
+                                    <Link href={ROUTES.home.href}>
                                         <Home className="h-4 w-4 mr-2" />
                                         Go to Homepage
                                     </Link>
@@ -483,7 +484,7 @@ function SellPostDetailContent() {
                 {/* Breadcrumb */}
                 <BreadcrumbList
                     items={[
-                        { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag className="h-4 w-4" /> },
+                        { label: 'Marketplace', href: ROUTES.marketplace.href, icon: <ShoppingBag className="h-4 w-4" /> },
                         { label: post.title },
                     ]}
                     className="mb-4"

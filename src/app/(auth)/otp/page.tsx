@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import AuthLayout from '@/components/auth-layout'
 import { OtpForm } from './components/otp-form'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function Otp() {
   return (
@@ -22,7 +23,7 @@ export default function Otp() {
         <p className='mt-4 text-center text-sm text-muted-foreground'>
           Haven&apos;t received it?{' '}
           <Link
-            href='/sign-in'
+            href={ROUTES.login.href}
             className='underline underline-offset-4 hover:text-primary'
           >
             Resend a new code.

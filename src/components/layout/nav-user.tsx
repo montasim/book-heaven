@@ -31,6 +31,7 @@ import {
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export function NavUser({
   user,
@@ -111,25 +112,25 @@ export function NavUser({
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                  <Link href='/settings/account'>
+                  <Link href={ROUTES.settingsAccount.href}>
                     <BadgeCheck className="mr-2 h-4 w-4" />
                     Account
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href='/settings/account'>
+                  <Link href={ROUTES.settingsBilling.href}>
                     <CreditCard className="mr-2 h-4 w-4" />
                     Billing
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href='/settings/notifications'>
+                  <Link href={ROUTES.settingsNotifications.href}>
                     <Bell className="mr-2 h-4 w-4" />
                     Notifications
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href='/library/my-requests'>
+                  <Link href={ROUTES.libraryMyRequests.href}>
                     <BookOpen className="mr-2 h-4 w-4" />
                     My Requests
                   </Link>

@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   Eye,
 } from 'lucide-react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function AuthorDetailsPage() {
   const params = useParams()
@@ -100,13 +101,13 @@ export default function AuthorDetailsPage() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/authors">
+                  <Link href={ROUTES.authors.href}>
                     <Users className="h-4 w-4 mr-2" />
                     Browse All Authors
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/">
+                  <Link href={ROUTES.home.href}>
                     <Home className="h-4 w-4 mr-2" />
                     Go to Homepage
                   </Link>
@@ -126,8 +127,8 @@ export default function AuthorDetailsPage() {
         <NavigationBreadcrumb
           className="mb-6"
           items={[
-            { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
-            { label: 'Authors', href: '/authors', icon: <UserIcon className="h-4 w-4" /> },
+            { label: 'Home', href: ROUTES.home.href, icon: <Home className="h-4 w-4" /> },
+            { label: 'Authors', href: ROUTES.authors.href, icon: <UserIcon className="h-4 w-4" /> },
             { label: author.name },
           ]}
         />

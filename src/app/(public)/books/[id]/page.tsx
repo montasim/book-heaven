@@ -50,6 +50,7 @@ import {
     Volume2,
 } from 'lucide-react'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // Expandable description component with MDX support (defined outside component to avoid recreation)
 interface ExpandableDescriptionProps {
@@ -227,13 +228,13 @@ export default function BookDetailsPage() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/books">
+                  <Link href={ROUTES.books.href}>
                     <LibraryBig className="h-4 w-4 mr-2" />
                     Browse All Books
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/">
+                  <Link href={ROUTES.home.href}>
                     <Home className="h-4 w-4 mr-2" />
                     Go to Homepage
                   </Link>
@@ -351,8 +352,8 @@ export default function BookDetailsPage() {
         <NavigationBreadcrumb
           className="mb-6"
           items={[
-            { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
-            { label: 'Books', href: '/books', icon: <LibraryBig className="h-4 w-4" /> },
+            { label: 'Home', href: ROUTES.home.href, icon: <Home className="h-4 w-4" /> },
+            { label: 'Books', href: ROUTES.books.href, icon: <LibraryBig className="h-4 w-4" /> },
             { label: book.name },
           ]}
         />
@@ -1129,7 +1130,7 @@ export default function BookDetailsPage() {
                         <p className="text-muted-foreground mb-4">
                           Log in to start reading this book and track your reading progress.
                         </p>
-                        <Link href="/auth/sign-in">
+                        <Link href={ROUTES.signIn.href}>
                           <Button>
                             Sign In
                           </Button>
@@ -1243,7 +1244,7 @@ export default function BookDetailsPage() {
                         <p className="text-muted-foreground mb-4">
                           Log in to share your thoughts about this book with other readers.
                         </p>
-                        <Link href="/auth/sign-in">
+                        <Link href={ROUTES.signIn.href}>
                           <Button>
                             Sign In
                           </Button>

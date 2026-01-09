@@ -19,6 +19,7 @@ import { getUserDisplayName } from '@/lib/utils/user'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { UserAchievementsBadges } from '@/components/achievements/user-achievements-badges'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function UserProfilePage() {
   const params = useParams()
@@ -81,13 +82,13 @@ export default function UserProfilePage() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/books">
+                  <Link href={ROUTES.books.href}>
                     <BookOpen className="h-4 w-4 mr-2" />
                     Browse Books
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/">
+                  <Link href={ROUTES.home.href}>
                     <Home className="h-4 w-4 mr-2" />
                     Go to Homepage
                   </Link>
@@ -123,8 +124,8 @@ export default function UserProfilePage() {
         <NavigationBreadcrumb
           className="mb-6"
           items={[
-            { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
-            { label: 'Books', href: '/books', icon: <LibraryBig className="h-4 w-4" /> },
+            { label: 'Home', href: ROUTES.home.href, icon: <Home className="h-4 w-4" /> },
+            { label: 'Books', href: ROUTES.books.href, icon: <LibraryBig className="h-4 w-4" /> },
             { label: displayName },
           ]}
         />

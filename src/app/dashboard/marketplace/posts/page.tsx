@@ -36,6 +36,7 @@ import { SellPostStatus, BookCondition } from '@prisma/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getInitials } from '@/lib/utils'
 import { MarketplaceListingSkeleton } from '@/components/data-table/table-skeleton'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // ============================================================================
 // TYPES
@@ -220,7 +221,7 @@ export default function AdminMarketplacePostsPage() {
                         Manage all marketplace listings
                     </p>
                 </div>
-                <Link href="/marketplace">
+                <Link href={ROUTES.marketplace.href}>
                     <Button variant="outline">
                         <ShoppingBag className="h-4 w-4 mr-2" />
                         View Marketplace

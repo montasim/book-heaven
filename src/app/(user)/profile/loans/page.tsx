@@ -28,6 +28,7 @@ import {
   LoansTabsHeaderSkeleton
 } from '@/components/loans/loan-card-skeleton'
 import Link from 'next/link'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface Book {
   id: string
@@ -57,7 +58,7 @@ export default function ProfileLoansPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/auth/sign-in')
+      router.push(ROUTES.signIn.href)
     }
   }, [user, authLoading, router])
 
@@ -250,7 +251,7 @@ export default function ProfileLoansPage() {
                       <p className="text-muted-foreground mb-4">
                         You haven't borrowed any books yet.
                       </p>
-                      <Link href="/books">
+                      <Link href={ROUTES.books.href}>
                         <Button>Browse Books</Button>
                       </Link>
                     </div>

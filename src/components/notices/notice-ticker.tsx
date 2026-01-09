@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface Notice {
   id: string
@@ -57,7 +58,7 @@ export function NoticeTicker() {
       <div className="container mx-auto px-4">
         <div className="flex items-center gap-4 overflow-hidden py-2">
           {/* Icon Section - Clickable to view all notices */}
-          <Link href="/notices" className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 shrink-0 rounded hover:bg-primary/20 transition-colors">
+          <Link href={ROUTES.notices.href} className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 shrink-0 rounded hover:bg-primary/20 transition-colors">
             <Megaphone className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold text-primary">Notices</span>
           </Link>
@@ -76,7 +77,7 @@ export function NoticeTicker() {
                 return (
                   <React.Fragment key={`${notice.id}-${index}`}>
                     <Link
-                      href={`/notices?notice=${notice.id}`}
+                      href={`${ROUTES.notices.href}?notice=${notice.id}`}
                       className="inline-flex items-center gap-2 hover:underline"
                       style={{ padding: '0 0.5rem', fontSize: '0.875rem' }}
                     >

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import AuthLayout from '@/components/auth-layout'
 import ForgotForm from './components/forgot-password-form'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function ForgotPassword() {
   return (
@@ -22,7 +23,7 @@ export default function ForgotPassword() {
         <p className='mt-4 text-center text-sm text-muted-foreground'>
           Don&apos;t have an account?{' '}
           <Link
-            href='/sign-up'
+            href={ROUTES.signUpSimple.href}
             className='underline underline-offset-4 hover:text-primary'
           >
             Sign up

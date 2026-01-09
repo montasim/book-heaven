@@ -9,6 +9,7 @@ import { formatPrice, getYearlySavings } from '@/lib/stripe/config'
 import { SubscriptionPlan } from '@prisma/client'
 import { CheckoutButton } from '@/components/subscription/checkout-button'
 import { useState, useEffect } from 'react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface PricingFeature {
   id: string
@@ -143,7 +144,7 @@ export function PricingCards({
                 </Button>
               ) : tier.plan === SubscriptionPlan.FREE ? (
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/signup">Get Started</Link>
+                  <Link href={ROUTES.signup.href}>Get Started</Link>
                 </Button>
               ) : showCheckoutButton ? (
                 <CheckoutButton

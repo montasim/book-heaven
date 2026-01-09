@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   Eye,
 } from 'lucide-react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function CategoryDetailsPage() {
   const params = useParams()
@@ -100,13 +101,13 @@ export default function CategoryDetailsPage() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/categories">
+                  <Link href={ROUTES.categories.href}>
                     <Tag className="h-4 w-4 mr-2" />
                     Browse All Categories
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/">
+                  <Link href={ROUTES.home.href}>
                     <Home className="h-4 w-4 mr-2" />
                     Go to Homepage
                   </Link>
@@ -126,8 +127,8 @@ export default function CategoryDetailsPage() {
         <NavigationBreadcrumb
           className="mb-6"
           items={[
-            { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
-            { label: 'Categories', href: '/categories', icon: <Tag className="h-4 w-4" /> },
+            { label: 'Home', href: ROUTES.home.href, icon: <Home className="h-4 w-4" /> },
+            { label: 'Categories', href: ROUTES.categories.href, icon: <Tag className="h-4 w-4" /> },
             { label: category.name },
           ]}
         />

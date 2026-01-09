@@ -2,6 +2,7 @@ import { QuizLeaderboard } from '@/components/quiz/quiz-leaderboard'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Trophy, ArrowLeft, Sparkles } from 'lucide-react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function QuizLeaderboardPage() {
   return (
@@ -10,7 +11,7 @@ export default function QuizLeaderboardPage() {
         {/* Header */}
         <div className="mb-8">
           <Button variant="ghost" asChild className="mb-4">
-            <Link href="/quiz">
+            <Link href={ROUTES.quiz.href}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Quiz
             </Link>
@@ -40,7 +41,7 @@ export default function QuizLeaderboardPage() {
               Join the competition and see your name on the leaderboard!
             </p>
             <Button asChild size="lg" className="gap-2">
-              <Link href="/login">
+              <Link href={ROUTES.login.href}>
                 <Sparkles className="h-5 w-5" />
                 Start Playing Now
               </Link>

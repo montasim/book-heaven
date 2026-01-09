@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function SeedMoodsPage() {
   const [loading, setLoading] = useState(false)
@@ -77,7 +78,7 @@ export default function SeedMoodsPage() {
 
         <div className="mt-4 text-center text-sm text-muted-foreground">
           After seeding, you can edit moods at{' '}
-          <a href="/dashboard/moods" className="text-primary hover:underline">
+          <a href={ROUTES.moods.href} className="text-primary hover:underline">
             /dashboard/moods
           </a>
         </div>

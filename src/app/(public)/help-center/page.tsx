@@ -16,6 +16,7 @@ import { SupportTicket, TicketPriority, TicketStatus } from '@prisma/client'
 import { LifeBuoy, Search, Plus, ChevronDown, ChevronRight, MessageSquare, Send, CheckCircle2, XCircle, Clock, AlertCircle, User } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { FAQTabSkeleton, TicketsTabSkeleton } from '@/components/help-center/help-center-skeleton'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface FAQ {
   id: string
@@ -216,7 +217,7 @@ function HelpCenterPageContent() {
           description: 'Your support ticket has been submitted. We\'ll get back to you soon.',
         })
         setNewTicket({ subject: '', description: '', category: 'technical', priority: 'MEDIUM' })
-        router.push('/help-center?tab=tickets')
+        router.push(`${ROUTES.helpCenter.href}?tab=tickets`)
         // Refresh tickets
         const ticketsResponse = await fetch('/api/user/support-tickets')
         if (ticketsResponse.ok) {
@@ -251,7 +252,7 @@ function HelpCenterPageContent() {
           Please sign in to access this feature.
         </p>
         <Button asChild>
-          <a href='/auth/sign-in'>Sign In</a>
+          <a href={ROUTES.signIn.href}>Sign In</a>
         </Button>
       </CardContent>
     </Card>
@@ -275,15 +276,15 @@ function HelpCenterPageContent() {
             </div>
           </div>
 
-          <Tabs value={activeTab} className="space-y-4" onValueChange={(value) => router.push(`/help-center?tab=${value}`)}>
+          <Tabs value={activeTab} className="space-y-4" onValueChange={(value) => router.push(`${ROUTES.helpCenter.href}?tab=${value}`)}>
             {/* Tabs List with Filter Toolbar - Side by Side */}
             <div className="flex flex-col md:flex-row md:justify-between gap-4">
           <TabsList>
-            <Link href="/help-center?tab=faq">
+            <Link href={`${ROUTES.helpCenter.href}?tab=faq`}>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
             </Link>
             {user && (
-              <Link href="/help-center?tab=tickets">
+              <Link href={`${ROUTES.helpCenter.href}?tab=tickets`}>
                 <TabsTrigger value="tickets">
                   My Tickets
                   {tickets.some(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS' || t.status === 'WAITING_FOR_USER') && (
@@ -295,7 +296,7 @@ function HelpCenterPageContent() {
               </Link>
             )}
             {!user && (
-              <Link href="/help-center?tab=tickets">
+              <Link href={`${ROUTES.helpCenter.href}?tab=tickets`}>
                 <TabsTrigger value="tickets">My Tickets</TabsTrigger>
               </Link>
             )}
@@ -304,7 +305,8 @@ function HelpCenterPageContent() {
           {/* Right side: Create Ticket button and Filter Toolbar */}
           <div className="flex items-center gap-2">
             {user && activeTab !== 'new' && (
-              <Button onClick={() => router.push('/help-center?tab=new')}>
+              <Button onClick={() => router.push(`${ROUTES.helpCenter.href}?tab=new`)}>
+
                 <Plus className='h-4 w-4 mr-2' />
                 Create Ticket
               </Button>
@@ -427,7 +429,7 @@ function HelpCenterPageContent() {
                         <p className='text-sm text-muted-foreground mb-4'>
                           You haven&lsquo;t created any support tickets yet.
                         </p>
-                        <Button onClick={() => router.push('/help-center?tab=new')}>
+                        <Button onClick={() => router.push(`${ROUTES.helpCenter.href}?tab=new`)}>
                           <Plus className='h-4 w-4 mr-2' />
                           Create Your First Ticket
                         </Button>

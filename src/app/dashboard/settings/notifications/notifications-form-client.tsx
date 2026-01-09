@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface NotificationsFormClientProps {
   defaultValues: Partial<NotificationsFormValues>
@@ -224,7 +225,7 @@ export function NotificationsFormClient({ defaultValues }: NotificationsFormClie
                 <FormDescription>
                   You can manage your mobile notifications in the{' '}
                   <Link
-                    href='/dashboard/settings'
+                    href={ROUTES.settings.href}
                     className='underline decoration-dashed underline-offset-4 hover:decoration-solid'
                   >
                     mobile settings

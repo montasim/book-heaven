@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow, getInitials } from '@/lib/utils'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // ============================================================================
 // TYPES
@@ -157,7 +158,7 @@ function MessagesInboxPageContent() {
                                     : 'Your conversations with buyers and sellers will appear here.'}
                             </p>
                             {!searchQuery && (
-                                <Link href="/marketplace">
+                                <Link href={ROUTES.marketplace.href}>
                                     <Button>Browse Marketplace</Button>
                                 </Link>
                             )}

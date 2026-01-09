@@ -14,6 +14,7 @@ import { getProxiedImageUrl } from '@/lib/image-proxy'
 import { useAuth } from '@/context/auth-context'
 import { BookTypeBadge } from '@/components/books/book-type-badge'
 import type { Book } from '@/hooks/use-book'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // Extended type for books in series context
 interface BookWithSeriesOrder extends Book {
@@ -84,13 +85,13 @@ export default function SeriesDetailPage() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <Link href="/series">
+                  <Link href={ROUTES.series.href}>
                     <LibraryBig className="h-4 w-4 mr-2" />
                     Browse All Series
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Link href="/">
+                  <Link href={ROUTES.home.href}>
                     <Home className="h-4 w-4 mr-2" />
                     Go to Homepage
                   </Link>
@@ -113,15 +114,15 @@ export default function SeriesDetailPage() {
         <div className="container mx-auto px-4 py-6">
           <NavigationBreadcrumb
             items={[
-              { label: 'Home', href: '/' },
-              { label: 'Series', href: '/series' },
+              { label: 'Home', href: ROUTES.home.href },
+              { label: 'Series', href: ROUTES.series.href },
               { label: series.name }
             ]}
           />
           <div className="mt-4">
             <Button
               variant="ghost"
-              onClick={() => router.push('/series')}
+              onClick={() => router.push(ROUTES.series.href)}
               className="mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />

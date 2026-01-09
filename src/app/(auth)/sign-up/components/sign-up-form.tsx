@@ -25,6 +25,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from '@/hooks/use-toast'
 import { useEffect } from 'react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 type SignUpFormProps = HTMLAttributes<HTMLDivElement>
 
@@ -78,7 +79,7 @@ const Header = () => (
       Enter your email and password to create an account. <br />
       Already have an account?{' '}
       <Link
-        href='/auth/sign-in'
+        href={ROUTES.signIn.href}
         className='underline underline-offset-4 hover:text-primary'
       >
         Sign In
@@ -319,7 +320,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
         description: 'Account created successfully',
       })
 
-      router.push('/books')
+      router.push(ROUTES.books.href)
       router.refresh()
     } catch (error) {
       console.error('Create account error:', error)

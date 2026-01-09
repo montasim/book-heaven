@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { UserAuthForm } from '../components/user-auth-form'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function SignIn() {
     const [authStep, setAuthStep] = useState<'email' | 'password'>('email')
@@ -37,14 +38,14 @@ export default function SignIn() {
             <p className='mt-4 px-8 text-center text-sm text-muted-foreground'>
                 By clicking login, you agree to our{' '}
                 <a
-                    href='/terms'
+                    href={ROUTES.terms.href}
                     className='underline underline-offset-4 hover:text-primary'
                 >
                     Terms of Service
                 </a>{' '}
                 and{' '}
                 <a
-                    href='/privacy'
+                    href={ROUTES.privacy.href}
                     className='underline underline-offset-4 hover:text-primary'
                 >
                     Privacy Policy

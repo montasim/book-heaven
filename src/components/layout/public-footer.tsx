@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { BookOpen, Github, Twitter, Heart, Facebook, Instagram, Linkedin } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface SocialLinks {
   twitter?: string
@@ -115,22 +116,22 @@ export function PublicFooter() {
             <h3 className="text-sm font-semibold">Explore</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/books" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.books.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Browse Books
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.categories.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Categories
                 </Link>
               </li>
               <li>
-                <Link href="/marketplace" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.marketplace.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Marketplace
                 </Link>
               </li>
               <li>
-                <Link href="/quiz" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.quiz.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Quiz
                 </Link>
               </li>
@@ -142,17 +143,17 @@ export function PublicFooter() {
             <h3 className="text-sm font-semibold">Support</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/help-center" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.helpCenter.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.about.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.contact.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Contact
                 </Link>
               </li>
@@ -164,12 +165,12 @@ export function PublicFooter() {
             <h3 className="text-sm font-semibold">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.terms.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href={ROUTES.privacy.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
               </li>

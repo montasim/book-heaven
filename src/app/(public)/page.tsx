@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Brain, Trophy, Users, BookOpen, ArrowRight, TrendingUp, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export default function LandingPage() {
   const [siteName, setSiteName] = useState('Book Heaven')
@@ -35,13 +36,13 @@ export default function LandingPage() {
             </p>
             <div className="flex items-center justify-center gap-4 pt-4">
               <Button asChild size="lg">
-                <Link href="/books">
+                <Link href={ROUTES.books.href}>
                   <BookOpen className="h-5 w-5 mr-2" />
                   Browse Books
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/quiz">
+                <Link href={ROUTES.quiz.href}>
                   <Brain className="h-5 w-5 mr-2" />
                   Play Quiz
                 </Link>
@@ -120,13 +121,13 @@ export default function LandingPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
                     <Button asChild size="lg" className="gap-2">
-                      <Link href="/quiz">
+                      <Link href={ROUTES.quiz.href}>
                         <Sparkles className="h-5 w-5" />
                         Start Quiz
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="gap-2">
-                      <Link href="/quiz/leaderboard">
+                      <Link href={ROUTES.quizLeaderboard.href}>
                         <Trophy className="h-5 w-5" />
                         View Rankings
                       </Link>
@@ -158,10 +159,10 @@ export default function LandingPage() {
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button asChild size="lg">
-              <Link href="/login">Sign Up</Link>
+              <Link href={ROUTES.login.href}>Sign Up</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/books">Browse Books</Link>
+              <Link href={ROUTES.books.href}>Browse Books</Link>
             </Button>
           </div>
         </div>

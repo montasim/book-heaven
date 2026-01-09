@@ -20,6 +20,7 @@ import {
     Activity,
 } from 'lucide-react'
 import Link from 'next/link'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // ============================================================================
 // TYPES
@@ -353,7 +354,7 @@ export default function AdminMarketplacePage() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Link href="/dashboard/marketplace/posts">
+                                <Link href={ROUTES.marketplacePosts.href}>
                                     <Card className="transition-all hover:shadow-md hover:border-primary cursor-pointer">
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-3">
@@ -372,7 +373,7 @@ export default function AdminMarketplacePage() {
                                     </Card>
                                 </Link>
 
-                                <Link href="/dashboard/marketplace/conversations">
+                                <Link href={ROUTES.marketplaceConversations.href}>
                                     <Card className="transition-all hover:shadow-md hover:border-primary cursor-pointer">
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-3">
@@ -391,7 +392,7 @@ export default function AdminMarketplacePage() {
                                     </Card>
                                 </Link>
 
-                                <Link href="/dashboard/marketplace/analytics">
+                                <Link href={ROUTES.marketplaceAnalytics.href}>
                                     <Card className="transition-all hover:shadow-md hover:border-primary cursor-pointer">
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-3">

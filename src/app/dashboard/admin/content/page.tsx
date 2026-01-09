@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // Pricing Types
 interface PricingFeature {
@@ -294,10 +295,10 @@ function AdminContentPageWrapper() {
         <div className="w-full overflow-x-auto">
           <div className="flex items-center justify-between gap-4">
             <TabsList>
-              <Link href="/dashboard/admin/content?tab=pricing">
+              <Link href={`${ROUTES.dashboardAdminContent.href}?tab=pricing`}>
                 <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
               </Link>
-              <Link href="/dashboard/admin/content?tab=faq">
+              <Link href={`${ROUTES.dashboardAdminContent.href}?tab=faq`}>
                 <TabsTrigger value="faq">FAQ</TabsTrigger>
               </Link>
             </TabsList>

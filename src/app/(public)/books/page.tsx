@@ -43,6 +43,7 @@ import {
   ChevronsRight,
 } from 'lucide-react'
 import { NoticeTicker } from '@/components/notices/notice-ticker'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // Type for category
 interface Category {
@@ -154,7 +155,7 @@ function BooksPageContent({
     if (filters.premium !== 'all') params.set('premium', filters.premium)
     if (filters.page !== 1) params.set('page', filters.page.toString())
 
-    const newUrl = `/books${params.toString() ? '?' + params.toString() : ''}`
+    const newUrl = `${ROUTES.books.href}${params.toString() ? '?' + params.toString() : ''}`
     window.history.replaceState(null, '', newUrl)
   }, [filters])
 
@@ -791,7 +792,7 @@ function BooksPageContent({
                               <PlayCircle className="h-5 w-5 text-primary" />
                               <h2 className="text-xl font-semibold">Continue Reading</h2>
                           </div>
-                          <Link href="/library?filter=reading">
+                          <Link href={`${ROUTES.library.href}?filter=reading`}>
                               <Button variant="outline" size="sm">
                                   View All
                               </Button>
@@ -822,7 +823,7 @@ function BooksPageContent({
                               <Clock className="h-5 w-5 text-primary" />
                               <h2 className="text-xl font-semibold">Recently Visited</h2>
                           </div>
-                          <Link href="/library">
+                          <Link href={ROUTES.library.href}>
                               <Button variant="outline" size="sm">
                                   View All
                               </Button>

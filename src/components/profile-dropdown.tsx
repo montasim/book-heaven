@@ -18,6 +18,7 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from "@/lib/utils/user"
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export function ProfileDropdown() {
   const { user, logout } = useAuth()
@@ -60,25 +61,25 @@ export function ProfileDropdown() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link href='/settings'>
+              <Link href={ROUTES.settings.href}>
                 Profile
                 <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href='/settings/account'>
+              <Link href={ROUTES.settingsAccount.href}>
                 Billing
                 <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href='/dashboard/activity'>
+              <Link href={ROUTES.dashboardActivity.href}>
                 Activity
                 <DropdownMenuShortcut>⌘A</DropdownMenuShortcut>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href='/settings'>
+              <Link href={ROUTES.settings.href}>
                 Settings
                 <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
               </Link>

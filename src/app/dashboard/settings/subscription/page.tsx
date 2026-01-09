@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { SubscriptionManagement } from '@/components/subscription/subscription-management'
 import { getSiteName } from '@/lib/utils/site-settings'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteName = await getSiteName()
@@ -31,7 +32,7 @@ export default async function SubscriptionSettingsPage() {
           Explore our premium plans to unlock more features
         </p>
         <a
-          href="/pricing"
+          href={ROUTES.pricing.href}
           className="text-sm text-primary hover:underline"
         >
           View pricing plans →

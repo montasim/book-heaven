@@ -34,6 +34,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { NavigationBreadcrumb } from '@/components/ui/breadcrumb'
 import { useConversationSocket } from '@/hooks/use-conversation-socket'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 // ============================================================================
 // TYPES
@@ -409,7 +410,7 @@ function ConversationViewPageContent() {
                         <p className="text-muted-foreground mb-4">
                             {error || 'This conversation may have been removed.'}
                         </p>
-                        <Link href="/messages">
+                        <Link href={ROUTES.messagesSimple.href}>
                             <Button>Back to Messages</Button>
                         </Link>
                     </CardContent>
@@ -426,8 +427,8 @@ function ConversationViewPageContent() {
                 {/* Header with Breadcrumb */}
                 <NavigationBreadcrumb
                     items={[
-                        { label: 'Home', href: '/', icon: <Home className="h-4 w-4" /> },
-                        { label: 'Messages', href: '/messages', icon: <MessageSquare className="h-4 w-4" /> },
+                        { label: 'Home', href: ROUTES.home.href, icon: <Home className="h-4 w-4" /> },
+                        { label: 'Messages', href: ROUTES.messagesSimple.href, icon: <MessageSquare className="h-4 w-4" /> },
                         { label: conversation.sellPost.title, icon: <ShoppingBag className="h-4 w-4" /> },
                     ]}
                     className="mb-6"

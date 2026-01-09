@@ -47,6 +47,7 @@ import { toast } from '@/hooks/use-toast'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { RequestStatus, BookType } from '@prisma/client'
+import { ROUTES } from '@/lib/routes/client-routes'
 
 interface LibraryStats {
   completedBooks: number
@@ -446,7 +447,7 @@ function LibraryPageContent() {
       <LibraryContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshBooks }}>
         <div className="space-y-6">
           <div className="flex items-center">
-            <Link href="/library?tab=bookshelves">
+            <Link href={`${ROUTES.library.href}?tab=bookshelves`}>
               <Button variant="ghost">
                 &larr; Back to Bookshelves
               </Button>
@@ -557,20 +558,20 @@ function LibraryPageContent() {
           />
         )}
 
-        <Tabs value={activeTab} className="space-y-4" onValueChange={(value) => router.push(`/library?tab=${value}`)}>
+        <Tabs value={activeTab} className="space-y-4" onValueChange={(value) => router.push(`${ROUTES.library.href}?tab=${value}`)}>
           {/* Tabs List with Filter Toolbar - Side by Side */}
           {booksLoading ? (
             <FilterToolbarSkeleton />
           ) : (
             <div className="flex flex-col md:flex-row md:justify-between gap-4">
               <TabsList>
-                <Link href="/library?tab=my-uploads">
+                <Link href={`${ROUTES.library.href}?tab=my-uploads`}>
                   <TabsTrigger value="my-uploads">My Uploads</TabsTrigger>
                 </Link>
-                <Link href="/library?tab=bookshelves">
+                <Link href={`${ROUTES.library.href}?tab=bookshelves`}>
                   <TabsTrigger value="bookshelves">Bookshelves</TabsTrigger>
                 </Link>
-                <Link href="/library?tab=my-requests">
+                <Link href={`${ROUTES.library.href}?tab=my-requests`}>
                   <TabsTrigger value="my-requests">My Requests</TabsTrigger>
               </Link>
             </TabsList>
