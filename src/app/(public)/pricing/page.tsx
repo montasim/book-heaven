@@ -1,21 +1,16 @@
-import { Metadata } from 'next'
+'use client'
+
 import { Crown } from 'lucide-react'
 import { PricingCards } from '@/components/subscription/pricing-cards'
 import { FAQSection } from '@/components/faq-section'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SubscriptionPlan } from '@prisma/client'
-import { getSiteName } from '@/lib/utils/site-settings'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
-export async function generateMetadata(): Promise<Metadata> {
-  const siteName = await getSiteName()
-  return {
-    title: `Pricing - ${siteName}`,
-    description: `Simple, transparent pricing for ${siteName}. Choose the perfect plan for your reading journey.`,
-  }
-}
-
-export default async function PricingPage() {
-  const siteName = await getSiteName()
+export default function PricingPage() {
+  const searchParams = useSearchParams()
+  const activeTab = searchParams.get('billing') || 'month'
 
   return (
     <div className="min-h-screen">
@@ -46,10 +41,14 @@ export default async function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <Tabs defaultValue="month" className="w-full">
+        <Tabs value={activeTab} className="w-full">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-            <TabsTrigger value="month">Monthly Billing</TabsTrigger>
-            <TabsTrigger value="year">Yearly Billing (Save 17%)</TabsTrigger>
+            <Link href="/pricing?billing=month">
+              <TabsTrigger value="month">Monthly Billing</TabsTrigger>
+            </Link>
+            <Link href="/pricing?billing=year">
+              <TabsTrigger value="year">Yearly Billing (Save 17%)</TabsTrigger>
+            </Link>
           </TabsList>
 
           <TabsContent value="month">
@@ -77,12 +76,6 @@ export default async function PricingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             <span>Cancel Anytime</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>14-Day Free Trial</span>
           </div>
         </div>
       </main>
