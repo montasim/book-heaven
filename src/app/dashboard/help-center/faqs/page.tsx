@@ -194,7 +194,7 @@ function HelpCenterFAQsPageWrapper() {
   }
 
   return (
-    <>
+    <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -462,7 +462,7 @@ function HelpCenterFAQsPageWrapper() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   )
 }
 
@@ -470,7 +470,7 @@ function HelpCenterFAQsPageWrapper() {
 export default function HelpCenterFAQsPage() {
   return (
     <Suspense fallback={
-      <>
+      <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-2">
@@ -523,7 +523,7 @@ export default function HelpCenterFAQsPage() {
             </Card>
           ))}
         </div>
-      </>
+      </div>
     }>
       <HelpCenterFAQsPageWrapper />
     </Suspense>

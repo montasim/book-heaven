@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import useSWR from 'swr'
@@ -106,8 +106,9 @@ interface Loan {
 export default function PhysicalLibraryBookPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const bookId = params.id as string
-  const [activeTab, setActiveTab] = useState('details')
+  const activeTab = searchParams.get('tab') || 'details'
   const { user } = useAuth()
 
   // Dialog states
@@ -560,10 +561,14 @@ export default function PhysicalLibraryBookPage() {
             </div>
 
             {/* Detailed Information Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="history">Loan History</TabsTrigger>
+                <Link href={`/physical-library/${bookId}?tab=details`}>
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                </Link>
+                <Link href={`/physical-library/${bookId}?tab=history`}>
+                  <TabsTrigger value="history">Loan History</TabsTrigger>
+                </Link>
               </TabsList>
 
               {/* Details Tab */}

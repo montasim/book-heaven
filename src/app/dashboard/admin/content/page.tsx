@@ -326,7 +326,7 @@ function AdminContentPageWrapper() {
   }
 
   return (
-    <>
+    <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Pricing Page Content</h1>
@@ -810,7 +810,7 @@ function AdminContentPageWrapper() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   )
 }
 
@@ -818,7 +818,7 @@ function AdminContentPageWrapper() {
 export default function AdminContentPage() {
   return (
     <Suspense fallback={
-      <>
+      <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-2">
             <Skeleton className="h-8 w-64" />
@@ -828,7 +828,7 @@ export default function AdminContentPage() {
         <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
           <Skeleton className="h-64 w-full" />
         </div>
-      </>
+      </div>
     }>
       <AdminContentPageWrapper />
     </Suspense>

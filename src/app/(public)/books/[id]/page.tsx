@@ -83,7 +83,7 @@ export default function BookDetailsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bookId = params.id as string
-  const [activeTab, setActiveTab] = useState('description')
+  const activeTab = searchParams.get('tab') || 'description'
 
   // Expand/collapse state for descriptions
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -705,11 +705,17 @@ export default function BookDetailsPage() {
             </div>
 
             {/* Detailed Information Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="description">Description</TabsTrigger>
-                <TabsTrigger value="progress">My Progress</TabsTrigger>
-                <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                <Link href={`/books/${bookId}?tab=description`}>
+                  <TabsTrigger value="description">Description</TabsTrigger>
+                </Link>
+                <Link href={`/books/${bookId}?tab=progress`}>
+                  <TabsTrigger value="progress">My Progress</TabsTrigger>
+                </Link>
+                <Link href={`/books/${bookId}?tab=reviews`}>
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                </Link>
               </TabsList>
 
               {/* Description Tab - Book Description and Author Info */}

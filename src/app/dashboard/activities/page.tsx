@@ -178,7 +178,8 @@ export default function AdminActivitiesPage() {
         </div>
       </HeaderContainer>
 
-      <div className='space-y-4'>
+      <div className='bg-background h-screen overflow-y-auto no-scrollbar pb-4'>
+        <div className='space-y-4'>
         {/* Stats */}
         {loading ? (
           <DashboardSummarySkeleton count={4} />
@@ -392,6 +393,7 @@ export default function AdminActivitiesPage() {
               columns={columns}
             />
           )}
+        </div>
         </div>
       </div>
     </>
