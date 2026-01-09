@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Plus, Trash2, Save, GripVertical, Search, Filter, ArrowUpDown } from 'lucide-react'
+import { Plus, Trash2, Save, GripVertical, Search, Filter, ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -52,6 +52,7 @@ function HelpCenterFAQsPageWrapper() {
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredCategory, setFilteredCategory] = useState(categoryFilter)
+  const [expandedFaqs, setExpandedFaqs] = useState<Set<number>>(new Set())
 
   // Dialog state
   const [seedDialogOpen, setSeedDialogOpen] = useState(false)
@@ -180,8 +181,20 @@ function HelpCenterFAQsPageWrapper() {
   const activeCount = faqs.filter(f => f.isActive).length
   const inactiveCount = faqs.length - activeCount
 
+  const toggleFAQExpand = (index: number) => {
+    setExpandedFaqs(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) {
+        newSet.delete(index)
+      } else {
+        newSet.add(index)
+      }
+      return newSet
+    })
+  }
+
   return (
-    <div className="pb-safe-bottom">
+    <>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -270,6 +283,7 @@ function HelpCenterFAQsPageWrapper() {
       </Card>
 
       {/* FAQ List */}
+      <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
       {loading ? (
         <>
           {[...Array(3)].map((_, i) => (
@@ -306,80 +320,107 @@ function HelpCenterFAQsPageWrapper() {
               <CardContent className="space-y-4">
                 {categoryFaqs.map((faq, index) => {
                   const globalIndex = faqs.findIndex(f => f.id === faq.id || (f.question === faq.question && f.answer === faq.answer))
+                  const isExpanded = expandedFaqs.has(globalIndex)
                   return (
-                    <div key={faq.id || index} className="border rounded-lg p-4 space-y-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-                          <Badge variant="outline" className="text-xs">
-                            #{faq.order + 1}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => moveFAQ(globalIndex, 'up')}
-                            disabled={globalIndex === 0}
-                          >
-                            <ArrowUpDown className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => removeFAQ(globalIndex)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid gap-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Category</Label>
-                            <Select
-                              value={faq.category}
-                              onValueChange={(value) => updateFAQ(globalIndex, { category: value })}
+                    <div key={faq.id || index} className="border rounded-lg overflow-hidden">
+                      {/* Collapsed Header - Always Visible */}
+                      <div
+                        className="p-4 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
+                        onClick={() => toggleFAQExpand(globalIndex)}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0" onClick={(e) => e.stopPropagation()} />
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">
+                                {faq.question || <span className="text-muted-foreground italic">No question</span>}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {FAQ_CATEGORIES[faq.category as keyof typeof FAQ_CATEGORIES] || faq.category}
+                                </Badge>
+                                <Badge variant={faq.isActive ? 'default' : 'secondary'} className="text-xs">
+                                  {faq.isActive ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => moveFAQ(globalIndex, 'up')}
+                              disabled={globalIndex === 0}
                             >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(FAQ_CATEGORIES).map(([key, label]) => (
-                                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              <ArrowUpDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeFAQ(globalIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <div className="flex items-end space-x-2">
-                            <Switch
-                              checked={faq.isActive}
-                              onCheckedChange={(checked) => updateFAQ(globalIndex, { isActive: checked })}
-                            />
-                            <Label className="mb-2">Active</Label>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Question</Label>
-                          <Input
-                            value={faq.question}
-                            onChange={(e) => updateFAQ(globalIndex, { question: e.target.value })}
-                            placeholder="Enter question..."
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Answer</Label>
-                          <Textarea
-                            value={faq.answer}
-                            onChange={(e) => updateFAQ(globalIndex, { answer: e.target.value })}
-                            placeholder="Enter answer..."
-                            rows={3}
-                          />
                         </div>
                       </div>
+
+                      {/* Expanded Content - Visible when expanded */}
+                      {isExpanded && (
+                        <div className="p-4 space-y-4 border-t">
+                          <div className="grid gap-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Category</Label>
+                                <Select
+                                  value={faq.category}
+                                  onValueChange={(value) => updateFAQ(globalIndex, { category: value })}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(FAQ_CATEGORIES).map(([key, label]) => (
+                                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex items-end space-x-2">
+                                <Switch
+                                  checked={faq.isActive}
+                                  onCheckedChange={(checked) => updateFAQ(globalIndex, { isActive: checked })}
+                                />
+                                <Label className="mb-2">Active</Label>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Question</Label>
+                              <Input
+                                value={faq.question}
+                                onChange={(e) => updateFAQ(globalIndex, { question: e.target.value })}
+                                placeholder="Enter question..."
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Answer</Label>
+                              <Textarea
+                                value={faq.answer}
+                                onChange={(e) => updateFAQ(globalIndex, { answer: e.target.value })}
+                                placeholder="Enter answer..."
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -388,6 +429,7 @@ function HelpCenterFAQsPageWrapper() {
           ))}
         </div>
       )}
+      </div>
 
       {/* Seed Confirmation Dialog */}
       <AlertDialog open={seedDialogOpen} onOpenChange={setSeedDialogOpen}>
@@ -420,7 +462,7 @@ function HelpCenterFAQsPageWrapper() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   )
 }
 
@@ -428,7 +470,7 @@ function HelpCenterFAQsPageWrapper() {
 export default function HelpCenterFAQsPage() {
   return (
     <Suspense fallback={
-      <div className="space-y-4">
+      <>
         {/* Header Skeleton */}
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-2">
@@ -468,18 +510,20 @@ export default function HelpCenterFAQsPage() {
         </Card>
 
         {/* FAQ List Skeleton */}
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="mb-4">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="mb-4">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </>
     }>
       <HelpCenterFAQsPageWrapper />
     </Suspense>
