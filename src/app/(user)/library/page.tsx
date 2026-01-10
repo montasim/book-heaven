@@ -23,6 +23,8 @@ import {
     Calendar,
     X,
     MessageCircle,
+    Library,
+    Inbox,
 } from 'lucide-react'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { BookList } from './book-list'
@@ -497,7 +499,7 @@ function LibraryPageContent() {
 
   return (
     <LibraryContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshBooks }}>
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-y-auto h-full">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-xl font-bold mb-2">My Library</h1>
@@ -506,17 +508,17 @@ function LibraryPageContent() {
             </p>
           </div>
           <div className="flex items-center justify-start gap-2 flex-wrap mt-4 md:mt-0 md:justify-end">
-            <Button onClick={() => setIsBookDrawerOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Book
+            <Button onClick={() => setIsBookDrawerOpen(true)} aria-label="Upload Book">
+              <Upload className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Upload Book</span>
             </Button>
-            <Button onClick={() => setIsShelfDrawerOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Bookshelf
+            <Button onClick={() => setIsShelfDrawerOpen(true)} aria-label="Create Bookshelf">
+              <Library className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Create Bookshelf</span>
             </Button>
-            <Button onClick={() => setIsRequestDrawerOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Request Book
+            <Button onClick={() => setIsRequestDrawerOpen(true)} aria-label="Request Book">
+              <Inbox className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Request Book</span>
             </Button>
           </div>
         </div>
@@ -614,12 +616,9 @@ function LibraryPageContent() {
           </div>
           )}
 
-          <TabsContent value="my-uploads" className="space-y-6 md:overflow-y-visible md:max-h-none">
+          <TabsContent value="my-uploads" className="space-y-6 pb-4">
             {booksLoading ? (
-              /* Scrollable skeleton - only this scrolls on mobile */
-              <div className="overflow-y-auto pb-24 md:overflow-y-visible md:max-h-none md:pb-0 max-h-[calc(100vh-28rem)]">
-                <BookGridSkeleton count={6} />
-              </div>
+              <BookGridSkeleton count={6} />
             ) : filteredBooks.length === 0 ? (
               <Card>
                 <CardContent className="pt-12 pb-12">
@@ -636,29 +635,24 @@ function LibraryPageContent() {
                 </CardContent>
               </Card>
             ) : (
-              /* Scrollable book list - only this scrolls on mobile */
-              <div className="overflow-y-auto pb-24 md:overflow-y-visible md:max-h-none md:pb-0 max-h-[calc(100vh-28rem)]">
-                <BookList
-                  books={filteredBooks}
-                  onEditAction={handleEditBook}
-                  onCardClickAction={handleBookClick}
-                />
-              </div>
+              <BookList
+                books={filteredBooks}
+                onEditAction={handleEditBook}
+                onCardClickAction={handleBookClick}
+              />
             )}
           </TabsContent>
-          <TabsContent value="bookshelves" className="space-y-4 md:overflow-y-visible md:max-h-none">
-            <div className="overflow-y-auto max-h-[calc(100vh-24rem)] pb-24 md:overflow-y-visible md:max-h-none md:pb-0">
-              <Bookshelves
-                key={bookshelfKey}
-                bookshelves={filteredBookshelves}
-                isLoading={bookshelvesLoading}
-                onEdit={handleEditBookshelf}
-                onDelete={handleDeleteBookshelf}
-                onRefresh={refreshBookshelves}
-              />
-            </div>
+          <TabsContent value="bookshelves" className="space-y-4 pb-24 md:pb-0">
+            <Bookshelves
+              key={bookshelfKey}
+              bookshelves={filteredBookshelves}
+              isLoading={bookshelvesLoading}
+              onEdit={handleEditBookshelf}
+              onDelete={handleDeleteBookshelf}
+              onRefresh={refreshBookshelves}
+            />
           </TabsContent>
-          <TabsContent value="my-requests" className="space-y-6 md:overflow-y-visible md:max-h-none">
+          <TabsContent value="my-requests" className="space-y-6 pb-24 md:pb-0">
             {requestsLoading ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
