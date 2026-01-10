@@ -173,8 +173,8 @@ function SiteSettingsPageWrapper() {
   const currentTab = TABS.find(t => t.value === activeTab)
 
   return (
-    <div className="pb-safe-bottom">
-      <Tabs value={activeTab} className="space-y-4">
+    <div className="pb-6 overflow-y-auto h-full">
+      <Tabs value={activeTab} className="space-y-4 h-full flex flex-col">
         {/* Dynamic Header */}
         {activeTab && (
           <div className="flex items-center gap-3">
@@ -232,7 +232,7 @@ function SiteSettingsPageWrapper() {
           </div>
         </div>
 
-        <TabsContent value="general">
+        <TabsContent value="general" className="flex-1 overflow-y-auto">
           <GeneralTab
             settings={settings}
             setSettings={setSettings}
@@ -243,7 +243,7 @@ function SiteSettingsPageWrapper() {
           />
         </TabsContent>
 
-        <TabsContent value="branding">
+        <TabsContent value="branding" className="flex-1 overflow-y-auto">
           <BrandingTab
             settings={settings}
             setSettings={setSettings}
@@ -252,7 +252,7 @@ function SiteSettingsPageWrapper() {
           />
         </TabsContent>
 
-        <TabsContent value="seo">
+        <TabsContent value="seo" className="flex-1 overflow-y-auto">
           <SEOTab
             settings={settings}
             setSettings={setSettings}
@@ -261,7 +261,7 @@ function SiteSettingsPageWrapper() {
           />
         </TabsContent>
 
-        <TabsContent value="contact">
+        <TabsContent value="contact" className="flex-1 overflow-y-auto">
           <ContactTab
             settings={settings}
             setSettings={setSettings}
