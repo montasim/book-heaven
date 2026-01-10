@@ -480,7 +480,7 @@ function SellPostDetailContent() {
 
     return (
         <div className="min-h-screen bg-background">
-            <main className="container mx-auto p-4 pb-24 lg:pb-8">
+            <main className="container mx-auto p-4 pb-6">
                 {/* Breadcrumb */}
                 <BreadcrumbList
                     items={[

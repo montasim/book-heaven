@@ -212,7 +212,7 @@ function MySellPostsPageContent() {
 
     return (
         <div className="min-h-screen bg-background">
-            <main className="container mx-auto p-4 pb-24 lg:pb-8">
+            <main className="container mx-auto p-4 pb-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">

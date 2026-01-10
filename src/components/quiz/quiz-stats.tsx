@@ -40,7 +40,7 @@ export function QuizStats({ showUserProfile = true }: QuizStatsProps) {
         </Card>
 
         {/* Streak Cards Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <Skeleton className="h-4 w-24" />
@@ -141,7 +141,7 @@ export function QuizStats({ showUserProfile = true }: QuizStatsProps) {
       )}
 
       {/* Streak Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
         {/* Daily Streak */}
         <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 border-orange-200 dark:border-orange-800">
           <CardHeader className="pb-3">
@@ -209,14 +209,6 @@ export function QuizStats({ showUserProfile = true }: QuizStatsProps) {
               <div className="text-xl font-bold">{stats.bestScore}</div>
               <p className="text-sm text-muted-foreground mt-1">Best Score</p>
             </div>
-          </div>
-
-          <div className="mt-6 pt-6 border-t">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Win Rate</span>
-              <span className="font-medium">{winRate}%</span>
-            </div>
-            <Progress value={winRate} className="h-2" />
           </div>
         </CardContent>
       </Card>

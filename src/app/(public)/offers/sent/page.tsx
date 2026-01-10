@@ -167,7 +167,7 @@ function OffersSentPageContent() {
 
     return (
         <div className="min-h-screen bg-background">
-            <main className="container mx-auto p-4 pb-24 lg:pb-8">
+            <main className="container mx-auto p-4 pb-6">
                 {/* Back Button */}
                 <Link href={ROUTES.marketplace.href} className="inline-block mb-6">
                     <Button variant="ghost" size="sm">

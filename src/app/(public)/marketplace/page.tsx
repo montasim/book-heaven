@@ -190,7 +190,7 @@ function MarketplacePageContent({
 
     return (
         <div className="min-h-screen bg-background">
-            <main className="container mx-auto p-4 pb-24 lg:pb-8">
+            <main className="container mx-auto p-4 pb-6">
                 {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
                     <div className="flex items-center gap-3">

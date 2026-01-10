@@ -225,7 +225,7 @@ function OffersReceivedPageContent() {
 
     return (
         <div className="min-h-screen bg-background">
-            <main className="container mx-auto p-4 pb-24 lg:pb-8">
+            <main className="container mx-auto p-4 pb-6">
                 {/* Breadcrumb */}
                 <BreadcrumbList
                     items={[
@@ -592,7 +592,7 @@ export default function OffersReceivedPage() {
             <Suspense
                 fallback={
                     <div className="min-h-screen bg-background">
-                        <main className="container mx-auto p-4 pb-24 lg:pb-8 space-y-6">
+                        <main className="container mx-auto p-4 pb-6 space-y-6">
                             <DashboardSummarySkeleton count={4} />
                             <Card className="p-4 mb-6">
                                 <div className="flex items-center justify-between mb-4">

@@ -50,7 +50,14 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
   const scrollToBottom = useCallback(() => {
     // Use requestAnimationFrame to ensure DOM has updated
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      // First try to scroll the end ref into view
+      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
+
+      // Also try to directly scroll the ScrollArea viewport
+      const scrollViewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]')
+      if (scrollViewport) {
+        scrollViewport.scrollTop = scrollViewport.scrollHeight
+      }
     })
   }, [])
 
@@ -99,8 +106,9 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
             content: m.content,
             timestamp: new Date(m.timestamp)
           })))
-          // Scroll to bottom after loading history
-          setTimeout(() => scrollToBottom(), 50)
+          // Scroll to bottom after loading history with multiple delays to ensure rendering is complete
+          setTimeout(() => scrollToBottom(), 100)
+          setTimeout(() => scrollToBottom(), 300)
         }
 
         // Check extraction status
@@ -376,7 +384,7 @@ export function BookChatModal({ open, onOpenChange, book }: BookChatModalProps) 
                     <li>Explain the key concepts from chapter 3</li>
                     <li>Who are the main characters and their relationships?</li>
                     <li>What did the author say about [topic]?</li>
-                    <li>Summarize the book's conclusion</li>
+                    <li>Summarize the book&apos;s conclusion</li>
                   </ul>
                   <p className="text-xs mt-3">AI answers based on this book&apos;s content only. Responses may not be 100% accurate.</p>
                 </div>
