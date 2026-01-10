@@ -248,7 +248,8 @@ export default function AdminPublicationDetailsPage() {
             </div>
 
             {/* Metadata - Responsive Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 text-sm">
+              <MetadataItem label="Total Spend:" value={`৳${publication.analytics?.totalSpend?.toLocaleString() || 0}`} />
               <MetadataItem label="Hard Copy:" value={publication.analytics?.booksByType?.HARD_COPY || 0} />
               <MetadataItem label="eBook:" value={publication.analytics?.booksByType?.EBOOK || 0} />
               <MetadataItem label="Audio:" value={publication.analytics?.booksByType?.AUDIO || 0} />

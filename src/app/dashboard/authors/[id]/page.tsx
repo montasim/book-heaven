@@ -264,11 +264,12 @@ export default function AdminAuthorDetailsPage() {
             </div>
 
             {/* Metadata - Responsive Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 text-sm">
               <MetadataItem label="Total Spend:" value={`৳${author.analytics?.totalSpend?.toLocaleString() || 0}`} />
               <MetadataItem label="Hard Copy:" value={author.analytics?.booksByType?.HARD_COPY || 0} />
               <MetadataItem label="eBook:" value={author.analytics?.booksByType?.EBOOK || 0} />
               <MetadataItem label="Audio:" value={author.analytics?.booksByType?.AUDIO || 0} />
+              <MetadataItem label="Total Books:" value={author.analytics?.totalBooks || 0} />
               {author.birthDate && (
                 <MetadataItem label="Birth Date:" value={new Date(author.birthDate).toLocaleDateString()} />
               )}

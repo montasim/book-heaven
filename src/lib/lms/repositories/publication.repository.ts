@@ -332,6 +332,7 @@ export async function getPublicationWithCompleteDetails(id: string) {
 
   const totalBooks = publication.books.length
   const totalPages = publication.books.reduce((sum, pb) => sum + (pb.book.pageNumber || 0), 0)
+  const totalSpend = publication.books.reduce((sum, pb) => sum + (pb.book.buyingPrice || 0), 0)
 
   return {
     ...publication,
@@ -342,6 +343,7 @@ export async function getPublicationWithCompleteDetails(id: string) {
       completedReaders,
       booksByType,
       totalPages,
+      totalSpend,
     },
   }
 }
