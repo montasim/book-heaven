@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { calculatePageProgress } from '@/lib/utils/reading-progress'
+import { useAuth } from '@/context/auth-context'
 
 interface Book {
   fileUrl: string
@@ -46,6 +47,7 @@ export function PDFReaderModal({
   directFileUrl: propDirectFileUrl,
   initialPage: propInitialPage,
 }: PDFReaderModalProps) {
+  const { user } = useAuth()
   const [book, setBook] = useState<Book | null>(null)
   const [readingProgress, setReadingProgress] = useState<ReadingProgress | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -55,9 +57,14 @@ export function PDFReaderModal({
   const [scale, setScale] = useState(1.2)
   const [rotation, setRotation] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isMobileFullscreen, setIsMobileFullscreen] = useState(false)
   const fetchedBookIdRef = useRef<string | null>(null)
   const saveProgressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const pdfViewerRef = useRef<{ downloadPDF: () => void }>(null)
+  const dialogContentRef = useRef<HTMLDivElement>(null)
+
+  // Check if user can download (admin or super admin)
+  const canDownload = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   // Fetch reading progress
   const fetchReadingProgress = useCallback(async () => {
@@ -172,6 +179,7 @@ export function PDFReaderModal({
         setScale(1.2)
         setRotation(0)
         setIsFullscreen(false)
+        setIsMobileFullscreen(false)
         fetchedBookIdRef.current = null
       }, 300)
       return () => clearTimeout(timer)
@@ -198,12 +206,21 @@ export function PDFReaderModal({
   }, [])
 
   const handleToggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-      setIsFullscreen(true)
+    // Check if we're on mobile (screen width < 768px)
+    const isMobile = window.innerWidth < 768
+
+    if (isMobile) {
+      // For mobile, use CSS-based fullscreen
+      setIsMobileFullscreen(prev => !prev)
     } else {
-      document.exitFullscreen()
-      setIsFullscreen(false)
+      // For desktop, use Fullscreen API
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+        setIsFullscreen(true)
+      } else {
+        document.exitFullscreen()
+        setIsFullscreen(false)
+      }
     }
   }, [])
 
@@ -249,7 +266,12 @@ export function PDFReaderModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="h-[95vh] sm:h-[95vh] w-[95vw] max-w-none p-0 gap-0 border-0 rounded-lg overflow-hidden [&>button]:hidden flex flex-col max-h-[100dvh]"
+        ref={dialogContentRef}
+        className={
+          isMobileFullscreen
+            ? "fixed inset-0 h-screen w-screen p-0 gap-0 border-0 rounded-none overflow-hidden [&>button]:hidden flex flex-col z-[9999]"
+            : "h-[95vh] sm:h-[95vh] w-[95vw] max-w-none p-0 gap-0 border-0 rounded-lg overflow-hidden [&>button]:hidden flex flex-col max-h-[100dvh]"
+        }
         style={{
           paddingBottom: 'env(safe-area-inset-bottom, 0)',
           paddingLeft: 'env(safe-area-inset-left, 0)',
@@ -313,22 +335,24 @@ export function PDFReaderModal({
                 className="h-8 w-8"
                 aria-label="Toggle fullscreen"
               >
-                {isFullscreen ? (
+                {(isFullscreen || isMobileFullscreen) ? (
                   <Minimize2 className="h-4 w-4" />
                 ) : (
                   <Maximize2 className="h-4 w-4" />
                 )}
               </Button>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDownload}
-                className="h-8 w-8"
-                aria-label="Download PDF"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+              {canDownload && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDownload}
+                  className="h-8 w-8"
+                  aria-label="Download PDF"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* Desktop: Reading Mode text */}
@@ -382,6 +406,7 @@ export function PDFReaderModal({
               onScaleChange={setScale}
               onRotationChange={setRotation}
               hideToolbarOnMobile={true}
+              showDownloadButton={canDownload}
               className="h-full"
             />
           )}

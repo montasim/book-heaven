@@ -35,6 +35,7 @@ interface PDFViewerProps {
   onRotationChange?: (rotation: number) => void
   className?: string
   hideToolbarOnMobile?: boolean
+  showDownloadButton?: boolean
 }
 
 export interface PDFViewerRef {
@@ -53,7 +54,8 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   onScaleChange,
   onRotationChange,
   className,
-  hideToolbarOnMobile = false
+  hideToolbarOnMobile = false,
+  showDownloadButton = true
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -374,6 +376,21 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
     renderInitialPage()
   }, [pdfDocument, renderPage, currentPage, scale, rotation])
 
+  // Re-render page when scale or rotation changes (for external control)
+  useEffect(() => {
+    if (!pdfDocument || !canvasRef.current || !hasRenderedInitialPage.current) return
+
+    const reRenderPage = async () => {
+      try {
+        await renderPage(pdfDocument, currentPage, scale, rotation)
+      } catch (err) {
+        console.error('Error re-rendering page:', err)
+      }
+    }
+
+    reRenderPage()
+  }, [scale, rotation])
+
   // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -566,15 +583,17 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
               )}
             </Button>
 
-            {/* Download button - hidden on mobile */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              className="hidden sm:inline-flex"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            {/* Download button - hidden on mobile - conditionally rendered */}
+            {showDownloadButton && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownload}
+                className="hidden sm:inline-flex"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
 
             {/* Mobile menu toggle button */}
             <Button
@@ -659,15 +678,17 @@ export const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
                   </>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                className="justify-start min-h-[44px] col-span-2"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
-              </Button>
+              {showDownloadButton && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  className="justify-start min-h-[44px] col-span-2"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              )}
             </div>
           </div>
         )}
