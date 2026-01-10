@@ -375,6 +375,19 @@ export async function getPublicationBooksWithStats(
                 category: true,
               },
             },
+            series: {
+              include: {
+                series: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+              orderBy: {
+                order: 'asc',
+              },
+            },
           },
         },
       },
@@ -407,6 +420,27 @@ export async function getPublicationBooksWithStats(
     },
   })
 
+  // Get completed readers count per book
+  const completedReadersStats = await prisma.readingProgress.groupBy({
+    by: ['bookId'],
+    where: {
+      bookId: { in: bookIds },
+      isCompleted: true,
+    },
+    _count: {
+      id: true,
+    },
+  })
+
+  // Get average progress per book
+  const avgProgressStats = await prisma.readingProgress.groupBy({
+    by: ['bookId'],
+    where: { bookId: { in: bookIds } },
+    _avg: {
+      progress: true,
+    },
+  })
+
   const statsMap = new Map()
   bookStats.forEach(stat => {
     statsMap.set(stat.bookId, stat._count.id)
@@ -417,10 +451,22 @@ export async function getPublicationBooksWithStats(
     readersMap.set(stat.bookId, stat._count.id)
   })
 
+  const completedReadersMap = new Map()
+  completedReadersStats.forEach(stat => {
+    completedReadersMap.set(stat.bookId, stat._count.id)
+  })
+
+  const avgProgressMap = new Map()
+  avgProgressStats.forEach(stat => {
+    avgProgressMap.set(stat.bookId, Math.round((stat._avg.progress || 0) * 100) / 100)
+  })
+
   const booksWithStats = books.map(pb => ({
     ...pb.book,
     viewCount: statsMap.get(pb.book.id) || 0,
     readerCount: readersMap.get(pb.book.id) || 0,
+    completedReaders: completedReadersMap.get(pb.book.id) || 0,
+    avgProgress: avgProgressMap.get(pb.book.id) || 0,
   }))
 
   return {
