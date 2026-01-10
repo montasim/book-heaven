@@ -332,6 +332,7 @@ export async function getAuthorWithCompleteDetails(id: string) {
 
   const totalBooks = author.books.length
   const totalPages = author.books.reduce((sum, ab) => sum + (ab.book.pageNumber || 0), 0)
+  const totalSpend = author.books.reduce((sum, ab) => sum + (ab.book.buyingPrice || 0), 0)
 
   return {
     ...author,
@@ -342,6 +343,7 @@ export async function getAuthorWithCompleteDetails(id: string) {
       completedReaders,
       booksByType,
       totalPages,
+      totalSpend,
     },
   }
 }
@@ -367,12 +369,35 @@ export async function getAuthorBooksWithStats(
           include: {
             publications: {
               include: {
-                publication: true,
+                publication: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             categories: {
               include: {
-                category: true,
+                category: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+            series: {
+              include: {
+                series: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+              orderBy: {
+                order: 'asc',
               },
             },
           },
@@ -407,6 +432,27 @@ export async function getAuthorBooksWithStats(
     },
   })
 
+  // Get completed readers count per book
+  const completedReadersStats = await prisma.readingProgress.groupBy({
+    by: ['bookId'],
+    where: {
+      bookId: { in: bookIds },
+      isCompleted: true,
+    },
+    _count: {
+      id: true,
+    },
+  })
+
+  // Get average progress per book
+  const avgProgressStats = await prisma.readingProgress.groupBy({
+    by: ['bookId'],
+    where: { bookId: { in: bookIds } },
+    _avg: {
+      progress: true,
+    },
+  })
+
   const statsMap = new Map()
   bookStats.forEach(stat => {
     statsMap.set(stat.bookId, stat._count.id)
@@ -417,10 +463,22 @@ export async function getAuthorBooksWithStats(
     readersMap.set(stat.bookId, stat._count.id)
   })
 
+  const completedReadersMap = new Map()
+  completedReadersStats.forEach(stat => {
+    completedReadersMap.set(stat.bookId, stat._count.id)
+  })
+
+  const avgProgressMap = new Map()
+  avgProgressStats.forEach(stat => {
+    avgProgressMap.set(stat.bookId, Math.round((stat._avg.progress || 0) * 100) / 100)
+  })
+
   const booksWithStats = books.map(ab => ({
     ...ab.book,
     viewCount: statsMap.get(ab.book.id) || 0,
     readerCount: readersMap.get(ab.book.id) || 0,
+    completedReaders: completedReadersMap.get(ab.book.id) || 0,
+    avgProgress: avgProgressMap.get(ab.book.id) || 0,
   }))
 
   return {
