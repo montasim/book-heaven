@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { getCampaigns } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { CampaignsHeaderActions } from './components/campaigns-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton, DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
@@ -15,6 +15,7 @@ import { CampaignsMutateDrawer } from './components/campaigns-mutate-drawer'
 import { CampaignDeleteDialog } from './components/campaign-delete-dialog'
 import { CampaignStatsDialog } from './components/campaign-stats-dialog'
 import { Mail, Send, Clock, CheckCircle2, AlertCircle, TrendingUp, Megaphone } from 'lucide-react'
+import { IconPlus } from '@tabler/icons-react'
 
 function CampaignsPageContent() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
@@ -112,7 +113,17 @@ function CampaignsPageContent() {
         icon={Megaphone}
         title="Campaigns"
         description="Manage email campaigns to engage with your audience"
-        actions={<CampaignsHeaderActions campaignCount={campaigns.length} />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'New Campaign',
+                icon: IconPlus,
+                onClick: () => setOpen('create'),
+              },
+            ]}
+          />
+        }
       >
         <div className="space-y-4">
           {/* Campaign Summary */}

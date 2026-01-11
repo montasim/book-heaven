@@ -2,7 +2,7 @@
 
 import { getLoans, markAsReturned } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { LoansHeaderActions } from './components/loans-header'
+import { DashboardPageHeaderActions, ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
 import { LendBookDrawer } from './components/lend-book-drawer'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Loan } from './data/schema'
@@ -11,7 +11,7 @@ import { toast } from '@/hooks/use-toast'
 import { DataTable } from '@/components/data-table/data-table'
 import { columns } from './components/columns'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
-import { BookOpen, AlertTriangle, CheckCircle, Clock, HandCoins } from 'lucide-react'
+import { BookOpen, AlertTriangle, CheckCircle, Clock, HandCoins, Plus, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
@@ -92,7 +92,25 @@ export default function LoansPage() {
         icon={HandCoins}
         title="Loans"
         description="Manage book lending and returns"
-        actions={<LoansHeaderActions onLendBook={() => setIsLendDialogOpen(true)} />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={
+              [
+                {
+                  label: 'Lend Book',
+                  icon: Plus,
+                  onClick: () => setIsLendDialogOpen(true),
+                },
+                {
+                  label: 'Refresh',
+                  icon: RefreshCw,
+                  onClick: refreshLoans,
+                  variant: 'outline',
+                },
+              ] as ActionConfig[]
+            }
+          />
+        }
       >
         {/* Dashboard Summary */}
         {isLoading ? (

@@ -2,7 +2,9 @@
 
 import { deleteBook, getBooks } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { BooksHeaderActions } from './components/books-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
+import { BulkImportDrawer } from './components/bulk-import-drawer'
+import { invalidateCache } from './actions'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { Book } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +17,7 @@ import { BooksMutateDrawer } from './components/books-mutate-drawer'
 import { BooksDeleteDialog } from './components/books-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { Button } from '@/components/ui/button'
-import { Trash2, X, BookOpen } from 'lucide-react'
+import { Trash2, X, BookOpen, Plus, Upload, RefreshCw, Trash2 as TrashIcon } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,10 +107,32 @@ export default function BooksPage() {
   // Local states
   const [currentRow, setCurrentRow] = useState<Book | null>(null)
   const [open, setOpen] = useDialogState<BooksDialogType>(null)
+  const [bulkImportOpen, setBulkImportOpen] = useState(false)
+  const [isInvalidating, setIsInvalidating] = useState(false)
 
   const refreshBooks = async () => {
     const { pageIndex, pageSize } = paginationRef.current
     await fetchBooksForPage(pageIndex, pageSize, true) // Force refresh
+  }
+
+  const handleInvalidateCache = async () => {
+    setIsInvalidating(true)
+    try {
+      await invalidateCache()
+      toast({
+        title: 'Cache Cleared',
+        description: 'Books cache has been invalidated successfully',
+      })
+      await refreshBooks()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to invalidate cache',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsInvalidating(false)
+    }
   }
 
   // Create columns dynamically with processing progress
@@ -245,7 +269,37 @@ export default function BooksPage() {
         icon={BookOpen}
         title="Books"
         description="Manage books in your library system"
-        actions={<BooksHeaderActions />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Add Book',
+                icon: Plus,
+                onClick: () => setOpen('create'),
+              },
+              {
+                label: 'Bulk Import',
+                icon: Upload,
+                onClick: () => setBulkImportOpen(true),
+                variant: 'outline',
+              },
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: refreshBooks,
+                variant: 'outline',
+              },
+              {
+                label: 'Invalidate Cache',
+                icon: TrashIcon,
+                onClick: handleInvalidateCache,
+                variant: 'outline',
+                disabled: isInvalidating,
+                loading: isInvalidating,
+              },
+            ]}
+          />
+        }
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
@@ -346,6 +400,12 @@ export default function BooksPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BulkImportDrawer
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        onSuccess={refreshBooks}
+      />
       </DashboardPage>
     </BooksContextProvider>
   )

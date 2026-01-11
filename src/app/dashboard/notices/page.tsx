@@ -2,7 +2,7 @@
 
 import { deleteNotice, getNotices } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { NoticesHeaderActions } from './components/notices-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState } from 'react'
 import { Notice } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -14,7 +14,7 @@ import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { columns } from './components/columns'
 import { NoticesMutateDrawer } from './components/notices-mutate-drawer'
 import { NoticesDeleteDialog } from './components/notices-delete-dialog'
-import { Bell } from 'lucide-react'
+import { Bell, Plus, RefreshCw } from 'lucide-react'
 
 export default function NoticesPage() {
   const [notices, setNotices] = useState<Notice[]>([])
@@ -84,7 +84,23 @@ export default function NoticesPage() {
         icon={Bell}
         title="Notices"
         description="Manage notices and announcements for your users"
-        actions={<NoticesHeaderActions />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Add Notice',
+                icon: Plus,
+                onClick: () => setOpen('create'),
+              },
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: refreshNotices,
+                variant: 'outline',
+              },
+            ]}
+          />
+        }
       >
         {isLoading ? (
           <TableSkeleton />

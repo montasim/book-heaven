@@ -2,7 +2,7 @@
 
 import { deleteCategory, getCategories } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { CategoriesHeaderActions } from './components/categories-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Category } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import { CategoriesDeleteDialog } from './components/categories-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
-import { Trash2, X, FolderTree } from 'lucide-react'
+import { Trash2, X, FolderTree, Plus, RefreshCw } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {IconTag} from "@tabler/icons-react";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -167,10 +168,26 @@ export default function CategoriesPage() {
   return (
     <CategoriesContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshCategories }}>
       <DashboardPage
-        icon={FolderTree}
+        icon={IconTag}
         title="Categories"
         description="Manage book categories in your system"
-        actions={<CategoriesHeaderActions />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Add Category',
+                icon: Plus,
+                onClick: () => setOpen('create'),
+              },
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: refreshCategories,
+                variant: 'outline',
+              },
+            ]}
+          />
+        }
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

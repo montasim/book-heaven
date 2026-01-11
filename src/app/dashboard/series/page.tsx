@@ -2,7 +2,7 @@
 
 import { deleteSeries, getSeries } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { SeriesHeaderActions } from './components/series-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Series } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import SeriesProvider, { useSeriesContext, SeriesDialogType } from './context/se
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
-import { Trash2, X, Layers } from 'lucide-react'
+import { Trash2, X, Layers, Plus } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -149,7 +149,17 @@ export default function SeriesPage() {
         icon={Layers}
         title="Series"
         description="Manage book series in your system"
-        actions={<SeriesHeaderActions />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Add Series',
+                icon: Plus,
+                onClick: () => setOpen('create'),
+              },
+            ]}
+          />
+        }
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

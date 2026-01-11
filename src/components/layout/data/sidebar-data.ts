@@ -39,7 +39,16 @@ import {
   IconLayoutDashboard,
   IconSettings,
 } from '@tabler/icons-react'
-import { AudioWaveform, BookOpen as BookOpenIcon, Brain, Command, GalleryVerticalEnd } from 'lucide-react'
+import {
+    AudioWaveform,
+    BookOpen as BookOpenIcon,
+    Brain,
+    Command,
+    GalleryVerticalEnd,
+    HandCoins,
+    Layers, Megaphone, Package,
+    PenTool, ShoppingBag, TrendingUp, Bell
+} from 'lucide-react'
 import { type SidebarData } from '../types'
 import { ROUTES } from '@/lib/routes/client-routes'
 
@@ -93,12 +102,12 @@ export const sidebarData: SidebarData = {
         {
           title: ROUTES.dashboardCampaigns.label,
           url: ROUTES.dashboardCampaigns.href,
-          icon: IconMail,
+          icon: Megaphone,
         },
         {
           title: ROUTES.dashboardNotices.label,
           url: ROUTES.dashboardNotices.href,
-          icon: IconNotification,
+          icon: Bell,
         },
         {
           title: ROUTES.dashboardActivities.label,
@@ -138,12 +147,12 @@ export const sidebarData: SidebarData = {
         {
           title: ROUTES.dashboardSeries.label,
           url: ROUTES.dashboardSeries.href,
-          icon: IconList,
+          icon: Layers,
         },
         {
           title: ROUTES.dashboardAuthors.label,
           url: ROUTES.dashboardAuthors.href,
-          icon: IconUser,
+          icon: PenTool,
         },
         {
           title: ROUTES.dashboardPublications.label,
@@ -168,12 +177,12 @@ export const sidebarData: SidebarData = {
         {
           title: ROUTES.dashboardLoans.label,
           url: ROUTES.dashboardLoans.href,
-          icon: IconHandStop,
+          icon: HandCoins,
         },
         {
           title: ROUTES.dashboardBooksCostAnalytics.label,
           url: ROUTES.dashboardBooksCostAnalytics.href,
-          icon: IconCurrency,
+          icon: TrendingUp,
         },
       ],
     },
@@ -183,7 +192,7 @@ export const sidebarData: SidebarData = {
         {
           title: ROUTES.marketplace.label,
           url: ROUTES.marketplace.href,
-          icon: IconShoppingCart,
+          icon: ShoppingBag,
         },
         {
           title: ROUTES.marketplaceMyPosts.label,

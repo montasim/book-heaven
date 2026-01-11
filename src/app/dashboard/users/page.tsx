@@ -2,7 +2,7 @@
 
 import { deleteUser, getUsers } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { UsersHeaderActions } from './components/users-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState } from 'react'
 import { User, userListSchema } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -16,6 +16,7 @@ import { UsersInviteDialog } from './components/users-invite-dialog'
 import { UsersMutateDrawer } from './components/users-mutate-drawer'
 import { UsersImportDialog } from './components/users-import-dialog'
 import { Users } from 'lucide-react'
+import { IconMailPlus, IconUserPlus } from '@tabler/icons-react'
 
 export default function Page() {
   const [users, setUsers] = useState<User[]>([])
@@ -87,7 +88,23 @@ export default function Page() {
         icon={Users}
         title="Users"
         description="Manage user accounts and permissions"
-        actions={<UsersHeaderActions />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Invite User',
+                icon: IconMailPlus,
+                onClick: () => setOpen('invite'),
+                variant: 'outline',
+              },
+              {
+                label: 'Add User',
+                icon: IconUserPlus,
+                onClick: () => setOpen('create'),
+              },
+            ]}
+          />
+        }
       >
         {isLoading ? <TableSkeleton /> : <DataTable data={users} columns={columns} />}
 

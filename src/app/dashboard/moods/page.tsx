@@ -2,7 +2,7 @@
 
 import { deleteMood, getMoods } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { MoodsHeaderActions } from './components/moods-header'
+import { DashboardPageHeaderActions, ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Mood } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import { MoodsMutateDrawer } from './components/moods-mutate-drawer'
 import { MoodsDeleteDialog } from './components/moods-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { Button } from '@/components/ui/button'
-import { Trash2, X, Smile } from 'lucide-react'
+import { Trash2, X, Smile, Plus, RefreshCw, Sprout } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -164,7 +164,31 @@ export default function MoodsPage() {
         icon={Smile}
         title="Moods"
         description="Manage reading moods in your system"
-        actions={<MoodsHeaderActions onSeedMoods={() => setSeedDialogOpen(true)} />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={
+              [
+                {
+                  label: 'Add Mood',
+                  icon: Plus,
+                  onClick: () => setOpen('create'),
+                },
+                {
+                  label: 'Refresh',
+                  icon: RefreshCw,
+                  onClick: refreshMoods,
+                  variant: 'outline',
+                },
+                {
+                  label: 'Seed Moods',
+                  icon: Sprout,
+                  onClick: () => setSeedDialogOpen(true),
+                  variant: 'outline',
+                },
+              ] as ActionConfig[]
+            }
+          />
+        }
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

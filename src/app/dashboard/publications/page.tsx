@@ -2,7 +2,7 @@
 
 import { deletePublication, getPublications } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { PublicationsHeaderActions } from './components/publications-header'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Publication } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import { PublicationsDeleteDialog } from './components/publications-delete-dialo
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
-import { Trash2, X, Newspaper } from 'lucide-react'
+import { Trash2, X, Plus, RefreshCw } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {IconBuildingStore} from "@tabler/icons-react";
 
 export default function PublicationsPage() {
   const [publications, setPublications] = useState<Publication[]>([])
@@ -167,10 +168,26 @@ export default function PublicationsPage() {
   return (
     <PublicationsContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshPublications }}>
       <DashboardPage
-        icon={Newspaper}
+        icon={IconBuildingStore}
         title="Publications"
         description="Manage publications in your system"
-        actions={<PublicationsHeaderActions />}
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Add Publication',
+                icon: Plus,
+                onClick: () => setOpen('create'),
+              },
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: refreshPublications,
+                variant: 'outline',
+              },
+            ]}
+          />
+        }
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
