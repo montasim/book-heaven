@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -200,20 +201,28 @@ function HelpCenterFAQsPageWrapper() {
       title="Help Center FAQs"
       description="Manage frequently asked questions for the help center"
       actions={
-        <>
-          <Button onClick={() => setSeedDialogOpen(true)} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className='hidden sm:inline'>Seed Initial Data</span>
-          </Button>
-          <Button onClick={addFAQ} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className='hidden sm:inline'>Add FAQ</span>
-          </Button>
-          <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            <span className='hidden sm:inline'>Save All</span>
-          </Button>
-        </>
+        <DashboardPageHeaderActions
+          actions={[
+            {
+              label: 'Seed Initial Data',
+              onClick: () => setSeedDialogOpen(true),
+              variant: 'outline',
+            },
+            {
+              label: 'Add FAQ',
+              icon: Plus,
+              onClick: addFAQ,
+              variant: 'outline',
+            },
+            {
+              label: 'Save All',
+              icon: Save,
+              onClick: handleSaveFAQs,
+              disabled: saving,
+              loading: saving,
+            },
+          ]}
+        />
       }
     >
       {/* Stats Cards */}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useAuth } from '@/context/auth-context'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,12 +13,16 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { SellPostGrid, type SellPostCardProps } from '@/components/marketplace'
 import Link from 'next/link'
+import { ROUTES } from '@/lib/routes/client-routes'
 import {
     SlidersHorizontal,
     X,
     ShoppingBag,
     Filter,
     ArrowUpDown,
+    MessageSquare,
+    TrendingUp,
+    Inbox,
 } from 'lucide-react'
 import { BookCondition } from '@prisma/client'
 
@@ -192,7 +197,8 @@ function MarketplacePageContent({
         <div className="min-h-screen bg-background">
             <main className="container mx-auto p-4 pb-6">
                 {/* Header */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                    {/* Left - Title and Description */}
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <ShoppingBag className="h-5 w-5 text-primary" />
@@ -205,30 +211,70 @@ function MarketplacePageContent({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Search */}
-                        <div className="relative flex-1 max-w-md">
-                            <Input
-                                type="search"
-                                placeholder="Search by title, author..."
-                                value={filters.search}
-                                onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full"
-                            />
-                        </div>
+                    {/* Middle - Search */}
+                    <div className="flex-1 max-w-md mx-4 hidden lg:block">
+                        <Input
+                            type="search"
+                            placeholder="Search by title, author..."
+                            value={filters.search}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="w-full h-9"
+                        />
+                    </div>
+
+                    {/* Right - Action Buttons */}
+                    <div className="flex items-center gap-2">
+                        {/* Action Buttons */}
+                        <DashboardPageHeaderActions
+                            actions={[
+                                {
+                                    label: 'My Listing',
+                                    icon: ShoppingBag,
+                                    href: ROUTES.marketplaceMyPosts.href,
+                                    variant: 'outline',
+                                },
+                                {
+                                    label: 'Messages',
+                                    icon: MessageSquare,
+                                    href: ROUTES.messagesSimple.href,
+                                    variant: 'outline',
+                                },
+                                {
+                                    label: 'My Offers',
+                                    icon: TrendingUp,
+                                    href: ROUTES.offersSent.href,
+                                    variant: 'outline',
+                                },
+                                {
+                                    label: 'Received Offers',
+                                    icon: Inbox,
+                                    href: ROUTES.offersReceived.href,
+                                    variant: 'outline',
+                                },
+                            ]}
+                        />
 
                         {/* Filter Toggle - Mobile */}
                         <Button
                             variant={hasActiveFilters ? "default" : "outline"}
-                            size="sm"
+                            size="icon"
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
                             className="lg:hidden"
                         >
                             <Filter className="h-4 w-4" />
-                            {hasActiveFilters && <span className="ml-1 h-2 w-2 bg-current rounded-full" />}
                         </Button>
-
                     </div>
+                </div>
+
+                {/* Mobile Search Row */}
+                <div className="lg:hidden mb-4">
+                    <Input
+                        type="search"
+                        placeholder="Search by title, author..."
+                        value={filters.search}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="w-full h-9"
+                    />
                 </div>
 
                 <div className="flex gap-8">

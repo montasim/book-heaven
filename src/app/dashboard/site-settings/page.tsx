@@ -13,6 +13,8 @@ import { BrandingTab } from './components/branding-tab'
 import { SEOTab } from './components/seo-tab'
 import { ContactTab } from './components/contact-tab'
 import { ROUTES } from '@/lib/routes/client-routes'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 
 interface SiteSettings {
   id: string
@@ -131,18 +133,26 @@ function SiteSettingsPageWrapper() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        {/* Header skeleton */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-          <Skeleton className="h-10 w-24" />
-        </div>
-
-        {/* Tabs skeleton */}
+      <DashboardPage
+        icon={Construction}
+        title="Site Settings"
+        description="Manage your site settings"
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: fetchSettings,
+                variant: 'outline',
+                disabled: true,
+              },
+            ]}
+          />
+        }
+      >
         <div className="space-y-4">
+          {/* Tabs skeleton */}
           <div className="flex gap-2">
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-24" />
@@ -151,15 +161,33 @@ function SiteSettingsPageWrapper() {
           </div>
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
+      </DashboardPage>
     )
   }
 
   if (!settings) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Failed to load settings</p>
-      </div>
+      <DashboardPage
+        icon={Construction}
+        title="Site Settings"
+        description="Manage your site settings"
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: fetchSettings,
+                variant: 'outline',
+              },
+            ]}
+          />
+        }
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Failed to load settings</p>
+        </div>
+      </DashboardPage>
     )
   }
 
@@ -173,23 +201,26 @@ function SiteSettingsPageWrapper() {
   const currentTab = TABS.find(t => t.value === activeTab)
 
   return (
-    <div className="pb-6 overflow-y-auto h-full">
+    <DashboardPage
+      icon={currentTab?.icon}
+      title={currentTab?.label || 'Site Settings'}
+      description={`Manage your site ${currentTab?.label.toLowerCase() || ''} settings`}
+      actions={
+        <DashboardPageHeaderActions
+          actions={[
+            {
+              label: 'Refresh',
+              icon: RefreshCw,
+              onClick: fetchSettings,
+              variant: 'outline',
+              disabled: isLoading,
+              loading: isLoading,
+            },
+          ]}
+        />
+      }
+    >
       <Tabs value={activeTab} className="space-y-4 h-full flex flex-col">
-        {/* Dynamic Header */}
-        {activeTab && (
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              {currentTab && <currentTab.icon className="h-5 w-5 text-primary" />}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">{currentTab?.label}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage your site {currentTab?.label.toLowerCase()} settings
-              </p>
-            </div>
-          </div>
-        )}
-
         <div className="flex items-center justify-between gap-4">
           <div className="w-full overflow-x-auto">
             <TabsList>
@@ -218,17 +249,6 @@ function SiteSettingsPageWrapper() {
                 </TabsTrigger>
               </Link>
             </TabsList>
-          </div>
-          <div className="flex items-center justify-center gap-2 flex-shrink-0">
-            <Button
-              variant="outline"
-              onClick={fetchSettings}
-              disabled={isLoading}
-              size="sm"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading && 'animate-spin'}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
           </div>
         </div>
 
@@ -270,7 +290,7 @@ function SiteSettingsPageWrapper() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPage>
   )
 }
 
@@ -278,18 +298,25 @@ function SiteSettingsPageWrapper() {
 export default function SiteSettingsPage() {
   return (
     <Suspense fallback={
-      <div className="space-y-6">
-        {/* Header skeleton */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-          <Skeleton className="h-10 w-24" />
-        </div>
-
-        {/* Tabs skeleton */}
+      <DashboardPage
+        icon={Construction}
+        title="Site Settings"
+        description="Manage your site settings"
+        actions={
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Refresh',
+                icon: RefreshCw,
+                onClick: () => {},
+                variant: 'outline',
+              },
+            ]}
+          />
+        }
+      >
         <div className="space-y-4">
+          {/* Tabs skeleton */}
           <div className="flex gap-2">
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-24" />
@@ -298,7 +325,7 @@ export default function SiteSettingsPage() {
           </div>
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
+      </DashboardPage>
     }>
       <SiteSettingsPageWrapper />
     </Suspense>

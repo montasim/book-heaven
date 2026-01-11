@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, HelpCircle, Plus, Trash2, Save, Pencil, GripVertical, AlertTriangle, ChevronDown, ChevronUp, FileText } from 'lucide-react'
+import { Crown, HelpCircle, Plus, Trash2, Save, Pencil, GripVertical, AlertTriangle, ChevronDown, ChevronUp, FileText, ChevronDown as ExpandIcon, ChevronUp as CollapseIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -331,6 +332,54 @@ function AdminContentPageWrapper() {
       icon={FileText}
       title="Pricing Page Content"
       description="Manage pricing tiers, features, and FAQ content for the pricing page"
+      actions={
+        activeTab === 'pricing' ? (
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All',
+                icon: expandedPricingCards.size === editedTiers.length ? CollapseIcon : ExpandIcon,
+                onClick: togglePricingAll,
+                variant: 'outline',
+              },
+              {
+                label: 'Seed Pricing',
+                onClick: () => setPricingSeedDialogOpen(true),
+                variant: 'outline',
+              },
+            ]}
+          />
+        ) : activeTab === 'faq' ? (
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All',
+                icon: expandedFaqCards.size === faqs.length ? CollapseIcon : ExpandIcon,
+                onClick: toggleFaqAll,
+                variant: 'outline',
+              },
+              {
+                label: 'Seed FAQ',
+                onClick: () => setFaqSeedDialogOpen(true),
+                variant: 'outline',
+              },
+              {
+                label: 'Add FAQ',
+                icon: Plus,
+                onClick: addFAQ,
+                variant: 'outline',
+              },
+              {
+                label: 'Save All',
+                icon: Save,
+                onClick: handleSaveFAQs,
+                disabled: saving,
+                loading: saving,
+              },
+            ]}
+          />
+        ) : null
+      }
     >
       <Tabs value={activeTab} className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -342,36 +391,6 @@ function AdminContentPageWrapper() {
             <TabsTrigger value="faq">FAQ</TabsTrigger>
           </Link>
         </TabsList>
-        <div className="flex gap-2 flex-wrap">
-          {activeTab === 'pricing' && (
-            <>
-              <Button onClick={togglePricingAll} variant="outline" size="sm">
-                {expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All'}
-              </Button>
-              <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline" size="sm">
-                Seed Pricing
-              </Button>
-            </>
-          )}
-          {activeTab === 'faq' && (
-            <>
-              <Button onClick={toggleFaqAll} variant="outline" size="sm">
-                {expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All'}
-              </Button>
-              <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline" size="sm">
-                Seed FAQ
-              </Button>
-              <Button onClick={addFAQ} variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add FAQ
-              </Button>
-              <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
-                <Save className="h-4 w-4 mr-2" />
-                Save All
-              </Button>
-            </>
-          )}
-        </div>
       </div>
 
         {/* Pricing Tiers Tab */}

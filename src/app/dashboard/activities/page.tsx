@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton, DashboardSummarySkeleton, FilterSectionSkeleton } from '@/components/data-table/table-skeleton'
 import { columns } from './components/columns'
@@ -168,10 +169,16 @@ export default function AdminActivitiesPage() {
               {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
             </Badge>
           )}
-          <Button onClick={handleExport} variant='outline' size='sm'>
-            <Download className='mr-2 h-4 w-4' />
-            <span className='hidden sm:inline'>Export CSV</span>
-          </Button>
+          <DashboardPageHeaderActions
+            actions={[
+              {
+                label: 'Export CSV',
+                icon: Download,
+                onClick: handleExport,
+                variant: 'outline',
+              },
+            ]}
+          />
         </>
       }
     >

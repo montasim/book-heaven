@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DollarSign, Loader2, TrendingUp } from 'lucide-react'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { CostSummaryCards } from './components/cost-summary-cards'
 import { CostOverTimeChart } from './components/cost-over-time-chart'
 import { CostByDimensionChart } from './components/cost-by-dimension-chart'
@@ -157,36 +158,30 @@ export default function BookCostAnalyticsPage() {
       title={isAdmin ? 'Book Cost Analytics' : 'My Book Costs'}
       description={isAdmin ? 'Track and analyze book acquisition costs across the library' : 'Track your book spending and collection value'}
       actions={
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant={dateRange === '7d' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setDateRange('7d')}
-          >
-            7 Days
-          </Button>
-          <Button
-            variant={dateRange === '30d' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setDateRange('30d')}
-          >
-            30 Days
-          </Button>
-          <Button
-            variant={dateRange === '90d' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setDateRange('90d')}
-          >
-            90 Days
-          </Button>
-          <Button
-            variant={dateRange === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setDateRange('all')}
-          >
-            All Time
-          </Button>
-        </div>
+        <DashboardPageHeaderActions
+          actions={[
+            {
+              label: '7 Days',
+              onClick: () => setDateRange('7d'),
+              variant: dateRange === '7d' ? 'default' : 'outline',
+            },
+            {
+              label: '30 Days',
+              onClick: () => setDateRange('30d'),
+              variant: dateRange === '30d' ? 'default' : 'outline',
+            },
+            {
+              label: '90 Days',
+              onClick: () => setDateRange('90d'),
+              variant: dateRange === '90d' ? 'default' : 'outline',
+            },
+            {
+              label: 'All Time',
+              onClick: () => setDateRange('all'),
+              variant: dateRange === 'all' ? 'default' : 'outline',
+            },
+          ]}
+        />
       }
     >
 
