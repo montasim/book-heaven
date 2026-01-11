@@ -219,14 +219,14 @@ function SiteSettingsPageWrapper() {
               </Link>
             </TabsList>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center justify-center gap-2 flex-shrink-0">
             <Button
               variant="outline"
               onClick={fetchSettings}
               disabled={isLoading}
               size="sm"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin mr-2' : 'mr-2'}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoading && 'animate-spin'}`} />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
           </div>
