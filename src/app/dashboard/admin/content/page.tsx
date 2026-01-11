@@ -329,55 +329,53 @@ function AdminContentPageWrapper() {
     <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Pricing Page Content</h1>
+          <h1 className="text-xl font-bold">Pricing Page Content</h1>
           <p className="text-muted-foreground mt-1">
             Manage pricing tiers, features, and FAQ content for the pricing page
           </p>
         </div>
       </div>
 
-      <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+      <div className="flex-1">
         <Tabs value={activeTab} className="space-y-4">
-        <div className="w-full overflow-x-auto">
-          <div className="flex items-center justify-between gap-4">
-            <TabsList>
-              <Link href={`${ROUTES.dashboardAdminContent.href}?tab=pricing`}>
-                <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
-              </Link>
-              <Link href={`${ROUTES.dashboardAdminContent.href}?tab=faq`}>
-                <TabsTrigger value="faq">FAQ</TabsTrigger>
-              </Link>
-            </TabsList>
-            <div className="flex gap-2 flex-shrink-0">
-              {activeTab === 'pricing' && (
-                <>
-                  <Button onClick={togglePricingAll} variant="outline" size="sm">
-                    {expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All'}
-                  </Button>
-                  <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline" size="sm">
-                    Seed Pricing
-                  </Button>
-                </>
-              )}
-              {activeTab === 'faq' && (
-                <>
-                  <Button onClick={toggleFaqAll} variant="outline" size="sm">
-                    {expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All'}
-                  </Button>
-                  <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline" size="sm">
-                    Seed FAQ
-                  </Button>
-                  <Button onClick={addFAQ} variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add FAQ
-                  </Button>
-                  <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save All
-                  </Button>
-                </>
-              )}
-            </div>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <TabsList>
+            <Link href={`${ROUTES.dashboardAdminContent.href}?tab=pricing`}>
+              <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
+            </Link>
+            <Link href={`${ROUTES.dashboardAdminContent.href}?tab=faq`}>
+              <TabsTrigger value="faq">FAQ</TabsTrigger>
+            </Link>
+          </TabsList>
+          <div className="flex gap-2 flex-wrap">
+            {activeTab === 'pricing' && (
+              <>
+                <Button onClick={togglePricingAll} variant="outline" size="sm">
+                  {expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All'}
+                </Button>
+                <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline" size="sm">
+                  Seed Pricing
+                </Button>
+              </>
+            )}
+            {activeTab === 'faq' && (
+              <>
+                <Button onClick={toggleFaqAll} variant="outline" size="sm">
+                  {expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All'}
+                </Button>
+                <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline" size="sm">
+                  Seed FAQ
+                </Button>
+                <Button onClick={addFAQ} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add FAQ
+                </Button>
+                <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save All
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -398,7 +396,7 @@ function AdminContentPageWrapper() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {[...Array(8)].map((_, j) => (
                         <div key={j} className="space-y-2">
                           <Skeleton className="h-4 w-20" />
@@ -492,7 +490,7 @@ function AdminContentPageWrapper() {
                 </CardHeader>
                 {expandedPricingCards.has(tier.plan) && (
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Name</Label>
                       <Input
@@ -552,7 +550,7 @@ function AdminContentPageWrapper() {
                         disabled={editingPlan !== tier.plan}
                       />
                     </div>
-                    <div className="flex items-end gap-4">
+                    <div className="flex items-end gap-4 flex-wrap">
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={tier.popular}
@@ -825,7 +823,7 @@ export default function AdminContentPage() {
             <Skeleton className="h-4 w-96" />
           </div>
         </div>
-        <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+        <div className="flex-1">
           <Skeleton className="h-64 w-full" />
         </div>
       </div>
