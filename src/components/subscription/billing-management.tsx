@@ -179,7 +179,7 @@ export function BillingManagement() {
                           {invoice.status}
                         </Badge>
                         <p className="text-sm text-muted-foreground">
-                          {invoice.currency.toUpperCase()} ${(invoice.amountPaid / 100).toFixed(2)}
+                          ৳{(invoice.amountPaid / 100).toFixed(2)}
                         </p>
                       </div>
                     </div>

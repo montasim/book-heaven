@@ -296,9 +296,9 @@ export async function notifyNewReview(
 
 // Helper function to format price
 function formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-BD', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'BDT',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(price)

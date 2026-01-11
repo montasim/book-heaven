@@ -314,7 +314,7 @@ export default function BookDetailsPage() {
   // Format price for display
   const formatPrice = (price: number | null | undefined) => {
     if (price === null || price === undefined) return 'N/A'
-    return `$${price.toFixed(2)}`
+    return `৳${price.toFixed(2)}`
   }
 
   // Toggle expand/collapse for a section

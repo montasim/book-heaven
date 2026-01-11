@@ -442,7 +442,7 @@ function ConversationViewPageContent() {
                     <div className="flex-1 min-w-0">
                         <h1 className="text-lg font-bold truncate">{conversation.sellPost.title}</h1>
                         <p className="text-sm text-muted-foreground">
-                            ${conversation.sellPost.price} • {CONDITION_LABELS[conversation.sellPost.condition]}
+                            ৳{conversation.sellPost.price} • {CONDITION_LABELS[conversation.sellPost.condition]}
                         </p>
                     </div>
                     {/* Connection Status Indicator */}
@@ -577,7 +577,7 @@ function ConversationViewPageContent() {
                                             {conversation.sellPost.title}
                                         </Link>
                                         <p className="text-lg font-bold text-primary">
-                                            ${conversation.sellPost.price}
+                                            ৳{conversation.sellPost.price}
                                         </p>
                                     </div>
                                 </div>

@@ -232,7 +232,7 @@ function MessagesInboxPageContent() {
                                                             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                                                                 <span>{formatDistanceToNow(new Date(conversation.updatedAt))}</span>
                                                                 <span>•</span>
-                                                                <span>${conversation.sellPost.price}</span>
+                                                                <span>৳{conversation.sellPost.price}</span>
                                                                 {conversation.transactionCompleted && (
                                                                     <>
                                                                         <span>•</span>

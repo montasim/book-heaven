@@ -30,7 +30,7 @@ export function RecentSalesList({ sales }: RecentSalesListProps) {
               </p>
             </div>
             <div className="font-medium">
-              +${sale.amount.toFixed(2)}
+              +৳{sale.amount.toFixed(2)}
             </div>
           </div>
         </div>
