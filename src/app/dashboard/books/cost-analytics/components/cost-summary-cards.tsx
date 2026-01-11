@@ -22,7 +22,7 @@ export function CostSummaryCards({ summary, activity }: CostSummaryCardsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-xl font-bold">
-            ${summary.totalSpent.toLocaleString()}
+            ৳{summary.totalSpent.toLocaleString()}
           </div>
           <p className="text-xs text-muted-foreground">
             {summary.hardCopyCount} hard copy books
@@ -40,7 +40,7 @@ export function CostSummaryCards({ summary, activity }: CostSummaryCardsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-xl font-bold">
-            ${summary.averageHardCopyCost.toFixed(2)}
+            ৳{summary.averageHardCopyCost.toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">
             Across {summary.totalBooks} books
@@ -58,7 +58,7 @@ export function CostSummaryCards({ summary, activity }: CostSummaryCardsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-xl font-bold">
-            ${activity.spentThisMonth.toLocaleString()}
+            ৳{activity.spentThisMonth.toLocaleString()}
           </div>
           <p className="text-xs text-muted-foreground">
             {activity.booksAddedThisMonth} book{activity.booksAddedThisMonth !== 1 ? 's' : ''} added
@@ -77,7 +77,7 @@ export function CostSummaryCards({ summary, activity }: CostSummaryCardsProps) {
         <CardContent>
           <div className="text-xl font-bold">{summary.hardCopyCount}</div>
           <p className="text-xs text-muted-foreground">
-            Collection value: ${summary.hardCopySpent.toLocaleString()}
+            Collection value: ৳{summary.hardCopySpent.toLocaleString()}
           </p>
         </CardContent>
       </Card>

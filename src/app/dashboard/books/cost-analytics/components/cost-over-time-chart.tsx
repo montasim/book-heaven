@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="font-medium">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ color: entry.color }}>
-            {entry.name}: ${entry.value.toFixed(2)}
+            {entry.name}: ৳{entry.value.toFixed(2)}
           </p>
         ))}
       </div>
@@ -66,7 +66,7 @@ export function CostOverTimeChart({ data, dateRange }: CostOverTimeChartProps) {
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `৳${value}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area

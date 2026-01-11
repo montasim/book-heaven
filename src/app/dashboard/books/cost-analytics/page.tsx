@@ -224,10 +224,10 @@ export default function BookCostAnalyticsPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-primary">
-                      ${item.totalCost.toLocaleString()}
+                      ৳{item.totalCost.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      ${item.buyingPrice} each
+                      ৳{item.buyingPrice} each
                     </p>
                   </div>
                 </div>

@@ -60,11 +60,11 @@ export function CostDetailsTable({ items, isAdmin = false }: CostDetailsTablePro
               <TableCell className="font-medium">{item.bookName}</TableCell>
               <TableCell>{getBookTypeBadge(item.bookType)}</TableCell>
               <TableCell className="text-right">
-                {item.buyingPrice ? `$${item.buyingPrice.toFixed(2)}` : '-'}
+                {item.buyingPrice ? `৳${item.buyingPrice.toFixed(2)}` : '-'}
               </TableCell>
               <TableCell className="text-right">{item.numberOfCopies || 1}</TableCell>
               <TableCell className="text-right font-semibold">
-                ${item.totalCost.toFixed(2)}
+                ৳{item.totalCost.toFixed(2)}
               </TableCell>
               <TableCell>
                 {item.purchaseDate

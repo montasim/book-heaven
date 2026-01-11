@@ -25,7 +25,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="rounded-lg border bg-popover px-3 py-2 text-sm shadow-sm">
         <p className="font-medium">{payload[0].payload.name}</p>
         <p style={{ color: payload[0].color }}>
-          Total: ${payload[0].value.toFixed(2)}
+          Total: ৳{payload[0].value.toFixed(2)}
         </p>
         <p className="text-muted-foreground">
           {payload[0].payload.bookCount} books
@@ -105,7 +105,7 @@ export function CostByDimensionChart({ data, groupBy, onGroupByChange }: CostByD
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `৳${value}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar
