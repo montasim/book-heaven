@@ -527,7 +527,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                       <Input
                         type='number'
                         step='0.01'
-                        placeholder='0.00'
+                        placeholder='৳ 0.00'
                         {...field}
                       />
                     </FormControl>
@@ -546,7 +546,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                       <Input
                         type='number'
                         step='0.01'
-                        placeholder='0.00'
+                        placeholder='৳ 0.00'
                         {...field}
                       />
                     </FormControl>
@@ -557,68 +557,68 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
             </div>
 
             {watchType === 'HARD_COPY' && (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <FormField
-                  control={form.control}
-                  name='numberOfCopies'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Copies <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input
-                          type='number'
-                          min='1'
-                          placeholder='Enter number of copies'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                    control={form.control}
+                    name='numberOfCopies'
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Number of Copies <span className="text-destructive">*</span></FormLabel>
+                            <FormControl>
+                                <Input
+                                    type='number'
+                                    min='1'
+                                    placeholder='Enter number of copies'
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
+            )}
 
+            {watchType === 'HARD_COPY' && (
                 <FormField
-                  control={form.control}
-                  name='purchaseDate'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Purchase Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant='outline'
-                              className={cn(
-                                'w-full pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), 'PPP')
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-auto p-0' align='start'>
-                          <Calendar
-                            mode='single'
-                            selected={purchaseDate}
-                            onSelect={(date) => {
-                              setPurchaseDate(date)
-                              field.onChange(date ? date.toISOString().split('T')[0] : '')
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                    control={form.control}
+                    name='purchaseDate'
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Purchase Date</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                            variant='outline'
+                                            className={cn(
+                                                'w-full pl-3 text-left font-normal',
+                                                !field.value && 'text-muted-foreground'
+                                            )}
+                                        >
+                                            {field.value ? (
+                                                format(new Date(field.value), 'PPP')
+                                            ) : (
+                                                <span>Pick a date</span>
+                                            )}
+                                            <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
+                                        </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className='w-auto p-0' align='start'>
+                                    <Calendar
+                                        mode='single'
+                                        selected={purchaseDate}
+                                        onSelect={(date) => {
+                                            setPurchaseDate(date)
+                                            field.onChange(date ? date.toISOString().split('T')[0] : '')
+                                        }}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
-              </div>
             )}
 
             <FormField
