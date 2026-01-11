@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { HeaderContainer } from '@/components/ui/header-container'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton, DashboardSummarySkeleton, FilterSectionSkeleton } from '@/components/data-table/table-skeleton'
 import { columns } from './components/columns'
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon, Filter, X, Search, Download } from 'lucide-react'
+import { CalendarIcon, Filter, X, Search, Download, Activity as ActivityIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -156,15 +156,12 @@ export default function AdminActivitiesPage() {
     (endDate ? 1 : 0)
 
   return (
-    <>
-      <HeaderContainer>
-        <div>
-          <h1 className='text-xl font-bold'>Activity Logs</h1>
-          <p className='text-sm text-muted-foreground'>
-            Track all user and system activities across the platform
-          </p>
-        </div>
-        <div className='flex items-center gap-2'>
+    <DashboardPage
+      icon={ActivityIcon}
+      title="Activity Logs"
+      description="Track all user and system activities across the platform"
+      actions={
+        <>
           {activeFiltersCount > 0 && (
             <Badge variant='secondary' className='gap-1'>
               <Filter className='h-3 w-3' />
@@ -173,229 +170,227 @@ export default function AdminActivitiesPage() {
           )}
           <Button onClick={handleExport} variant='outline' size='sm'>
             <Download className='mr-2 h-4 w-4' />
-            Export CSV
+            <span className='hidden sm:inline'>Export CSV</span>
           </Button>
+        </>
+      }
+    >
+      <div className='space-y-4'>
+      {/* Stats */}
+      {loading ? (
+        <DashboardSummarySkeleton count={4} />
+      ) : (
+        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+          <div className='rounded-lg border bg-card p-4'>
+            <div className='text-sm text-muted-foreground'>Total Activities</div>
+            <div className='text-xl font-bold'>{pagination.total.toLocaleString()}</div>
+          </div>
+          <div className='rounded-lg border bg-card p-4'>
+            <div className='text-sm text-muted-foreground'>Current Page</div>
+            <div className='text-xl font-bold'>
+              {pagination.currentPage} / {pagination.totalPages}
+            </div>
+          </div>
+          <div className='rounded-lg border bg-card p-4'>
+            <div className='text-sm text-muted-foreground'>Success Rate</div>
+            <div className='text-xl font-bold'>
+              {activities.length > 0
+                ? Math.round((activities.filter(a => a.success).length / activities.length) * 100)
+                : 0}%
+            </div>
+          </div>
+          <div className='rounded-lg border bg-card p-4'>
+            <div className='text-sm text-muted-foreground'>Filtered Results</div>
+            <div className='text-xl font-bold'>{activities.length}</div>
+          </div>
         </div>
-      </HeaderContainer>
+      )}
 
-      <div className='bg-background h-screen overflow-y-auto no-scrollbar pb-4'>
-        <div className='space-y-4'>
-        {/* Stats */}
-        {loading ? (
-          <DashboardSummarySkeleton count={4} />
-        ) : (
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-            <div className='rounded-lg border bg-card p-4'>
-              <div className='text-sm text-muted-foreground'>Total Activities</div>
-              <div className='text-xl font-bold'>{pagination.total.toLocaleString()}</div>
-            </div>
-            <div className='rounded-lg border bg-card p-4'>
-              <div className='text-sm text-muted-foreground'>Current Page</div>
-              <div className='text-xl font-bold'>
-                {pagination.currentPage} / {pagination.totalPages}
-              </div>
-            </div>
-            <div className='rounded-lg border bg-card p-4'>
-              <div className='text-sm text-muted-foreground'>Success Rate</div>
-              <div className='text-xl font-bold'>
-                {activities.length > 0
-                  ? Math.round((activities.filter(a => a.success).length / activities.length) * 100)
-                  : 0}%
-              </div>
-            </div>
-            <div className='rounded-lg border bg-card p-4'>
-              <div className='text-sm text-muted-foreground'>Filtered Results</div>
-              <div className='text-xl font-bold'>{activities.length}</div>
-            </div>
-          </div>
-        )}
-
-        {/* Filters */}
-        {loading ? <FilterSectionSkeleton /> : (
-        <div className='rounded-lg border bg-card p-4'>
-          <div className='flex items-center justify-between mb-4'>
-            <h3 className='font-semibold flex items-center gap-2'>
-              <Filter className='h-4 w-4' />
-              Filters
-            </h3>
-            {activeFiltersCount > 0 && (
-              <Button onClick={handleClearFilters} variant='ghost' size='sm'>
-                <X className='mr-2 h-4 w-4' />
-                Clear all
-              </Button>
-            )}
-          </div>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-            {/* Search */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Search</label>
-              <div className='relative'>
-                <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
-                <Input
-                  placeholder='Search activities...'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className='pl-8'
-                />
-              </div>
-            </div>
-
-            {/* Action Filter */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Action</label>
-              <Select value={selectedAction} onValueChange={setSelectedAction}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select action' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Actions</SelectItem>
-                  {Object.values(ActivityAction).map((action) => (
-                    <SelectItem key={action} value={action}>
-                      {action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Resource Type Filter */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Resource Type</label>
-              <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select type' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Types</SelectItem>
-                  {Object.values(ActivityResourceType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Success Filter */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Status</label>
-              <Select value={selectedSuccess} onValueChange={setSelectedSuccess}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Select status' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Statuses</SelectItem>
-                  <SelectItem value='true'>Success</SelectItem>
-                  <SelectItem value='false'>Failed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Start Date */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Start Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !startDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className='mr-2 h-4 w-4' />
-                    {startDate ? format(startDate, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-auto p-0' align='start'>
-                  <Calendar
-                    mode='single'
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* End Date */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>End Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !endDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className='mr-2 h-4 w-4' />
-                    {endDate ? format(endDate, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className='w-auto p-0' align='start'>
-                  <Calendar
-                    mode='single'
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Sort By */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Sort By</label>
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='createdAt'>Time</SelectItem>
-                  <SelectItem value='action'>Action</SelectItem>
-                  <SelectItem value='resourceName'>Resource</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sort Order */}
-            <div className='space-y-2'>
-              <label className='text-sm font-medium'>Order</label>
-              <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='desc'>Descending</SelectItem>
-                  <SelectItem value='asc'>Ascending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className='mt-4 flex justify-end'>
-            <Button onClick={handleApplyFilters}>
-              <Search className='mr-2 h-4 w-4' />
-              Apply Filters
+      {/* Filters */}
+      {loading ? <FilterSectionSkeleton /> : (
+      <div className='rounded-lg border bg-card p-4'>
+        <div className='flex items-center justify-between mb-4'>
+          <h3 className='font-semibold flex items-center gap-2'>
+            <Filter className='h-4 w-4' />
+            Filters
+          </h3>
+          {activeFiltersCount > 0 && (
+            <Button onClick={handleClearFilters} variant='ghost' size='sm'>
+              <X className='mr-2 h-4 w-4' />
+              Clear all
             </Button>
-          </div>
-        </div>
-        )}
-
-        {/* Table */}
-        <div className='-mx-4 overflow-auto px-4 py-1'>
-          {loading ? <TableSkeleton rowCount={pagination.limit} /> : (
-            <DataTable
-              data={activities as any}
-              columns={columns}
-            />
           )}
         </div>
+
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+          {/* Search */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Search</label>
+            <div className='relative'>
+              <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
+              <Input
+                placeholder='Search activities...'
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className='pl-8'
+              />
+            </div>
+          </div>
+
+          {/* Action Filter */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Action</label>
+            <Select value={selectedAction} onValueChange={setSelectedAction}>
+              <SelectTrigger>
+                <SelectValue placeholder='Select action' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All Actions</SelectItem>
+                {Object.values(ActivityAction).map((action) => (
+                  <SelectItem key={action} value={action}>
+                    {action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Resource Type Filter */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Resource Type</label>
+            <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
+              <SelectTrigger>
+                <SelectValue placeholder='Select type' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All Types</SelectItem>
+                {Object.values(ActivityResourceType).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Success Filter */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Status</label>
+            <Select value={selectedSuccess} onValueChange={setSelectedSuccess}>
+              <SelectTrigger>
+                <SelectValue placeholder='Select status' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All Statuses</SelectItem>
+                <SelectItem value='true'>Success</SelectItem>
+                <SelectItem value='false'>Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Start Date */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Start Date</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant='outline'
+                  className={cn(
+                    'w-full justify-start text-left font-normal',
+                    !startDate && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {startDate ? format(startDate, 'PPP') : 'Pick a date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-auto p-0' align='start'>
+                <Calendar
+                  mode='single'
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* End Date */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>End Date</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant='outline'
+                  className={cn(
+                    'w-full justify-start text-left font-normal',
+                    !endDate && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {endDate ? format(endDate, 'PPP') : 'Pick a date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className='w-auto p-0' align='start'>
+                <Calendar
+                  mode='single'
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Sort By */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Sort By</label>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='createdAt'>Time</SelectItem>
+                <SelectItem value='action'>Action</SelectItem>
+                <SelectItem value='resourceName'>Resource</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sort Order */}
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>Order</label>
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='desc'>Descending</SelectItem>
+                <SelectItem value='asc'>Ascending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className='mt-4 flex justify-end'>
+          <Button onClick={handleApplyFilters}>
+            <Search className='mr-2 h-4 w-4' />
+            Apply Filters
+          </Button>
         </div>
       </div>
-    </>
+      )}
+
+      {/* Table */}
+      <div>
+        {loading ? <TableSkeleton rowCount={pagination.limit} /> : (
+          <DataTable
+            data={activities as any}
+            columns={columns}
+          />
+        )}
+      </div>
+      </div>
+      </DashboardPage>
   )
 }

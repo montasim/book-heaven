@@ -45,7 +45,7 @@ export default async function TermsPage() {
               <FileText className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight sm:text-3xl">
+              <h1 className="text-xl font-bold tracking-tight">
                 Terms of Service
               </h1>
               <div className="flex flex-wrap items-center gap-2 mt-1">

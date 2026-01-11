@@ -54,7 +54,7 @@ export default function UserProfilePage() {
 
               {/* Heading */}
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold">User Not Found</h1>
+                <h1 className="text-xl font-bold">User Not Found</h1>
                 <p className="text-muted-foreground text-lg">
                   We couldn&apos;t find the user profile you&apos;re looking for
                 </p>

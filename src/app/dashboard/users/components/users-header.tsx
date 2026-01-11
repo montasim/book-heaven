@@ -4,29 +4,19 @@ import { Button } from '@/components/ui/button'
 import { IconMailPlus, IconUserPlus } from '@tabler/icons-react'
 import { useUsersContext } from '../context/users-context'
 
-export function UsersHeader() {
+export function UsersHeaderActions() {
   const { setOpen } = useUsersContext()
 
   return (
     <>
-      <div>
-        <h2 className='text-xl font-bold tracking-tight'>User List</h2>
-        <p className='text-muted-foreground'>
-          Manage your users and their roles here.
-        </p>
-      </div>
-      <div className='flex gap-2'>
-        <Button
-          variant='outline'
-          className='space-x-1'
-          onClick={() => setOpen('invite')}
-        >
-          <span>Invite User</span> <IconMailPlus size={18} />
-        </Button>
-        <Button className='space-x-1' onClick={() => setOpen('create')}>
-          <span>Add User</span> <IconUserPlus size={18} />
-        </Button>
-      </div>
+      <Button variant='outline' size="sm" onClick={() => setOpen('invite')}>
+        <IconMailPlus className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Invite User</span>
+      </Button>
+      <Button size="sm" onClick={() => setOpen('create')}>
+        <IconUserPlus className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Add User</span>
+      </Button>
     </>
   )
 }

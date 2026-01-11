@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Plus, Trash2, Save, GripVertical, Search, Filter, ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, Save, GripVertical, Search, Filter, ArrowUpDown, ChevronDown, ChevronRight, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -194,33 +195,29 @@ function HelpCenterFAQsPageWrapper() {
   }
 
   return (
-    <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Help Center FAQs</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage frequently asked questions for the help center
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setSeedDialogOpen(true)} variant="outline">
+    <DashboardPage
+      icon={HelpCircle}
+      title="Help Center FAQs"
+      description="Manage frequently asked questions for the help center"
+      actions={
+        <>
+          <Button onClick={() => setSeedDialogOpen(true)} variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Seed Initial Data
+            <span className='hidden sm:inline'>Seed Initial Data</span>
           </Button>
-          <Button onClick={addFAQ} variant="outline">
+          <Button onClick={addFAQ} variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Add FAQ
+            <span className='hidden sm:inline'>Add FAQ</span>
           </Button>
-          <Button onClick={handleSaveFAQs} disabled={saving}>
+          <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
             <Save className="h-4 w-4 mr-2" />
-            Save All
+            <span className='hidden sm:inline'>Save All</span>
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total FAQs</CardTitle>
@@ -251,7 +248,7 @@ function HelpCenterFAQsPageWrapper() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -283,7 +280,6 @@ function HelpCenterFAQsPageWrapper() {
       </Card>
 
       {/* FAQ List */}
-      <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
       {loading ? (
         <>
           {[...Array(3)].map((_, i) => (
@@ -429,7 +425,6 @@ function HelpCenterFAQsPageWrapper() {
           ))}
         </div>
       )}
-      </div>
 
       {/* Seed Confirmation Dialog */}
       <AlertDialog open={seedDialogOpen} onOpenChange={setSeedDialogOpen}>
@@ -462,7 +457,7 @@ function HelpCenterFAQsPageWrapper() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </DashboardPage>
   )
 }
 
@@ -470,47 +465,38 @@ function HelpCenterFAQsPageWrapper() {
 export default function HelpCenterFAQsPage() {
   return (
     <Suspense fallback={
-      <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
-        {/* Header Skeleton */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-96" />
+      <DashboardPage
+        icon={HelpCircle}
+        title="Help Center FAQs"
+        description="Manage frequently asked questions for the help center"
+      >
+        <div className="space-y-4">
+          {/* Stats Cards Skeleton */}
+          <div className="grid gap-4 md:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-4" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-32" />
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-9 w-24" />
-          </div>
-        </div>
 
-        {/* Stats Cards Skeleton */}
-        <div className="grid gap-4 md:grid-cols-3 mb-6">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          {/* Filters Skeleton */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex gap-4">
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-48" />
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Filters Skeleton */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <Skeleton className="h-10 flex-1" />
-              <Skeleton className="h-10 w-48" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* FAQ List Skeleton */}
-        <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
+          {/* FAQ List Skeleton */}
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="mb-4">
               <CardHeader>
@@ -523,7 +509,7 @@ export default function HelpCenterFAQsPage() {
             </Card>
           ))}
         </div>
-      </div>
+      </DashboardPage>
     }>
       <HelpCenterFAQsPageWrapper />
     </Suspense>

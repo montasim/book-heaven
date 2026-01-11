@@ -1,8 +1,8 @@
 'use client'
 
 import { deletePublication, getPublications } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { PublicationsHeader } from './components/publications-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { PublicationsHeaderActions } from './components/publications-header'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Publication } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import { PublicationsDeleteDialog } from './components/publications-delete-dialo
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, Newspaper } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -166,39 +166,40 @@ export default function PublicationsPage() {
 
   return (
     <PublicationsContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshPublications }}>
-      <HeaderContainer>
-        <PublicationsHeader />
-      </HeaderContainer>
-
-      {selectedRows.length > 0 && (
-        <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
-          <div className='flex items-center gap-2'>
-            <span className='text-sm font-medium'>
-              {selectedRows.length} {selectedRows.length === 1 ? 'publication' : 'publications'} selected
-            </span>
+      <DashboardPage
+        icon={Newspaper}
+        title="Publications"
+        description="Manage publications in your system"
+        actions={<PublicationsHeaderActions />}
+      >
+        {selectedRows.length > 0 && (
+          <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-medium'>
+                {selectedRows.length} {selectedRows.length === 1 ? 'publication' : 'publications'} selected
+              </span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setSelectedRows([])}
+              >
+                <X className='mr-2 h-4 w-4' />
+                Clear
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className='mr-2 h-4 w-4' />
+                Delete Selected
+              </Button>
+            </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setSelectedRows([])}
-            >
-              <X className='mr-2 h-4 w-4' />
-              Clear
-            </Button>
-            <Button
-              variant='destructive'
-              size='sm'
-              onClick={() => setShowBulkDeleteDialog(true)}
-            >
-              <Trash2 className='mr-2 h-4 w-4' />
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
 
-      <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
         {isLoading ? (
           <TableSkeleton rowCount={pagination.pageSize} />
         ) : publications.length === 0 ? (
@@ -216,7 +217,6 @@ export default function PublicationsPage() {
             onSelectedRowsChange={setSelectedRows}
           />
         )}
-      </div>
 
       <PublicationsMutateDrawer
         key='publication-create'
@@ -271,6 +271,7 @@ export default function PublicationsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </DashboardPage>
     </PublicationsContextProvider>
   )
 }

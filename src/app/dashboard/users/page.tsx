@@ -1,8 +1,8 @@
 'use client'
 
 import { deleteUser, getUsers } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { UsersHeader } from './components/users-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { UsersHeaderActions } from './components/users-header'
 import { useEffect, useState } from 'react'
 import { User, userListSchema } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,6 +15,7 @@ import { columns } from './components/columns'
 import { UsersInviteDialog } from './components/users-invite-dialog'
 import { UsersMutateDrawer } from './components/users-mutate-drawer'
 import { UsersImportDialog } from './components/users-import-dialog'
+import { Users } from 'lucide-react'
 
 export default function Page() {
   const [users, setUsers] = useState<User[]>([])
@@ -82,13 +83,13 @@ export default function Page() {
 
   return (
     <UsersContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshUsers }}>
-      <HeaderContainer>
-        <UsersHeader />
-      </HeaderContainer>
-
-      <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
+      <DashboardPage
+        icon={Users}
+        title="Users"
+        description="Manage user accounts and permissions"
+        actions={<UsersHeaderActions />}
+      >
         {isLoading ? <TableSkeleton /> : <DataTable data={users} columns={columns} />}
-      </div>
 
       <UsersMutateDrawer
         key='user-create'
@@ -148,6 +149,7 @@ export default function Page() {
           />
         </>
       )}
+      </DashboardPage>
     </UsersContextProvider>
   )
 }

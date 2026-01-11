@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
 import { formatDistanceToNow } from 'date-fns'
 import { Calendar, Filter, Clock, CheckCircle, XCircle, BookOpen, MessageSquare, ShoppingCart, User, Settings, TrendingUp, Activity } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { cn } from '@/lib/utils'
 import { DashboardSummary, DashboardSummaryGrid } from '@/components/dashboard/dashboard-summary'
 import { DashboardSummarySkeleton } from '@/components/dashboard/dashboard-summary-skeleton'
@@ -149,20 +150,11 @@ export default function UserActivityPage() {
     : 0
 
   return (
-    <div className='flex flex-col h-full'>
-        <HeaderContainer>
-            {loading ? (
-              <ActivityPageHeaderSkeleton />
-            ) : (
-              <div>
-                  <h1 className='text-xl font-bold'>Your Activity Timeline</h1>
-                  <p className='text-sm text-muted-foreground'>
-                      Track your recent activities on the platform
-                  </p>
-              </div>
-            )}
-        </HeaderContainer>
-
+    <DashboardPage
+      icon={Clock}
+      title="Your Activity Timeline"
+      description="Track your recent activities on the platform"
+    >
       <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16 h-full'>
         <div className='space-y-6'>
             {/* Stats Cards */}
@@ -359,6 +351,6 @@ export default function UserActivityPage() {
         )}
         </div>
       </ScrollArea>
-    </div>
+    </DashboardPage>
   )
 }

@@ -200,7 +200,7 @@ export default function BookDetailsPage() {
 
               {/* Heading */}
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Book Not Found</h1>
+                <h1 className="text-xl font-bold">Book Not Found</h1>
                 <p className="text-muted-foreground text-lg">
                   We couldn&apos;t find the book you&apos;re looking for
                 </p>

@@ -27,7 +27,9 @@ import {
     ShoppingBag,
     Users,
     MessageSquare,
+    BarChart3,
 } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 
 // ============================================================================
 // TYPES
@@ -182,20 +184,18 @@ export default function AdminMarketplaceAnalyticsPage() {
 
     if (isLoading || !analytics) {
         return (
-            <div className="space-y-6">
-                {/* Header Skeleton */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <Skeleton className="h-8 w-64 mb-2" />
-                        <Skeleton className="h-4 w-80" />
-                    </div>
+            <DashboardPage
+                icon={BarChart3}
+                title="Marketplace Analytics"
+                description="Detailed marketplace metrics and trends"
+                actions={
                     <div className="flex items-center gap-2">
                         {Array.from({ length: 3 }).map((_, i) => (
                             <Skeleton key={i} className="h-9 w-20" />
                         ))}
                     </div>
-                </div>
-
+                }
+            >
                 {/* Quick Stats Skeleton */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                     {Array.from({ length: 7 }).map((_, i) => (
@@ -257,7 +257,7 @@ export default function AdminMarketplaceAnalyticsPage() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
+            </DashboardPage>
         )
     }
 
@@ -265,15 +265,11 @@ export default function AdminMarketplaceAnalyticsPage() {
     const salesData = formatSalesData()
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold">Marketplace Analytics</h1>
-                    <p className="text-muted-foreground">
-                        Detailed marketplace metrics and trends
-                    </p>
-                </div>
+        <DashboardPage
+            icon={BarChart3}
+            title="Marketplace Analytics"
+            description="Detailed marketplace metrics and trends"
+            actions={
                 <div className="flex items-center gap-2">
                     <Button
                         variant={dateRange === '7d' ? 'default' : 'outline'}
@@ -297,8 +293,8 @@ export default function AdminMarketplaceAnalyticsPage() {
                         90 Days
                     </Button>
                 </div>
-            </div>
-
+            }
+        >
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                 <Card>
@@ -538,6 +534,6 @@ export default function AdminMarketplaceAnalyticsPage() {
                     </CardContent>
                 </Card>
             )}
-        </div>
+        </DashboardPage>
     )
 }

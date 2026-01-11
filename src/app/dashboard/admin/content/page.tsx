@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Crown, HelpCircle, Plus, Trash2, Save, Pencil, GripVertical, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Crown, HelpCircle, Plus, Trash2, Save, Pencil, GripVertical, AlertTriangle, ChevronDown, ChevronUp, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -326,58 +327,52 @@ function AdminContentPageWrapper() {
   }
 
   return (
-    <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold">Pricing Page Content</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage pricing tiers, features, and FAQ content for the pricing page
-          </p>
+    <DashboardPage
+      icon={FileText}
+      title="Pricing Page Content"
+      description="Manage pricing tiers, features, and FAQ content for the pricing page"
+    >
+      <Tabs value={activeTab} className="space-y-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <TabsList>
+          <Link href={`${ROUTES.dashboardAdminContent.href}?tab=pricing`}>
+            <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
+          </Link>
+          <Link href={`${ROUTES.dashboardAdminContent.href}?tab=faq`}>
+            <TabsTrigger value="faq">FAQ</TabsTrigger>
+          </Link>
+        </TabsList>
+        <div className="flex gap-2 flex-wrap">
+          {activeTab === 'pricing' && (
+            <>
+              <Button onClick={togglePricingAll} variant="outline" size="sm">
+                {expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All'}
+              </Button>
+              <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline" size="sm">
+                Seed Pricing
+              </Button>
+            </>
+          )}
+          {activeTab === 'faq' && (
+            <>
+              <Button onClick={toggleFaqAll} variant="outline" size="sm">
+                {expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All'}
+              </Button>
+              <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline" size="sm">
+                Seed FAQ
+              </Button>
+              <Button onClick={addFAQ} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add FAQ
+              </Button>
+              <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
+                <Save className="h-4 w-4 mr-2" />
+                Save All
+              </Button>
+            </>
+          )}
         </div>
       </div>
-
-      <div className="flex-1">
-        <Tabs value={activeTab} className="space-y-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <TabsList>
-            <Link href={`${ROUTES.dashboardAdminContent.href}?tab=pricing`}>
-              <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
-            </Link>
-            <Link href={`${ROUTES.dashboardAdminContent.href}?tab=faq`}>
-              <TabsTrigger value="faq">FAQ</TabsTrigger>
-            </Link>
-          </TabsList>
-          <div className="flex gap-2 flex-wrap">
-            {activeTab === 'pricing' && (
-              <>
-                <Button onClick={togglePricingAll} variant="outline" size="sm">
-                  {expandedPricingCards.size === editedTiers.length ? 'Collapse All' : 'Expand All'}
-                </Button>
-                <Button onClick={() => setPricingSeedDialogOpen(true)} variant="outline" size="sm">
-                  Seed Pricing
-                </Button>
-              </>
-            )}
-            {activeTab === 'faq' && (
-              <>
-                <Button onClick={toggleFaqAll} variant="outline" size="sm">
-                  {expandedFaqCards.size === faqs.length ? 'Collapse All' : 'Expand All'}
-                </Button>
-                <Button onClick={() => setFaqSeedDialogOpen(true)} variant="outline" size="sm">
-                  Seed FAQ
-                </Button>
-                <Button onClick={addFAQ} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add FAQ
-                </Button>
-                <Button onClick={handleSaveFAQs} disabled={saving} size="sm">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save All
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
 
         {/* Pricing Tiers Tab */}
         <TabsContent value="pricing" className="space-y-4">
@@ -775,7 +770,6 @@ function AdminContentPageWrapper() {
           )}
         </TabsContent>
       </Tabs>
-      </div>
 
       {/* Pricing Seed Confirmation Dialog */}
       <AlertDialog open={pricingSeedDialogOpen} onOpenChange={setPricingSeedDialogOpen}>
@@ -808,7 +802,7 @@ function AdminContentPageWrapper() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </DashboardPage>
   )
 }
 
@@ -816,17 +810,13 @@ function AdminContentPageWrapper() {
 export default function AdminContentPage() {
   return (
     <Suspense fallback={
-      <div className="bg-background h-screen overflow-y-auto no-scrollbar pb-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-        </div>
-        <div className="flex-1">
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </div>
+      <DashboardPage
+        icon={FileText}
+        title="Pricing Page Content"
+        description="Manage pricing tiers, features, and FAQ content for the pricing page"
+      >
+        <Skeleton className="h-64 w-full" />
+      </DashboardPage>
     }>
       <AdminContentPageWrapper />
     </Suspense>

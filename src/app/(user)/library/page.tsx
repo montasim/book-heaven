@@ -26,6 +26,7 @@ import {
     Library,
     Inbox,
 } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { BookList } from './book-list'
 import { Bookshelves } from './components/bookshelves'
@@ -499,15 +500,12 @@ function LibraryPageContent() {
 
   return (
     <LibraryContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshBooks }}>
-      <div className="space-y-6 overflow-y-auto h-full">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-xl font-bold mb-2">My Library</h1>
-            <p className="text-muted-foreground">
-              Organize your books into custom collections and manage your uploads.
-            </p>
-          </div>
-          <div className="flex items-center justify-start gap-2 flex-wrap mt-4 md:mt-0 md:justify-end">
+      <DashboardPage
+        icon={Library}
+        title="My Library"
+        description="Organize your books into custom collections and manage your uploads."
+        actions={
+          <>
             <Button onClick={() => setIsBookDrawerOpen(true)} aria-label="Upload Book">
               <Upload className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Upload Book</span>
@@ -520,9 +518,9 @@ function LibraryPageContent() {
               <Inbox className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Request Book</span>
             </Button>
-          </div>
-        </div>
-
+          </>
+        }
+      >
         {/* Dashboard Summary - Always visible at top */}
         {booksLoading ? (
           <DashboardSummarySkeleton />
@@ -766,7 +764,7 @@ function LibraryPageContent() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
+      </DashboardPage>
 
       {/* Upload/Edit Book Drawer */}
       <UploadBooksMutateDrawer
@@ -879,7 +877,15 @@ function LibraryPageContent() {
 // Wrapper with Suspense boundary for useSearchParams
 export default function LibraryPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <DashboardPage
+        icon={Library}
+        title="My Library"
+        description="Organize your books into custom collections and manage your uploads."
+      >
+        <div className="min-h-screen flex items-center justify-center">Loading...</div>
+      </DashboardPage>
+    }>
       <LibraryPageContent />
     </Suspense>
   )

@@ -1,8 +1,8 @@
 'use client'
 
 import { deleteBook, getBooks } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { BooksHeader } from './components/books-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { BooksHeaderActions } from './components/books-header'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { Book } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import { BooksMutateDrawer } from './components/books-mutate-drawer'
 import { BooksDeleteDialog } from './components/books-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { Button } from '@/components/ui/button'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, BookOpen } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -241,39 +241,40 @@ export default function BooksPage() {
 
   return (
     <BooksContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshBooks }}>
-      <HeaderContainer>
-        <BooksHeader />
-      </HeaderContainer>
-
-      {selectedRows.length > 0 && (
-        <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
-          <div className='flex items-center gap-2'>
-            <span className='text-sm font-medium'>
-              {selectedRows.length} {selectedRows.length === 1 ? 'book' : 'books'} selected
-            </span>
+      <DashboardPage
+        icon={BookOpen}
+        title="Books"
+        description="Manage books in your library system"
+        actions={<BooksHeaderActions />}
+      >
+        {selectedRows.length > 0 && (
+          <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-medium'>
+                {selectedRows.length} {selectedRows.length === 1 ? 'book' : 'books'} selected
+              </span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setSelectedRows([])}
+              >
+                <X className='mr-2 h-4 w-4' />
+                Clear
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className='mr-2 h-4 w-4' />
+                Delete Selected
+              </Button>
+            </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setSelectedRows([])}
-            >
-              <X className='mr-2 h-4 w-4' />
-              Clear
-            </Button>
-            <Button
-              variant='destructive'
-              size='sm'
-              onClick={() => setShowBulkDeleteDialog(true)}
-            >
-              <Trash2 className='mr-2 h-4 w-4' />
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
 
-      <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0'>
         {isLoading ? (
           <TableSkeleton rowCount={pagination.pageSize} />
         ) : books.length === 0 ? (
@@ -291,7 +292,6 @@ export default function BooksPage() {
             onSelectedRowsChange={setSelectedRows}
           />
         )}
-      </div>
 
       <BooksMutateDrawer
         key='book-create'
@@ -346,6 +346,7 @@ export default function BooksPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </DashboardPage>
     </BooksContextProvider>
   )
 }

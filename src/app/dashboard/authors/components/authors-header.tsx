@@ -2,10 +2,10 @@
 
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {IconUserPlus } from "@tabler/icons-react";
+import { IconUserPlus } from "@tabler/icons-react";
 import { useAuthorsContext } from '../context/authors-context'
 
-export function AuthorsHeader() {
+export function AuthorsHeaderActions() {
   const { setOpen, refreshAuthors } = useAuthorsContext()
 
   const handleAddAuthor = () => {
@@ -13,22 +13,15 @@ export function AuthorsHeader() {
   }
 
   return (
-      <>
-          <div>
-              <h2 className='text-xl font-bold tracking-tight'>Authors List</h2>
-              <p className='text-muted-foreground'>
-                  Manage authors in your library system
-              </p>
-          </div>
-          <div className='flex gap-2'>
-              <Button className='space-x-1' onClick={handleAddAuthor}>
-                  <span>Add Author</span> <IconUserPlus size={18} />
-              </Button>
-              <Button className='space-x-1' onClick={refreshAuthors} variant='outline'>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-              </Button>
-          </div>
-      </>
+    <div className='space-x-4'>
+      <Button onClick={handleAddAuthor} size="sm">
+        <IconUserPlus className="h-4 w-4" />
+        <span className='hidden sm:inline'>Add Author</span>
+      </Button>
+      <Button onClick={refreshAuthors} variant='outline' size="sm">
+        <RefreshCw className="h-4 w-4" />
+        <span className='hidden sm:inline'>Refresh</span>
+      </Button>
+    </div>
   )
 }

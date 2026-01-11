@@ -1,8 +1,8 @@
 'use client'
 
 import { deleteMood, getMoods } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { MoodsHeader } from './components/moods-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { MoodsHeaderActions } from './components/moods-header'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Mood } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import { MoodsMutateDrawer } from './components/moods-mutate-drawer'
 import { MoodsDeleteDialog } from './components/moods-delete-dialog'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { Button } from '@/components/ui/button'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, Smile } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -160,39 +160,40 @@ export default function MoodsPage() {
 
   return (
     <MoodsContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshMoods }}>
-      <HeaderContainer>
-        <MoodsHeader onSeedMoods={() => setSeedDialogOpen(true)} />
-      </HeaderContainer>
-
-      {selectedRows.length > 0 && (
-        <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
-          <div className='flex items-center gap-2'>
-            <span className='text-sm font-medium'>
-              {selectedRows.length} {selectedRows.length === 1 ? 'mood' : 'moods'} selected
-            </span>
+      <DashboardPage
+        icon={Smile}
+        title="Moods"
+        description="Manage reading moods in your system"
+        actions={<MoodsHeaderActions onSeedMoods={() => setSeedDialogOpen(true)} />}
+      >
+        {selectedRows.length > 0 && (
+          <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-medium'>
+                {selectedRows.length} {selectedRows.length === 1 ? 'mood' : 'moods'} selected
+              </span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setSelectedRows([])}
+              >
+                <X className='mr-2 h-4 w-4' />
+                Clear
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className='mr-2 h-4 w-4' />
+                Delete Selected
+              </Button>
+            </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setSelectedRows([])}
-            >
-              <X className='mr-2 h-4 w-4' />
-              Clear
-            </Button>
-            <Button
-              variant='destructive'
-              size='sm'
-              onClick={() => setShowBulkDeleteDialog(true)}
-            >
-              <Trash2 className='mr-2 h-4 w-4' />
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
 
-      <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
         {isLoading ? (
           <TableSkeleton />
         ) : moods.length === 0 ? (
@@ -203,7 +204,6 @@ export default function MoodsPage() {
         ) : (
           <DataTable data={moods} columns={columns} onSelectedRowsChange={setSelectedRows} />
         )}
-      </div>
 
       <MoodsMutateDrawer
         key="mood-create"
@@ -273,6 +273,7 @@ export default function MoodsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </DashboardPage>
     </MoodsContextProvider>
   )
 }

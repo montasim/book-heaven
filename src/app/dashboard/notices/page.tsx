@@ -1,8 +1,8 @@
 'use client'
 
 import { deleteNotice, getNotices } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { NoticesHeader } from './components/notices-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { NoticesHeaderActions } from './components/notices-header'
 import { useEffect, useState } from 'react'
 import { Notice } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -14,6 +14,7 @@ import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { columns } from './components/columns'
 import { NoticesMutateDrawer } from './components/notices-mutate-drawer'
 import { NoticesDeleteDialog } from './components/notices-delete-dialog'
+import { Bell } from 'lucide-react'
 
 export default function NoticesPage() {
   const [notices, setNotices] = useState<Notice[]>([])
@@ -79,11 +80,12 @@ export default function NoticesPage() {
 
   return (
     <NoticesContextProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshNotices }}>
-      <HeaderContainer>
-        <NoticesHeader />
-      </HeaderContainer>
-
-      <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
+      <DashboardPage
+        icon={Bell}
+        title="Notices"
+        description="Manage notices and announcements for your users"
+        actions={<NoticesHeaderActions />}
+      >
         {isLoading ? (
           <TableSkeleton />
         ) : notices.length === 0 ? (
@@ -94,7 +96,6 @@ export default function NoticesPage() {
         ) : (
           <DataTable data={notices} columns={columns} />
         )}
-      </div>
 
       <NoticesMutateDrawer
         key="notice-create"
@@ -132,6 +133,7 @@ export default function NoticesPage() {
           />
         </>
       )}
+      </DashboardPage>
     </NoticesContextProvider>
   )
 }

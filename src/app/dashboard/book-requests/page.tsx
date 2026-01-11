@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { RequestStatus, BookType } from '@prisma/client'
-import { FileText, RefreshCw, MessageCircle, Filter } from 'lucide-react'
+import { FileText, RefreshCw, MessageCircle, Filter, FileQuestion } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { useBookRequestsContext } from './context/book-requests-context'
 import { BookRequestsProvider } from './context/book-requests-context'
@@ -20,6 +20,7 @@ import { BookRequestApproveDrawer } from './components/book-requests-approve-dra
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { DashboardSummarySkeleton, FilterSectionSkeleton, BookRequestListSkeleton } from '@/components/data-table/table-skeleton'
 
@@ -193,20 +194,17 @@ function BookRequestsPageContent() {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Book Requests</h1>
-          <p className="text-muted-foreground">
-            Manage and process book requests from users
-          </p>
-        </div>
+    <DashboardPage
+      icon={FileQuestion}
+      title="Book Requests"
+      description="Manage and process book requests from users"
+      actions={
         <Button onClick={fetchRequests} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          <span className='hidden sm:inline'>Refresh</span>
         </Button>
-      </div>
-
+      }
+    >
       <div className="space-y-4">
         {/* Stats Cards */}
         {loading ? (
@@ -462,7 +460,7 @@ function BookRequestsPageContent() {
           )}
         </div>
       </ConfirmDialog>
-    </div>
+      </DashboardPage>
   )
 }
 

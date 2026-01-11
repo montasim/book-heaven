@@ -20,6 +20,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import {
     ShoppingBag,
     Search,
@@ -212,23 +213,19 @@ export default function AdminMarketplacePostsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold">Sell Posts</h1>
-                    <p className="text-muted-foreground">
-                        Manage all marketplace listings
-                    </p>
-                </div>
+        <DashboardPage
+            icon={ShoppingBag}
+            title="Sell Posts"
+            description="Manage all marketplace listings"
+            actions={
                 <Link href={ROUTES.marketplace.href}>
-                    <Button variant="outline">
+                    <Button variant="outline" size="sm">
                         <ShoppingBag className="h-4 w-4 mr-2" />
-                        View Marketplace
+                        <span className='hidden sm:inline'>View Marketplace</span>
                     </Button>
                 </Link>
-            </div>
-
+            }
+        >
             {/* Filters */}
             {isLoading ? (
                 <Card>
@@ -453,6 +450,6 @@ export default function AdminMarketplacePostsPage() {
                     )}
                 </>
             )}
-        </div>
+            </DashboardPage>
     )
 }

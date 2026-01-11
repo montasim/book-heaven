@@ -4,7 +4,7 @@ import { Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePublicationsContext } from '../context/publications-context'
 
-export function PublicationsHeader() {
+export function PublicationsHeaderActions() {
   const { setOpen, refreshPublications } = usePublicationsContext()
 
   const handleAddPublication = () => {
@@ -12,22 +12,15 @@ export function PublicationsHeader() {
   }
 
   return (
-      <>
-          <div>
-              <h2 className='text-xl font-bold tracking-tight'>Publication List</h2>
-              <p className='text-muted-foreground'>
-                  Manage publications in your library system
-              </p>
-          </div>
-          <div className='flex gap-2'>
-              <Button className='space-x-1' onClick={handleAddPublication}>
-                  <span>Add Publication</span> <Plus size={18} />
-              </Button>
-              <Button className='space-x-1' onClick={refreshPublications} variant='outline'>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-              </Button>
-          </div>
-      </>
+    <>
+      <Button onClick={handleAddPublication} size="sm">
+        <Plus className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Add Publication</span>
+      </Button>
+      <Button onClick={refreshPublications} variant='outline' size="sm">
+        <RefreshCw className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Refresh</span>
+      </Button>
+    </>
   )
 }

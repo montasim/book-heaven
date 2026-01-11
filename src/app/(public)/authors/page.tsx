@@ -111,7 +111,7 @@ export default function AuthorsPage() {
           />
           <div className="flex items-center justify-between mt-4">
             <div>
-              <h1 className="text-3xl font-bold flex items-center gap-2">
+              <h1 className="text-xl font-bold flex items-center gap-2">
                 <Users className="h-8 w-8" />
                 Book Authors
               </h1>

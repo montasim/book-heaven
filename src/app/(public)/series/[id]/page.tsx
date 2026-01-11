@@ -57,7 +57,7 @@ export default function SeriesDetailPage() {
 
               {/* Heading */}
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Series Not Found</h1>
+                <h1 className="text-xl font-bold">Series Not Found</h1>
                 <p className="text-muted-foreground text-lg">
                   We couldn&apos;t find the series you&apos;re looking for
                 </p>
@@ -141,7 +141,7 @@ export default function SeriesDetailPage() {
                 </div>
               )}
               <div className="flex-1">
-                <h1 className="text-3xl font-bold">{series.name}</h1>
+                <h1 className="text-xl font-bold">{series.name}</h1>
                 <p className="text-muted-foreground mt-2">
                   {series.bookCount} book{series.bookCount !== 1 ? 's' : ''} in this series
                 </p>

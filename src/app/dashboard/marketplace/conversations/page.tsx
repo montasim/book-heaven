@@ -30,6 +30,7 @@ import {
     ShoppingBag,
     User,
 } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import Link from 'next/link'
 import { formatPrice, formatDistanceToNow, getInitials } from '@/lib/utils'
 import { ConversationStatus } from '@prisma/client'
@@ -209,17 +210,11 @@ export default function AdminMarketplaceConversationsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold">Conversations</h1>
-                    <p className="text-muted-foreground">
-                        Monitor all buyer-seller conversations
-                    </p>
-                </div>
-            </div>
-
+        <DashboardPage
+            icon={MessageSquare}
+            title="Conversations"
+            description="Monitor all buyer-seller conversations"
+        >
             {/* Filters */}
             {isLoading ? (
                 <Card>
@@ -423,6 +418,6 @@ export default function AdminMarketplaceConversationsPage() {
                     )}
                 </>
             )}
-        </div>
+        </DashboardPage>
     )
 }

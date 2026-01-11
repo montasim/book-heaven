@@ -24,6 +24,7 @@ import {
     User,
     MessageSquare,
 } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import Link from 'next/link'
 import { formatDistanceToNow, getInitials } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -161,17 +162,11 @@ export default function AdminMarketplaceReviewsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold">Seller Reviews</h1>
-                    <p className="text-muted-foreground">
-                        Moderate all seller reviews
-                    </p>
-                </div>
-            </div>
-
+        <DashboardPage
+            icon={Star}
+            title="Seller Reviews"
+            description="Moderate all seller reviews"
+        >
             {/* Filters */}
             {isLoading ? (
                 <Card>
@@ -333,6 +328,6 @@ export default function AdminMarketplaceReviewsPage() {
                     )}
                 </>
             )}
-        </div>
+        </DashboardPage>
     )
 }

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { getCampaigns } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { CampaignsHeader } from './components/campaigns-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { CampaignsHeaderActions } from './components/campaigns-header'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton, DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
@@ -14,7 +14,7 @@ import { Campaign } from './data/schema'
 import { CampaignsMutateDrawer } from './components/campaigns-mutate-drawer'
 import { CampaignDeleteDialog } from './components/campaign-delete-dialog'
 import { CampaignStatsDialog } from './components/campaign-stats-dialog'
-import { Mail, Send, Clock, CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react'
+import { Mail, Send, Clock, CheckCircle2, AlertCircle, TrendingUp, Megaphone } from 'lucide-react'
 
 function CampaignsPageContent() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
@@ -108,16 +108,17 @@ function CampaignsPageContent() {
         refreshCampaigns,
       }}
     >
-      <HeaderContainer>
-        <CampaignsHeader campaignCount={campaigns.length} />
-      </HeaderContainer>
+      <DashboardPage
+        icon={Megaphone}
+        title="Campaigns"
+        description="Manage email campaigns to engage with your audience"
+        actions={<CampaignsHeaderActions campaignCount={campaigns.length} />}
+      >
+        <div className="space-y-4">
+          {/* Campaign Summary */}
+          {isLoading ? <DashboardSummarySkeleton count={6} /> : <DashboardSummary summaries={summaryItems} />}
 
-      <div className="space-y-4 mt-4">
-        {/* Campaign Summary */}
-        {isLoading ? <DashboardSummarySkeleton count={6} /> : <DashboardSummary summaries={summaryItems} />}
-
-        {/* Campaigns Table */}
-        <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
+          {/* Campaigns Table */}
           {isLoading ? (
             <TableSkeleton />
           ) : campaigns.length === 0 ? (
@@ -129,7 +130,6 @@ function CampaignsPageContent() {
             <DataTable data={campaigns} columns={columns} />
           )}
         </div>
-      </div>
 
       {/* Create Drawer */}
       <CampaignsMutateDrawer
@@ -167,12 +167,11 @@ function CampaignsPageContent() {
 
       {/* Stats Dialog */}
       <CampaignStatsDialog />
+      </DashboardPage>
     </CampaignsContextProvider>
   )
 }
 
 export default function Page() {
-  return <div className='p-4'>
-      <CampaignsPageContent />
-  </div>
+  return <CampaignsPageContent />
 }

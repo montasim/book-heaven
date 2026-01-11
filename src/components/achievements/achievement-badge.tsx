@@ -47,7 +47,7 @@ export function AchievementBadge({ achievement, showProgress = false }: Achievem
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Icon */}
-          <div className={`text-3xl ${achievement.userUnlocked ? '' : 'grayscale opacity-30'}`}>
+          <div className={`text-xl ${achievement.userUnlocked ? '' : 'grayscale opacity-30'}`}>
             {achievement.icon}
           </div>
 

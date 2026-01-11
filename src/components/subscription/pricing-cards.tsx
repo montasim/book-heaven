@@ -111,7 +111,7 @@ export function PricingCards({
               <CardDescription>{tier.description}</CardDescription>
               <div className="mt-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">${formatPrice(price)}</span>
+                  <span className="text-xl font-bold">${formatPrice(price)}</span>
                   <span className="text-muted-foreground">/{interval}</span>
                 </div>
                 {savings > 0 && (

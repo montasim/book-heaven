@@ -51,7 +51,7 @@ export default function SettingsLayout({
   return (
     <>
       <div className='space-y-0.5'>
-        <h1 className='text-xl font-bold tracking-tight md:text-3xl'>
+        <h1 className='text-xl font-bold tracking-tight'>
           Settings
         </h1>
         <p className='text-muted-foreground'>

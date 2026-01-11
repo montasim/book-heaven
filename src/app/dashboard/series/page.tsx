@@ -1,8 +1,8 @@
 'use client'
 
 import { deleteSeries, getSeries } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { SeriesHeader } from './components/series-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { SeriesHeaderActions } from './components/series-header'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Series } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -15,7 +15,7 @@ import SeriesProvider, { useSeriesContext, SeriesDialogType } from './context/se
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { Button } from '@/components/ui/button'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, X, Layers } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,39 +145,40 @@ export default function SeriesPage() {
 
   return (
     <SeriesProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshSeries }}>
-      <HeaderContainer>
-        <SeriesHeader />
-      </HeaderContainer>
-
-      {selectedRows.length > 0 && (
-        <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
-          <div className='flex items-center gap-2'>
-            <span className='text-sm font-medium'>
-              {selectedRows.length} {selectedRows.length === 1 ? 'series' : 'series'} selected
-            </span>
+      <DashboardPage
+        icon={Layers}
+        title="Series"
+        description="Manage book series in your system"
+        actions={<SeriesHeaderActions />}
+      >
+        {selectedRows.length > 0 && (
+          <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-medium'>
+                {selectedRows.length} {selectedRows.length === 1 ? 'series' : 'series'} selected
+              </span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setSelectedRows([])}
+              >
+                <X className='mr-2 h-4 w-4' />
+                Clear
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                onClick={() => setShowBulkDeleteDialog(true)}
+              >
+                <Trash2 className='mr-2 h-4 w-4' />
+                Delete Selected
+              </Button>
+            </div>
           </div>
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setSelectedRows([])}
-            >
-              <X className='mr-2 h-4 w-4' />
-              Clear
-            </Button>
-            <Button
-              variant='destructive'
-              size='sm'
-              onClick={() => setShowBulkDeleteDialog(true)}
-            >
-              <Trash2 className='mr-2 h-4 w-4' />
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
 
-      <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
         {isLoading ? (
           <TableSkeleton rowCount={pagination.pageSize} />
         ) : series.length === 0 ? (
@@ -195,7 +196,6 @@ export default function SeriesPage() {
             onSelectedRowsChange={setSelectedRows}
           />
         )}
-      </div>
 
       <SeriesMutateDrawer
         key="series-create"
@@ -249,6 +249,7 @@ export default function SeriesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </DashboardPage>
     </SeriesProvider>
   )
 }

@@ -5,26 +5,20 @@ import { Plus } from 'lucide-react'
 import { useSeriesContext } from '../context/series-context'
 import { useAuth } from '@/context/auth-context'
 
-export function SeriesHeader() {
+export function SeriesHeaderActions() {
   const { user } = useAuth()
   const { setOpen } = useSeriesContext()
 
   const canCreate = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
+  if (!canCreate) return null
+
   return (
     <>
-      <div>
-        <h2 className='text-xl font-bold tracking-tight'>Series List</h2>
-        <p className='text-muted-foreground'>
-          Manage book series and reading orders
-        </p>
-      </div>
-      {canCreate && (
-        <Button onClick={() => setOpen('create')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Series
-        </Button>
-      )}
+      <Button onClick={() => setOpen('create')} size="sm">
+        <Plus className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Add Series</span>
+      </Button>
     </>
   )
 }

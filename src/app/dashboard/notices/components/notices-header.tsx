@@ -4,7 +4,7 @@ import { Plus, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNoticesContext } from '../context/notices-context'
 
-export function NoticesHeader() {
+export function NoticesHeaderActions() {
   const { setOpen, refreshNotices } = useNoticesContext()
 
   const handleAddNotice = () => {
@@ -13,21 +13,14 @@ export function NoticesHeader() {
 
   return (
     <>
-      <div>
-        <h2 className="text-xl font-bold tracking-tight">Notices</h2>
-        <p className="text-muted-foreground">
-          Manage announcements and notices displayed to users
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <Button className="space-x-1" onClick={handleAddNotice}>
-          <span>Add Notice</span> <Plus size={18} />
-        </Button>
-        <Button className="space-x-1" onClick={refreshNotices} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
+      <Button onClick={handleAddNotice} size="sm">
+        <Plus className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Add Notice</span>
+      </Button>
+      <Button onClick={refreshNotices} variant="outline" size="sm">
+        <RefreshCw className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Refresh</span>
+      </Button>
     </>
   )
 }

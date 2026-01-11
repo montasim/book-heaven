@@ -5,7 +5,8 @@ import { useAuth } from '@/context/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { DollarSign, Loader2 } from 'lucide-react'
+import { DollarSign, Loader2, TrendingUp } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { CostSummaryCards } from './components/cost-summary-cards'
 import { CostOverTimeChart } from './components/cost-over-time-chart'
 import { CostByDimensionChart } from './components/cost-by-dimension-chart'
@@ -61,110 +62,101 @@ export default function BookCostAnalyticsPage() {
   // Skeleton loading state
   if (isLoading || !analytics) {
     return (
-      <div className="space-y-6">
-        {/* Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-80" />
-          </div>
-          <div className="flex items-center gap-2">
+      <DashboardPage
+        icon={TrendingUp}
+        title={isAdmin ? 'Book Cost Analytics' : 'My Book Costs'}
+        description={isAdmin ? 'Track and analyze book acquisition costs across the library' : 'Track your book spending and collection value'}
+      >
+        <div className="space-y-6">
+          {/* Summary Cards Skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-9 w-20" />
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-7 w-16 mb-2" />
+                  <Skeleton className="h-3 w-32" />
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </div>
 
-        {/* Summary Cards Skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-4 rounded-full" />
+          {/* Charts Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-7 w-16 mb-2" />
-                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-[250px] w-full" />
               </CardContent>
             </Card>
-          ))}
-        </div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[250px] w-full" />
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Charts Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[250px] w-full" />
-            </CardContent>
-          </Card>
+          {/* Table Skeleton */}
           <Card>
             <CardHeader>
               <Skeleton className="h-6 w-48" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-[250px] w-full" />
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Table Skeleton */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </DashboardPage>
     )
   }
 
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 text-destructive">
-            <DollarSign className="h-6 w-6" />
+      <DashboardPage
+        icon={TrendingUp}
+        title={isAdmin ? 'Book Cost Analytics' : 'My Book Costs'}
+        description={isAdmin ? 'Track and analyze book acquisition costs across the library' : 'Track your book spending and collection value'}
+      >
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 text-destructive">
+              <DollarSign className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Failed to load analytics</h3>
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+            >
+              Try Again
+            </Button>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Failed to load analytics</h3>
-            <p className="text-muted-foreground">{error}</p>
-          </div>
-          <Button
-            onClick={() => window.location.reload()}
-            variant="outline"
-          >
-            Try Again
-          </Button>
         </div>
-      </div>
+      </DashboardPage>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">
-            {isAdmin ? 'Book Cost Analytics' : 'My Book Costs'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isAdmin
-              ? 'Track and analyze book acquisition costs across the library'
-              : 'Track your book spending and collection value'}
-          </p>
-        </div>
+    <DashboardPage
+      icon={TrendingUp}
+      title={isAdmin ? 'Book Cost Analytics' : 'My Book Costs'}
+      description={isAdmin ? 'Track and analyze book acquisition costs across the library' : 'Track your book spending and collection value'}
+      actions={
         <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={dateRange === '7d' ? 'default' : 'outline'}
@@ -195,7 +187,8 @@ export default function BookCostAnalyticsPage() {
             All Time
           </Button>
         </div>
-      </div>
+      }
+    >
 
       {/* Summary Cards */}
       <CostSummaryCards summary={analytics.summary} activity={analytics.activitySummary} />
@@ -261,6 +254,6 @@ export default function BookCostAnalyticsPage() {
           />
         </CardContent>
       </Card>
-    </div>
+      </DashboardPage>
   )
 }

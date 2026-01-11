@@ -22,6 +22,7 @@ import {
   AchievementsListSkeleton
 } from '@/components/achievements/achievements-page-skeleton'
 import { Trophy, Sparkles, Target, BookOpen, TrendingUp, Award, ChevronRight, ChevronDown } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import Link from 'next/link'
 import type { AchievementWithProgress } from '@/lib/achievements/types'
 
@@ -218,31 +219,20 @@ export default function AchievementsPage() {
   }
 
   return (
-    <div className='flex flex-col h-full'>
-      {/* Header */}
-      {isLoading ? (
-        <AchievementsPageHeaderSkeleton />
-      ) : (
-        <div className='flex-none mb-2 flex flex-col md:flex-row md:justify-between gap-4'>
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Trophy className="h-6 w-6" />
-              Achievements
-            </h1>
-            <p className="text-muted-foreground">
-              Unlock achievements by reading, taking quizzes, and exploring the platform
-            </p>
-          </div>
-          <Button
-            onClick={handleCheckAchievements}
-            disabled={isChecking}
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            {isChecking ? 'Checking...' : 'Check for New'}
-          </Button>
-        </div>
-      )}
-
+    <DashboardPage
+      icon={Trophy}
+      title="Achievements"
+      description="Unlock achievements by reading, taking quizzes, and exploring the platform"
+      actions={
+        <Button
+          onClick={handleCheckAchievements}
+          disabled={isChecking}
+        >
+          <Sparkles className="h-4 w-4 mr-2" />
+          {isChecking ? 'Checking...' : 'Check for New'}
+        </Button>
+      }
+    >
       <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16 h-full'>
         <div className='space-y-6'>
           {/* Dashboard Summary */}
@@ -406,6 +396,6 @@ export default function AchievementsPage() {
       )}
         </div>
       </ScrollArea>
-    </div>
+    </DashboardPage>
   )
 }

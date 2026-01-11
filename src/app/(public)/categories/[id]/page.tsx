@@ -73,7 +73,7 @@ export default function CategoryDetailsPage() {
 
               {/* Heading */}
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Category Not Found</h1>
+                <h1 className="text-xl font-bold">Category Not Found</h1>
                 <p className="text-muted-foreground text-lg">
                   We couldn&apos;t find the category you&apos;re looking for
                 </p>

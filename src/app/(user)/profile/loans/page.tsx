@@ -12,7 +12,8 @@ import { useState, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Calendar, CheckCircle, Clock, AlertTriangle, Loader2, RefreshCw } from 'lucide-react'
+import { BookOpen, Calendar, CheckCircle, Clock, AlertTriangle, Loader2, RefreshCw, HandCoins } from 'lucide-react'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { getProxiedImageUrl } from '@/lib/image-proxy'
@@ -167,12 +168,19 @@ function ProfileLoansContent() {
   const overdueCount = activeLoans.filter(l => l.status === 'OVERDUE').length
 
   return (
-    <div className="space-y-6">
+    <DashboardPage
+      icon={HandCoins}
+      title="My Borrowed Books"
+      description="View and manage your borrowed books"
+      actions={
+        <Button onClick={fetchLoans} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      }
+    >
       {isLoading ? (
         <>
-          {/* Header Skeleton */}
-          <LoansPageHeaderSkeleton />
-
           {/* Dashboard Summary Skeleton */}
           <DashboardSummarySkeleton count={3} />
 
@@ -184,20 +192,6 @@ function ProfileLoansContent() {
         </>
       ) : (
         <>
-          {/* Actual Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-xl font-bold mb-2">My Borrowed Books</h1>
-              <p className="text-muted-foreground">
-                View and manage your borrowed books
-              </p>
-            </div>
-            <Button onClick={fetchLoans} variant="outline" className="mt-4 md:mt-0">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-
           {/* Dashboard Summary */}
           <DashboardSummary
             summaries={[
@@ -408,15 +402,18 @@ function ProfileLoansContent() {
           </Tabs>
         </>
       )}
-    </div>
+    </DashboardPage>
   )
 }
 
 // Loading fallback for Suspense
 function ProfileLoansLoading() {
   return (
-    <div className="space-y-6">
-      <LoansPageHeaderSkeleton />
+    <DashboardPage
+      icon={HandCoins}
+      title="My Borrowed Books"
+      description="View and manage your borrowed books"
+    >
       <DashboardSummarySkeleton />
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -424,7 +421,7 @@ function ProfileLoansLoading() {
         </div>
         <LoanListSkeleton />
       </div>
-    </div>
+    </DashboardPage>
   )
 }
 

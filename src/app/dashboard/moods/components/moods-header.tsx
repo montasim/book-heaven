@@ -4,11 +4,11 @@ import { Plus, RefreshCw, Sprout } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMoodsContext } from '../context/moods-context'
 
-interface MoodsHeaderProps {
+interface MoodsHeaderActionsProps {
   onSeedMoods?: () => void
 }
 
-export function MoodsHeader({ onSeedMoods }: MoodsHeaderProps) {
+export function MoodsHeaderActions({ onSeedMoods }: MoodsHeaderActionsProps) {
   const { setOpen, refreshMoods } = useMoodsContext()
 
   const handleAddMood = () => {
@@ -17,27 +17,20 @@ export function MoodsHeader({ onSeedMoods }: MoodsHeaderProps) {
 
   return (
     <>
-      <div>
-        <h2 className="text-xl font-bold tracking-tight">Mood List</h2>
-        <p className="text-muted-foreground">
-          Manage moods and their category mappings for book recommendations
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <Button className="space-x-1" onClick={handleAddMood}>
-          <span>Add Mood</span> <Plus size={18} />
+      <Button onClick={handleAddMood} size="sm">
+        <Plus className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Add Mood</span>
+      </Button>
+      <Button onClick={refreshMoods} variant="outline" size="sm">
+        <RefreshCw className="h-4 w-4 mr-2" />
+        <span className='hidden sm:inline'>Refresh</span>
+      </Button>
+      {onSeedMoods && (
+        <Button onClick={onSeedMoods} variant="outline" size="sm">
+          <Sprout className="h-4 w-4 mr-2" />
+          <span className='hidden sm:inline'>Seed Moods</span>
         </Button>
-        <Button className="space-x-1" onClick={refreshMoods} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-        {onSeedMoods && (
-          <Button className="space-x-1" onClick={onSeedMoods} variant="outline">
-            <Sprout className="h-4 w-4 mr-2" />
-            Seed Moods
-          </Button>
-        )}
-      </div>
+      )}
     </>
   )
 }

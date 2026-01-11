@@ -110,7 +110,7 @@ export default function PublicationsPage() {
           />
           <div className="flex items-center justify-between mt-4">
             <div>
-              <h1 className="text-3xl font-bold flex items-center gap-2">
+              <h1 className="text-xl font-bold flex items-center gap-2">
                 <Building2 className="h-8 w-8" />
                 Publications
               </h1>

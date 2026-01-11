@@ -1,8 +1,8 @@
 'use client'
 
 import { getLoans, markAsReturned } from './actions'
-import { HeaderContainer } from '@/components/ui/header-container'
-import { LoansHeader } from './components/loans-header'
+import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { LoansHeaderActions } from './components/loans-header'
 import { LendBookDrawer } from './components/lend-book-drawer'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Loan } from './data/schema'
@@ -11,7 +11,7 @@ import { toast } from '@/hooks/use-toast'
 import { DataTable } from '@/components/data-table/data-table'
 import { columns } from './components/columns'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
-import { BookOpen, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { BookOpen, AlertTriangle, CheckCircle, Clock, HandCoins } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
@@ -88,45 +88,46 @@ export default function LoansPage() {
 
   return (
     <LoansProvider value={{ open, setOpen, currentRow, setCurrentRow, refreshLoans }}>
-      <HeaderContainer>
-        <LoansHeader onLendBook={() => setIsLendDialogOpen(true)} />
-      </HeaderContainer>
+      <DashboardPage
+        icon={HandCoins}
+        title="Loans"
+        description="Manage book lending and returns"
+        actions={<LoansHeaderActions onLendBook={() => setIsLendDialogOpen(true)} />}
+      >
+        {/* Dashboard Summary */}
+        {isLoading ? (
+          <DashboardSummarySkeleton count={4} />
+        ) : (
+          <DashboardSummary
+            summaries={[
+              {
+                title: 'Total Loans',
+                value: loans.length,
+                description: `${activeCount} currently active`,
+                icon: BookOpen,
+              },
+              {
+                title: 'Active Loans',
+                value: activeCount,
+                description: overdueCount > 0 ? `${overdueCount} overdue` : 'All on track',
+                icon: Clock,
+              },
+              {
+                title: 'Overdue Books',
+                value: overdueCount,
+                description: overdueCount > 0 ? 'Need attention' : 'No overdue books',
+                icon: AlertTriangle,
+              },
+              {
+                title: 'Returned',
+                value: returnedCount,
+                description: `${cancelledCount} cancelled`,
+                icon: CheckCircle,
+              },
+            ]}
+          />
+        )}
 
-      {/* Dashboard Summary */}
-      {isLoading ? (
-        <DashboardSummarySkeleton count={4} />
-      ) : (
-        <DashboardSummary
-          summaries={[
-            {
-              title: 'Total Loans',
-              value: loans.length,
-              description: `${activeCount} currently active`,
-              icon: BookOpen,
-            },
-            {
-              title: 'Active Loans',
-              value: activeCount,
-              description: overdueCount > 0 ? `${overdueCount} overdue` : 'All on track',
-              icon: Clock,
-            },
-            {
-              title: 'Overdue Books',
-              value: overdueCount,
-              description: overdueCount > 0 ? 'Need attention' : 'No overdue books',
-              icon: AlertTriangle,
-            },
-            {
-              title: 'Returned',
-              value: returnedCount,
-              description: `${cancelledCount} cancelled`,
-              icon: CheckCircle,
-            },
-          ]}
-        />
-      )}
-
-      <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-x-12 lg:space-y-0">
         {isLoading ? (
           <TableSkeleton />
         ) : loans.length === 0 ? (
@@ -137,7 +138,6 @@ export default function LoansPage() {
         ) : (
           <DataTable data={loans} columns={columns} />
         )}
-      </div>
 
       {/* Lend Book Drawer */}
       <LendBookDrawer
@@ -145,6 +145,7 @@ export default function LoansPage() {
         onOpenChange={setIsLendDialogOpen}
         onSuccess={refreshLoans}
       />
+      </DashboardPage>
     </LoansProvider>
   )
 }
