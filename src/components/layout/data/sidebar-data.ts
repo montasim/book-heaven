@@ -24,18 +24,27 @@ import {
   IconCrown,
   IconLayoutDashboard,
   IconSettings,
+  IconShield,
+  IconUsers,
+  IconMail,
+  IconDeviceDesktop,
 } from '@tabler/icons-react'
 import {
-    AudioWaveform,
-    BookOpen as BookOpenIcon,
-    Brain,
-    GalleryVerticalEnd,
-    HandCoins,
-    Layers,
-    Megaphone,
-    PenTool,
-    TrendingUp,
-    Bell
+  AudioWaveform,
+  BookOpen as BookOpenIcon,
+  Brain,
+  GalleryVerticalEnd,
+  HandCoins,
+  Layers,
+  Megaphone,
+  PenTool,
+  TrendingUp,
+  Bell,
+  BarChart3,
+  MessageSquare,
+  ShoppingBag,
+  Inbox,
+  Activity,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 import { ROUTES } from '@/lib/routes/client-routes'
@@ -64,240 +73,257 @@ export const sidebarData: SidebarData = {
     },
   ],
   navGroups: [
+    // ============================================================================
+    // OVERVIEW
+    // ============================================================================
     {
-      title: 'General',
+      title: 'Overview',
       items: [
         {
-          title: ROUTES.dashboard.label,
+          title: 'Dashboard',
           url: ROUTES.dashboard.href,
           icon: IconLayoutDashboard,
         },
-        {
-          title: ROUTES.siteSettings.label,
-          url: ROUTES.siteSettings.href,
-          icon: IconBuildingFactory,
-        },
-        {
-          title: ROUTES.dashboardAdminContent.label,
-          url: ROUTES.dashboardAdminContent.href,
-          icon: IconCrown,
-        },
-        {
-          title: ROUTES.dashboardUsers.label,
-          url: ROUTES.dashboardUsers.href,
-          icon: IconUser,
-        },
-        {
-          title: ROUTES.dashboardCampaigns.label,
-          url: ROUTES.dashboardCampaigns.href,
-          icon: Megaphone,
-        },
-        {
-          title: ROUTES.dashboardNotices.label,
-          url: ROUTES.dashboardNotices.href,
-          icon: Bell,
-        },
-        {
-          title: ROUTES.dashboardActivities.label,
-          url: ROUTES.dashboardActivities.href,
-          icon: IconHistory,
-        },
-        {
-          title: ROUTES.dashboardSupportTickets.label,
-          url: ROUTES.dashboardSupportTickets.href,
-          icon: IconMessages,
-        },
-        {
-          title: ROUTES.dashboardHelpCenterFaqs.label,
-          url: ROUTES.dashboardHelpCenterFaqs.href,
-          icon: IconHelp,
-        },
-        {
-          title: ROUTES.dashboardAdminContactSubmissions.label,
-          url: ROUTES.dashboardAdminContactSubmissions.href,
-          icon: IconMessages,
-        },
-        {
-          title: ROUTES.dashboardLegal.label,
-          url: ROUTES.dashboardLegal.href,
-          icon: IconFileText,
-        },
+          {
+              title: 'Activities',
+              url: ROUTES.dashboardActivities.href,
+              icon: IconHistory,
+          },
       ],
     },
+
+    // ============================================================================
+    // LIBRARY MANAGEMENT
+    // ============================================================================
     {
       title: 'Library Management',
       items: [
         {
-          title: ROUTES.dashboardBooks.label,
+          title: 'Books',
           url: ROUTES.dashboardBooks.href,
           icon: IconBook,
         },
         {
-          title: ROUTES.dashboardSeries.label,
+          title: 'Series',
           url: ROUTES.dashboardSeries.href,
           icon: Layers,
         },
         {
-          title: ROUTES.dashboardAuthors.label,
+          title: 'Authors',
           url: ROUTES.dashboardAuthors.href,
           icon: PenTool,
         },
         {
-          title: ROUTES.dashboardPublications.label,
+          title: 'Publications',
           url: ROUTES.dashboardPublications.href,
           icon: IconBuildingStore,
         },
         {
-          title: ROUTES.dashboardCategories.label,
+          title: 'Categories',
           url: ROUTES.dashboardCategories.href,
           icon: IconTag,
         },
+      ],
+    },
+    {
+      title: 'Library Operations',
+      items: [
         {
-          title: ROUTES.moods.label,
-          url: ROUTES.moods.href,
-          icon: IconMoodSmile,
-        },
-        {
-          title: ROUTES.dashboardBookRequests.label,
+          title: 'Book Requests',
           url: ROUTES.dashboardBookRequests.href,
           icon: IconBooks,
         },
         {
-          title: ROUTES.dashboardLoans.label,
+          title: 'Loans',
           url: ROUTES.dashboardLoans.href,
           icon: HandCoins,
         },
         {
-          title: ROUTES.dashboardBooksCostAnalytics.label,
+          title: 'Cost Analytics',
           url: ROUTES.dashboardBooksCostAnalytics.href,
           icon: TrendingUp,
         },
       ],
     },
+
+    // ============================================================================
+    // CONTENT MANAGEMENT
+    // ============================================================================
     {
-      title: 'Admin Marketplace',
+      title: 'Content Management',
       items: [
         {
-          title: ROUTES.dashboardMarketplace.label,
+          title: 'Site Settings',
+          url: ROUTES.siteSettings.href,
+          icon: IconBuildingFactory,
+        },
+        {
+          title: 'Pricing Content',
+          url: ROUTES.dashboardAdminContent.href,
+          icon: IconCrown,
+        },
+        {
+          title: 'Legal Content',
+          url: ROUTES.dashboardLegal.href,
+          icon: IconFileText,
+        },
+        {
+          title: 'Notices',
+          url: ROUTES.dashboardNotices.href,
+          icon: Megaphone,
+        },
+        {
+          title: 'Help Center FAQs',
+          url: ROUTES.dashboardHelpCenterFaqs.href,
+          icon: IconHelp,
+        },
+      ],
+    },
+
+    // ============================================================================
+    // USER MANAGEMENT
+    // ============================================================================
+    {
+      title: 'User Management',
+      items: [
+        {
+          title: 'Users',
+          url: ROUTES.dashboardUsers.href,
+          icon: IconUsers,
+        },
+        {
+          title: 'Campaigns',
+          url: ROUTES.dashboardCampaigns.href,
+          icon: IconMail,
+        },
+        {
+          title: 'Support Tickets',
+          url: ROUTES.dashboardSupportTickets.href,
+          icon: IconMessages,
+        },
+        {
+          title: 'Contact Submissions',
+          url: ROUTES.dashboardAdminContactSubmissions.href,
+          icon: MessageSquare,
+        },
+      ],
+    },
+
+    // ============================================================================
+    // MARKETPLACE
+    // ============================================================================
+    {
+      title: 'Marketplace',
+      items: [
+        {
+          title: 'Overview',
           url: ROUTES.dashboardMarketplace.href,
           icon: IconLayoutDashboard,
         },
         {
-          title: ROUTES.marketplacePosts.label,
+          title: 'My Posts',
           url: ROUTES.marketplacePosts.href,
-          icon: IconBook,
+          icon: ShoppingBag,
         },
         {
-          title: ROUTES.marketplaceConversations.label,
+          title: 'Conversations',
           url: ROUTES.marketplaceConversations.href,
-          icon: IconMessages,
+          icon: MessageSquare,
         },
         {
-          title: ROUTES.dashboardMarketplaceReviews.label,
+          title: 'Reviews',
           url: ROUTES.dashboardMarketplaceReviews.href,
           icon: IconStar,
         },
         {
-          title: ROUTES.marketplaceAnalytics.label,
+          title: 'Analytics',
           url: ROUTES.marketplaceAnalytics.href,
           icon: IconBrowserCheck,
         },
       ],
     },
+
+    // ============================================================================
+    // PERSONAL
+    // ============================================================================
     {
-      title: 'Games',
+      title: 'Personal',
       items: [
         {
-          title: ROUTES.quiz.label,
-          url: ROUTES.quiz.href,
-          icon: Brain,
-        },
-      ],
-    },
-    {
-      title: 'Other',
-      items: [
-        {
-          title: ROUTES.dashboard.label,
-          url: ROUTES.dashboard.href,
-          icon: IconLayoutDashboard,
-        },
-        {
-          title: ROUTES.physicalLibrary.label,
-          url: ROUTES.physicalLibrary.href,
+          title: 'My Library',
+          url: ROUTES.libraryMyUploads.href,
           icon: IconLibrary,
         },
         {
-          title: ROUTES.libraryMyUploads.label,
-          url: ROUTES.libraryMyUploads.href,
-          icon: IconBookmark,
-        },
-        {
-          title: ROUTES.profileLoans.label,
+          title: 'My Borrowed Books',
           url: ROUTES.profileLoans.href,
           icon: IconHandStop,
         },
         {
-          title: ROUTES.dashboardActivity.label,
-          url: ROUTES.dashboardActivity.href,
-          icon: IconHistory,
-        },
-        {
-          title: ROUTES.achievements.label,
+          title: 'Achievements',
           url: ROUTES.achievements.href,
           icon: IconTrophy,
         },
         {
-          title: ROUTES.settings.label,
+          title: 'Moods',
+          url: ROUTES.moods.href,
+          icon: IconMoodSmile,
+        },
+      ],
+    },
+
+    // ============================================================================
+    // SETTINGS
+    // ============================================================================
+    {
+      title: 'Settings',
+      items: [
+        {
+          title: 'Settings',
           icon: IconSettings,
           items: [
             {
-              title: ROUTES.settings.label,
+              title: 'General',
               url: ROUTES.settings.href,
               icon: IconUserCog,
             },
             {
-              title: ROUTES.settingsAccount.label,
+              title: 'Account',
               url: ROUTES.settingsAccount.href,
               icon: IconTool,
             },
             {
-              title: ROUTES.settingsSubscription.label,
-                url: ROUTES.settingsSubscription.href,
-                icon: IconCrown,
+              title: 'Subscription',
+              url: ROUTES.settingsSubscription.href,
+              icon: IconCrown,
             },
             {
-                title: ROUTES.settingsBilling.label,
-                url: ROUTES.settingsBilling.href,
-                icon: IconReceipt,
+              title: 'Billing',
+              url: ROUTES.settingsBilling.href,
+              icon: IconReceipt,
             },
             {
-              title: ROUTES.settingsAppearance.label,
+              title: 'Appearance',
               url: ROUTES.settingsAppearance.href,
               icon: IconPalette,
             },
             {
-              title: ROUTES.settingsNotifications.label,
+              title: 'Notifications',
               url: ROUTES.settingsNotifications.href,
               icon: IconNotification,
             },
             {
-              title: ROUTES.settingsDisplay.label,
+              title: 'Display',
               url: ROUTES.settingsDisplay.href,
-              icon: IconBrowserCheck,
+              icon: IconDeviceDesktop,
             },
           ],
         },
-        {
-          title: ROUTES.pricing.label,
-          url: ROUTES.pricing.href,
-          icon: IconCrown,
-        },
-        {
-          title: ROUTES.helpCenter.label,
-          url: ROUTES.helpCenter.href,
-          icon: IconHelp,
-        },
+          {
+              title: 'My Activity',
+              url: ROUTES.dashboardActivity.href,
+              icon: Activity,
+          },
       ],
     },
   ],
