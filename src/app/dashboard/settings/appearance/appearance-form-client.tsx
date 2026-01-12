@@ -107,7 +107,7 @@ export function AppearanceFormClient({ defaultValues }: AppearanceFormClientProp
               <RadioGroup
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                className='grid max-w-md grid-cols-2 gap-8 pt-2'
+                className='grid max-w-md grid-cols-2 gap-6 pt-2'
               >
                 <FormItem>
                   <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>

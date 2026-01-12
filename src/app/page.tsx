@@ -147,7 +147,7 @@ export default async function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-8 pt-8 border-t border-border/50">
+            <div className="flex flex-wrap items-center justify-center gap-6 pt-8 border-t border-border/50">
               <div className="text-center">
                 <div className="text-3xl font-bold">10K+</div>
                 <div className="text-sm text-muted-foreground">Books Available</div>
@@ -177,7 +177,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-6">
             {features.map((feature, index) => (
               <Card
                 key={index}
@@ -214,7 +214,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-6 max-w-5xl mx-auto">
             {bookTypes.map((type, index) => (
               <Card
                 key={index}
@@ -420,7 +420,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="py-12 bg-muted/30 border-t border-border">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-4 gap-6 mb-6">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-6 w-6 text-primary" />
