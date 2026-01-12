@@ -147,6 +147,9 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
 
     const estimatedReadingTime = calculateReadingTime(book.pageNumber)
     const authors = book.authors?.map((a: any) => a.name).join(', ') || 'Unknown'
+    const translators = book.translators && book.translators.length > 0
+      ? book.translators.map((t: any) => t.name).join(', ')
+      : null
 
     const handleEdit = (e: React.MouseEvent) => {
       e.preventDefault()
@@ -264,6 +267,13 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
                     {book.authors && book.authors.length > 0 && (
                       <p className="text-xs text-muted-foreground mb-1.5 line-clamp-1" title={`by ${authors}`}>
                         by {authors}
+                      </p>
+                    )}
+
+                    {/* Translators - Not clickable */}
+                    {translators && (
+                      <p className="text-xs text-muted-foreground mb-1.5 line-clamp-1" title={`translated by ${translators}`}>
+                        translated by {translators}
                       </p>
                     )}
 
@@ -552,6 +562,13 @@ const BookCard = React.forwardRef<HTMLDivElement, BookCardProps>(
             {book.authors && book.authors.length > 0 && (
               <p className="text-sm text-muted-foreground truncate" title={`by ${authors}`}>
                 by {authors}
+              </p>
+            )}
+
+            {/* Translator */}
+            {translators && (
+              <p className="text-sm text-muted-foreground truncate" title={`translated by ${translators}`}>
+                translated by {translators}
               </p>
             )}
 

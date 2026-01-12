@@ -45,6 +45,7 @@ const bookFormSchema = z.object({
     numberOfCopies: z.string().optional(),
     purchaseDate: z.string().optional(),
     authorIds: z.array(z.string()).min(1, 'At least one author is required'),
+    translatorIds: z.array(z.string()).optional(),
     publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
     categoryIds: z.array(z.string()).optional(),
 }).superRefine((data, ctx) => {
@@ -103,6 +104,11 @@ interface Author {
     name: string
 }
 
+interface Translator {
+    id: string
+    name: string
+}
+
 interface Publication {
     id: string
     name: string
@@ -115,6 +121,7 @@ interface Category {
 
 export function BookForm({ initialData, onSubmit, isEdit = false, onCancel }: BookFormProps) {
     const [authors, setAuthors] = useState<Author[]>([])
+    const [translators, setTranslators] = useState<Translator[]>([])
     const [publications, setPublications] = useState<Publication[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(false)
@@ -137,6 +144,7 @@ export function BookForm({ initialData, onSubmit, isEdit = false, onCancel }: Bo
             numberOfCopies: initialData?.numberOfCopies || '',
             purchaseDate: initialData?.purchaseDate || '',
             authorIds: initialData?.authorIds || [],
+            translatorIds: initialData?.translatorIds || [],
             publicationIds: initialData?.publicationIds || [],
             categoryIds: initialData?.categoryIds || [],
         },
@@ -154,6 +162,11 @@ export function BookForm({ initialData, onSubmit, isEdit = false, onCancel }: Bo
                     { id: '1', name: 'J.K. Rowling' },
                     { id: '2', name: 'Stephen King' },
                     { id: '3', name: 'George R.R. Martin' },
+                ])
+                setTranslators([
+                    { id: '1', name: 'John Smith' },
+                    { id: '2', name: 'Jane Doe' },
+                    { id: '3', name: 'Ahmed Hossain' },
                 ])
                 setPublications([
                     { id: '1', name: 'Penguin Books' },
@@ -478,6 +491,29 @@ export function BookForm({ initialData, onSubmit, isEdit = false, onCancel }: Bo
                                     onChange={field.onChange}
                                     placeholder='Select authors'
                                     emptyText='No authors found'
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name='translatorIds'
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Translators</FormLabel>
+                            <FormControl>
+                                <MultiSelect
+                                    options={translators.map(translator => ({
+                                        label: translator.name,
+                                        value: translator.id,
+                                    }))}
+                                    selected={field.value || []}
+                                    onChange={field.onChange}
+                                    placeholder='Select translators'
+                                    emptyText='No translators found'
                                 />
                             </FormControl>
                             <FormMessage />

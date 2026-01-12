@@ -53,6 +53,25 @@ model Author {
   @@map("authors")
 }
 
+model Translator {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  image          String?
+  directImageUrl String?
+  entryDate      DateTime     @default(now())
+  entryById   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  entryBy     User         @relation("UserTranslators", fields: [entryById], references: [id])
+  books       BookTranslator[]
+
+  // Analytics
+  views         TranslatorView[]
+
+  @@map("translators")
+}
+
 model Publication {
   id             String            @id @default(uuid())
   name           String
@@ -172,6 +191,7 @@ model Book {
   requiresPremium     Boolean           @default(false)
   summary             String?
   authors             BookAuthor[]
+  translators         BookTranslator[]
   categories          BookCategory[]
   publications        BookPublication[]
   series              BookSeries[]
@@ -262,6 +282,18 @@ model BookAuthor {
 
   @@unique([bookId, authorId])
   @@map("book_authors")
+}
+
+model BookTranslator {
+  id          String     @id @default(uuid())
+  bookId      String
+  translatorId String
+  createdAt   DateTime   @default(now())
+  translator  Translator @relation(fields: [translatorId], references: [id], onDelete: Cascade)
+  book        Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, translatorId])
+  @@map("book_translators")
 }
 
 model BookPublication {
@@ -423,6 +455,24 @@ model AuthorView {
   @@map("author_views")
 }
 
+model TranslatorView {
+  id          String    @id @default(uuid())
+  translatorId String
+  userId      String?   // Nullable for anonymous visits
+  sessionId   String?   // For anonymous tracking
+  visitedAt   DateTime  @default(now())
+  ip          String?   // Optional IP tracking
+  userAgent   String?   // Browser info
+  referrer    String?   // Where they came from
+
+  translator  Translator @relation(fields: [translatorId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([translatorId, visitedAt])
+  @@index([userId, visitedAt])
+  @@map("translator_views")
+}
+
 model PublicationView {
   id          String    @id @default(uuid())
   publicationId String
@@ -531,6 +581,7 @@ model User {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   authoredBooks       Author[]          @relation("UserAuthors")
+  translatedBooks     Translator[]      @relation("UserTranslators")
   cancelledRequests   BookRequest[]     @relation("UserCancelledRequests")
   bookRequests        BookRequest[]     @relation("UserBookRequests")
   books               Book[]            @relation("UserBooks")
@@ -555,6 +606,7 @@ model User {
   bookViews           BookView[]
   chatMessages        BookChatMessage[]
   authorViews         AuthorView[]
+  translatorViews     TranslatorView[]
   publicationViews    PublicationView[]
   categoryViews       CategoryView[]
   seriesViews         SeriesView[]

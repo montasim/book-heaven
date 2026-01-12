@@ -7,6 +7,13 @@ export interface Author {
   image?: string | null
 }
 
+export interface Translator {
+  id: string
+  name: string
+  description?: string | null
+  image?: string | null
+}
+
 export interface Category {
   id: string
   name: string
@@ -105,6 +112,7 @@ export interface Book {
   requiresPremium: boolean
   canAccess: boolean
   authors: Author[]
+  translators?: Translator[]
   categories: Category[]
   publications?: Publication[]
   series?: Series[]

@@ -20,6 +20,7 @@ import {
   updateBook as updateBookInDb,
   deleteBook as deleteBookFromDb,
   getAllAuthors,
+  getAllTranslators,
   getAllPublications,
   getBookTypes,
 } from '@/lib/lms/repositories/book.repository'
@@ -73,6 +74,7 @@ const createBookSchema = z.object({
   numberOfCopies: z.string().optional(),
   purchaseDate: z.string().optional(),
   authorIds: z.array(z.string()).min(1, 'At least one author is required'),
+  translatorIds: z.array(z.string()).optional(),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
   categoryIds: z.array(z.string()).optional(),
   series: z.array(z.object({
@@ -146,6 +148,7 @@ const updateBookSchema = z.object({
   numberOfCopies: z.string().optional(),
   purchaseDate: z.string().optional(),
   authorIds: z.array(z.string()).min(1, 'At least one author is required'),
+  translatorIds: z.array(z.string()).optional(),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required'),
   categoryIds: z.array(z.string()).optional(),
   series: z.array(z.object({
@@ -264,6 +267,10 @@ export async function getBooks(options?: { page?: number; pageSize?: number }) {
               id: bookAuthor.author.id,
               name: bookAuthor.author.name,
           })),
+          translators: book.translators?.map(bookTranslator => ({
+              id: bookTranslator.translator.id,
+              name: bookTranslator.translator.name,
+          })) || [],
           publications: book.publications.map(bookPublication => ({
               id: bookPublication.publication.id,
               name: bookPublication.publication.name,
@@ -332,6 +339,10 @@ export async function getBookById(id: string) {
         id: bookAuthor.author.id,
         name: bookAuthor.author.name,
       })),
+      translators: book.translators ? book.translators.map(bookTranslator => ({
+        id: bookTranslator.translator.id,
+        name: bookTranslator.translator.name,
+      })) : [],
       publications: book.publications.map(bookPublication => ({
         id: bookPublication.publication.id,
         name: bookPublication.publication.name,
@@ -346,6 +357,7 @@ export async function getBookById(id: string) {
         order: bookSeries.order,
       })),
       authorIds: book.authors.map(bookAuthor => bookAuthor.author.id),
+      translatorIds: book.translators ? book.translators.map(bookTranslator => bookTranslator.translator.id) : [],
       publicationIds: book.publications.map(bookPublication => bookPublication.publication.id),
       categoryIds: book.categories.map(bookCategory => bookCategory.category.id),
     }
@@ -363,6 +375,18 @@ export async function getAuthorsForSelect() {
     return await getAllAuthors()
   } catch (error) {
     console.error('Error fetching authors for select:', error)
+    return []
+  }
+}
+
+/**
+ * Get all translators for selection
+ */
+export async function getTranslatorsForSelect() {
+  try {
+    return await getAllTranslators()
+  } catch (error) {
+    console.error('Error fetching translators for select:', error)
     return []
   }
 }
@@ -443,6 +467,7 @@ export async function createBook(formData: FormData) {
       requiresPremium: formData.get('requiresPremium') === 'true',
       featured: formData.get('featured') === 'true',
       authorIds: formData.getAll('authorIds') as string[],
+      translatorIds: formData.getAll('translatorIds') as string[] || [],
       publicationIds: formData.getAll('publicationIds') as string[],
       categoryIds: formData.getAll('categoryIds') as string[],
     }
@@ -510,6 +535,7 @@ export async function createBook(formData: FormData) {
       featured: validatedData.featured,
       entryById: session.userId,
       authorIds: validatedData.authorIds,
+      translatorIds: validatedData.translatorIds,
       publicationIds: validatedData.publicationIds,
       categoryIds: validatedData.categoryIds || [],
       series: validatedData.series || [],
@@ -648,6 +674,7 @@ export async function updateBook(id: string, formData: FormData) {
       requiresPremium: formData.get('requiresPremium') === 'true',
       featured: formData.get('featured') === 'true',
       authorIds: formData.getAll('authorIds') as string[],
+      translatorIds: formData.getAll('translatorIds') as string[] || [],
       publicationIds: formData.getAll('publicationIds') as string[],
       categoryIds: formData.getAll('categoryIds') as string[],
     }
@@ -739,6 +766,7 @@ export async function updateBook(id: string, formData: FormData) {
       requiresPremium: validatedData.requiresPremium,
       featured: validatedData.featured,
       authorIds: validatedData.authorIds,
+      translatorIds: validatedData.translatorIds,
       publicationIds: validatedData.publicationIds,
       categoryIds: validatedData.categoryIds || [],
       series: validatedData.series || [],

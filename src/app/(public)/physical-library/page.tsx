@@ -432,7 +432,7 @@ function LibraryPageContent({
           </div>
         )}
 
-        <div className="flex gap-8">
+        <div className="flex gap-6">
           {/* Filters Sidebar */}
           <div className="hidden lg:block w-64 flex-shrink-0">
             <Card>

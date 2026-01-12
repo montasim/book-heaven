@@ -18,7 +18,7 @@ export function BookDetailsSkeleton() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6">
           {/* Book Cover and Actions - Left Column */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
@@ -78,7 +78,7 @@ export function BookDetailsSkeleton() {
 
           {/* Book Information - Right Column */}
           <div className="lg:col-span-2">
-            <div className="mb-8">
+            <div className="mb-6">
               {/* Title and Chat Button Row Skeleton */}
               <div className='flex items-center justify-between mb-3'>
                 <Skeleton className="h-8 w-3/4" />
@@ -174,6 +174,24 @@ export function BookDetailsSkeleton() {
                         <Skeleton className="h-5 w-32" />
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-4 w-5/6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* About the Translator Card Skeleton */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <Skeleton className="h-6 w-52" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex gap-4">
+                      <Skeleton className="h-16 w-16 rounded-full flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-5 w-36" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-2/3" />
                       </div>
                     </div>
                   </CardContent>

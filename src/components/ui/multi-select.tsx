@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import * as React from 'react'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from './command'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './command'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { Badge } from './badge'
 import { Button } from './button'
@@ -104,27 +104,29 @@ export function MultiSelect({
         <Command>
           <CommandInput placeholder='Search options...' />
           <CommandEmpty>{emptyText}</CommandEmpty>
-          <CommandGroup>
-            {options.map((option) => (
-              <CommandItem
-                key={option.value}
-                onSelect={() => handleSelect(option.value)}
-                className='flex cursor-pointer items-center gap-2'
-              >
-                <div
-                  className={cn(
-                    'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                    selected.includes(option.value)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'opacity-50 [&_svg]:invisible'
-                  )}
+          <CommandList className='max-h-[200px]'>
+            <CommandGroup>
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  onSelect={() => handleSelect(option.value)}
+                  className='flex cursor-pointer items-center gap-2'
                 >
-                  <Check className='h-4 w-4' />
-                </div>
-                <span>{option.label}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+                  <div
+                    className={cn(
+                      'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                      selected.includes(option.value)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'opacity-50 [&_svg]:invisible'
+                    )}
+                  >
+                    <Check className='h-4 w-4' />
+                  </div>
+                  <span>{option.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

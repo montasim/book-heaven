@@ -38,7 +38,7 @@ import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { Book } from '../data/schema'
-import { createBook, updateBook, getAuthorsForSelect, getPublicationsForSelect, getCategoriesForSelect, getBookTypesForSelect, getSeriesForSelect } from '../actions'
+import { createBook, updateBook, getAuthorsForSelect, getTranslatorsForSelect, getPublicationsForSelect, getCategoriesForSelect, getBookTypesForSelect, getSeriesForSelect } from '../actions'
 import { BookType } from '@prisma/client'
 import { MDXEditor } from '@/components/ui/mdx-editor'
 import { ImageUpload } from '@/components/ui/image-upload'
@@ -68,6 +68,7 @@ const formSchema = z.object({
   numberOfCopies: z.string().optional(),
   purchaseDate: z.string().optional(),
   authorIds: z.array(z.string()).min(1, 'At least one author is required.'),
+  translatorIds: z.array(z.string()).optional(),
   publicationIds: z.array(z.string()).min(1, 'At least one publication is required.'),
   categoryIds: z.array(z.string()).min(1, 'At least one category is required.'),
   series: z.array(z.object({
@@ -133,6 +134,11 @@ interface Author {
   name: string
 }
 
+interface Translator {
+  id: string
+  name: string
+}
+
 interface Publication {
   id: string
   name: string
@@ -157,6 +163,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
   const isUpdate = !!currentRow
 
   const [authors, setAuthors] = useState<Author[]>([])
+  const [translators, setTranslators] = useState<Translator[]>([])
   const [publications, setPublications] = useState<Publication[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [series, setSeries] = useState<Series[]>([])
@@ -182,6 +189,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
       numberOfCopies: '',
       purchaseDate: '',
       authorIds: [],
+      translatorIds: [],
       publicationIds: [],
       categoryIds: [],
       series: [],
@@ -207,6 +215,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         numberOfCopies: currentRow.numberOfCopies?.toString() || '',
         purchaseDate: currentRow.purchaseDate ? (typeof currentRow.purchaseDate === 'string' ? currentRow.purchaseDate : currentRow.purchaseDate.toISOString().split('T')[0]) : '',
         authorIds: currentRow.authors.map((author: any) => author.id || author.author?.id) || [],
+        translatorIds: currentRow.translators?.map((translator: any) => translator.id || translator.translator?.id) || [],
         publicationIds: currentRow.publications.map((pub: any) => pub.id || pub.publication?.id) || [],
         categoryIds: currentRow.categories.map((cat: any) => cat.id || cat.category?.id) || [],
         series: currentRow.series?.map((s: any) => ({
@@ -229,6 +238,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         numberOfCopies: '',
         purchaseDate: '',
         authorIds: [],
+        translatorIds: [],
         publicationIds: [],
         categoryIds: [],
         series: [],
@@ -253,8 +263,9 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [authorsData, publicationsData, categoriesData, seriesData, bookTypesData] = await Promise.all([
+        const [authorsData, translatorsData, publicationsData, categoriesData, seriesData, bookTypesData] = await Promise.all([
           getAuthorsForSelect(),
+          getTranslatorsForSelect(),
           getPublicationsForSelect(),
           getCategoriesForSelect(),
           getSeriesForSelect(),
@@ -262,6 +273,7 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
         ])
 
         setAuthors(authorsData)
+        setTranslators(translatorsData)
         setPublications(publicationsData)
         setCategories(categoriesData)
         setSeries(seriesData)
@@ -637,6 +649,30 @@ export function BooksMutateDrawer({ open, onOpenChange, currentRow, onSuccess }:
                       onChange={field.onChange}
                       placeholder='Select authors'
                       emptyText='No authors found'
+                      maxVisible={2}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='translatorIds'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Translators</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={translators.map(translator => ({
+                        label: translator.name,
+                        value: translator.id,
+                      }))}
+                      selected={field.value || []}
+                      onChange={field.onChange}
+                      placeholder='Select translators'
+                      emptyText='No translators found'
                       maxVisible={2}
                     />
                   </FormControl>

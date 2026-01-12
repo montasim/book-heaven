@@ -68,6 +68,10 @@ export const bookSchema = z.object({
     id: z.string(),
     name: z.string(),
   })),
+  translators: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+  })).optional(),
   publications: z.array(z.object({
     id: z.string(),
     name: z.string(),

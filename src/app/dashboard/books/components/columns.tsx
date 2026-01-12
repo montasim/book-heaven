@@ -184,6 +184,18 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
     enableSorting: false,
   },
   {
+    accessorKey: 'translators',
+    header: 'Translators',
+    cell: ({ row }) => {
+      const translators = (row.original as any).translators || []
+      if (!translators || translators.length === 0) {
+        return <span className='text-muted-foreground text-sm'>None</span>
+      }
+      return <ExpandableTags items={translators} variant='outline' maxVisible={1} basePath='/dashboard/translators' />
+    },
+    enableSorting: false,
+  },
+  {
     accessorKey: 'publications',
     header: 'Publications',
     cell: ({ row }) => {

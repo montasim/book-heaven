@@ -78,6 +78,7 @@ interface Book {
   buyingPrice: number | null
   categories: Array<{ id: string; name: string; description?: string | null; image?: string | null }>
   authors: Array<{ id: string; name: string; description?: string | null; image?: string | null }>
+  translators: Array<{ id: string; name: string; description?: string | null; image?: string | null }>
   publication: { id: string; name: string; description?: string | null; image?: string | null } | null
   totalCopies: number
   availableCopies: number
@@ -391,7 +392,7 @@ export default function PhysicalLibraryBookPage() {
           ]}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6">
           {/* Book Cover and Actions */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
@@ -485,7 +486,7 @@ export default function PhysicalLibraryBookPage() {
 
           {/* Book Information */}
           <div className="lg:col-span-2">
-            <div className="mb-8">
+            <div className="mb-6">
               {/* Title */}
               <h1 className="text-xl font-bold mb-4">{book.name}</h1>
 
@@ -610,7 +611,19 @@ export default function PhysicalLibraryBookPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleExpanded('authors-section')}
+                        onClick={() => {
+                          const shouldExpand = !expandedSections['authors-section']
+                          setExpandedSections((prev) => {
+                            const newSections = { ...prev }
+                            // Toggle the section
+                            newSections['authors-section'] = shouldExpand
+                            // Toggle all individual author descriptions
+                            book.authors.forEach((author) => {
+                              newSections[`author-${author.id}`] = shouldExpand
+                            })
+                            return newSections
+                          })
+                        }}
                         className="shrink-0"
                       >
                         {expandedSections['authors-section'] ? (
@@ -655,6 +668,71 @@ export default function PhysicalLibraryBookPage() {
                   </Card>
                 )}
 
+                {/* Translators */}
+                {book.translators && book.translators.length > 0 && (
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-lg">About the Translator{book.translators.length > 1 ? 's' : ''}</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const shouldExpand = !expandedSections['translators-section']
+                          setExpandedSections((prev) => {
+                            const newSections = { ...prev }
+                            // Toggle the section
+                            newSections['translators-section'] = shouldExpand
+                            // Toggle all individual translator descriptions
+                            book.translators.forEach((translator) => {
+                              newSections[`translator-${translator.id}`] = shouldExpand
+                            })
+                            return newSections
+                          })
+                        }}
+                        className="shrink-0"
+                      >
+                        {expandedSections['translators-section'] ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </CardHeader>
+                    {expandedSections['translators-section'] !== false && (
+                    <CardContent className="space-y-6">
+                      {book.translators.map((translator) => (
+                        <div key={translator.id} className="flex gap-4">
+                          <Avatar className="h-16 w-16 flex-shrink-0">
+                            <AvatarImage
+                              src={translator.image ? getProxiedImageUrl(translator.image) || translator.image : undefined}
+                              alt={translator.name}
+                            />
+                            <AvatarFallback className="text-lg bg-primary/10">
+                              {translator.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/translators/${translator.id}`}>
+                              <h3 className="font-semibold text-lg hover:text-primary hover:underline transition-colors">
+                                {translator.name}
+                              </h3>
+                            </Link>
+                            {translator.description && (
+                              <div className="text-muted-foreground mt-1">
+                                <ExpandableDescription
+                                  description={translator.description}
+                                  isExpanded={expandedSections[`translator-${translator.id}`] || false}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                    )}
+                  </Card>
+                )}
+
                 {/* Publications */}
                 {book.publication && (
                   <Card>
@@ -663,7 +741,19 @@ export default function PhysicalLibraryBookPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleExpanded('publication-section')}
+                        onClick={() => {
+                          const shouldExpand = !expandedSections['publication-section']
+                          setExpandedSections((prev) => {
+                            const newSections = { ...prev }
+                            // Toggle the section
+                            newSections['publication-section'] = shouldExpand
+                            // Toggle the publication description
+                            if (book.publication) {
+                              newSections[`publication-${book.publication.id}`] = shouldExpand
+                            }
+                            return newSections
+                          })
+                        }}
                         className="shrink-0"
                       >
                         {expandedSections['publication-section'] ? (

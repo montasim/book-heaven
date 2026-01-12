@@ -397,7 +397,7 @@ function BooksPageContent({
           )
         )}
 
-        <div className="flex gap-8">
+        <div className="flex gap-6">
           {/* Filters Sidebar */}
           {categoriesLoading ? (
             <BooksFilterSidebarSkeleton />

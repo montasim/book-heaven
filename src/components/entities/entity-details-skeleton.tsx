@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
 
 interface EntityDetailsSkeletonProps {
-  entityType: 'author' | 'publication' | 'category'
+  entityType: 'author' | 'publication' | 'category' | 'translator'
 }
 
 export function EntityDetailsSkeleton({ entityType }: EntityDetailsSkeletonProps) {
@@ -13,6 +13,8 @@ export function EntityDetailsSkeleton({ entityType }: EntityDetailsSkeletonProps
     switch (entityType) {
       case 'author':
         return 'Author'
+      case 'translator':
+        return 'Translator'
       case 'publication':
         return 'Publisher'
       case 'category':
@@ -32,7 +34,7 @@ export function EntityDetailsSkeleton({ entityType }: EntityDetailsSkeletonProps
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6">
           {/* Left Column - Image and Stats */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
@@ -74,7 +76,7 @@ export function EntityDetailsSkeleton({ entityType }: EntityDetailsSkeletonProps
 
           {/* Right Column - Information and Books */}
           <div className="lg:col-span-2">
-            <div className="mb-8">
+            <div className="mb-6">
               {/* Name and Visitor Count Row Skeleton */}
               <div className="flex items-center justify-between mb-4">
                 <Skeleton className="h-6 w-1/2" />
