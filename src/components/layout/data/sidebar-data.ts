@@ -130,7 +130,7 @@ export const sidebarData: SidebarData = {
           icon: FileQuestion,
         },
         {
-          title: 'Loans',
+          title: 'Borrowed Books',
           url: ROUTES.dashboardLoans.href,
           icon: HandCoins,
         },
@@ -241,7 +241,7 @@ export const sidebarData: SidebarData = {
           icon: Library,
         },
         {
-          title: 'My Borrowed Books',
+          title: 'Borrowed Books',
           url: ROUTES.profileLoans.href,
           icon: ShieldBan,
         },

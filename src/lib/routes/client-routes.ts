@@ -432,8 +432,8 @@ export const ROUTES = {
     icon: BookMarked,
   },
   dashboardLoans: {
-    label: 'Loans',
-    href: '/dashboard/loans',
+    label: 'Borrowed Books',
+    href: '/dashboard/borrowed-books',
     icon: ShieldCheck,
   },
   dashboardBooksCostAnalytics: {
@@ -461,8 +461,8 @@ export const ROUTES = {
 
   // Other Routes
   profileLoans: {
-    label: 'My Borrowed Books',
-    href: '/profile/loans',
+    label: 'Borrowed Books',
+    href: '/borrowed-books',
     icon: ShieldCheck,
   },
   achievements: {
