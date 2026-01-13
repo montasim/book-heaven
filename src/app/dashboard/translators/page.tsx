@@ -2,7 +2,7 @@
 
 import { deleteTranslator, getTranslators } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions, ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
+import { type ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Translator } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -172,23 +172,19 @@ export default function TranslatorsPage() {
         icon={Languages}
         title="Translators"
         description="Manage translators in your system"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Add Translator',
-                icon: IconUserPlus,
-                onClick: () => setOpen('create'),
-              },
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: refreshTranslators,
-                variant: 'outline',
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Add Translator',
+            icon: IconUserPlus,
+            onClick: () => setOpen('create'),
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: refreshTranslators,
+            variant: 'outline',
+          },
+        ]}
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

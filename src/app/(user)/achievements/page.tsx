@@ -23,7 +23,6 @@ import {
 } from '@/components/achievements/achievements-page-skeleton'
 import { Trophy, Sparkles, Target, BookOpen, TrendingUp, Award, ChevronRight, ChevronDown } from 'lucide-react'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import Link from 'next/link'
 import type { AchievementWithProgress } from '@/lib/achievements/types'
 import { ACHIEVEMENTS } from '@/lib/achievements/definitions'
@@ -256,18 +255,14 @@ export default function AchievementsPage() {
       icon={Trophy}
       title="Achievements"
       description="Unlock achievements by reading, taking quizzes, and exploring the platform"
-      actions={
-        <DashboardPageHeaderActions
-          actions={[
-            {
-              label: isChecking ? 'Checking...' : 'Check for New',
-              icon: Sparkles,
-              onClick: handleCheckAchievements,
-              disabled: isChecking,
-            },
-          ]}
-        />
-      }
+      actions={[
+        {
+          label: isChecking ? 'Checking...' : 'Check for New',
+          icon: Sparkles,
+          onClick: handleCheckAchievements,
+          disabled: isChecking,
+        },
+      ]}
     >
       <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16 h-full'>
         <div className='space-y-6'>

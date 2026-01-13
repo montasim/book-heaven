@@ -2,7 +2,7 @@
 
 import { deleteAuthor, getAuthors } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions, ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
+import { type ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Author } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -172,23 +172,19 @@ export default function AuthorsPage() {
         icon={PenTool}
         title="Authors"
         description="Manage authors in your system"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Add Author',
-                icon: IconUserPlus,
-                onClick: () => setOpen('create'),
-              },
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: refreshAuthors,
-                variant: 'outline',
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Add Author',
+            icon: IconUserPlus,
+            onClick: () => setOpen('create'),
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: refreshAuthors,
+            variant: 'outline',
+          },
+        ]}
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

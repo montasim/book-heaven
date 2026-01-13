@@ -2,7 +2,6 @@
 
 import { deleteUser, getUsers } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState } from 'react'
 import { User, userListSchema } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -88,23 +87,19 @@ export default function Page() {
         icon={Users}
         title="Users"
         description="Manage user accounts and permissions"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Invite User',
-                icon: IconMailPlus,
-                onClick: () => setOpen('invite'),
-                variant: 'outline',
-              },
-              {
-                label: 'Add User',
-                icon: IconUserPlus,
-                onClick: () => setOpen('create'),
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Invite User',
+            icon: IconMailPlus,
+            onClick: () => setOpen('invite'),
+            variant: 'outline',
+          },
+          {
+            label: 'Add User',
+            icon: IconUserPlus,
+            onClick: () => setOpen('create'),
+          },
+        ]}
       >
         {isLoading ? <TableSkeleton /> : <DataTable data={users} columns={columns} />}
 

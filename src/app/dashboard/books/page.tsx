@@ -2,7 +2,6 @@
 
 import { deleteBook, getBooks } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { BulkImportDrawer } from './components/bulk-import-drawer'
 import { invalidateCache } from './actions'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
@@ -269,37 +268,33 @@ export default function BooksPage() {
         icon={BookOpen}
         title="Books"
         description="Manage books in your library system"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Add Book',
-                icon: Plus,
-                onClick: () => setOpen('create'),
-              },
-              {
-                label: 'Bulk Import',
-                icon: Upload,
-                onClick: () => setBulkImportOpen(true),
-                variant: 'outline',
-              },
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: refreshBooks,
-                variant: 'outline',
-              },
-              {
-                label: 'Invalidate Cache',
-                icon: TrashIcon,
-                onClick: handleInvalidateCache,
-                variant: 'outline',
-                disabled: isInvalidating,
-                loading: isInvalidating,
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Add Book',
+            icon: Plus,
+            onClick: () => setOpen('create'),
+          },
+          {
+            label: 'Bulk Import',
+            icon: Upload,
+            onClick: () => setBulkImportOpen(true),
+            variant: 'outline',
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: refreshBooks,
+            variant: 'outline',
+          },
+          {
+            label: 'Invalidate Cache',
+            icon: TrashIcon,
+            onClick: handleInvalidateCache,
+            variant: 'outline',
+            disabled: isInvalidating,
+            loading: isInvalidating,
+          },
+        ]}
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

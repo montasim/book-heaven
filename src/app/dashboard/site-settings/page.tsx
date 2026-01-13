@@ -14,7 +14,6 @@ import { SEOTab } from './components/seo-tab'
 import { ContactTab } from './components/contact-tab'
 import { ROUTES } from '@/lib/routes/client-routes'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 
 interface SiteSettings {
   id: string
@@ -137,19 +136,15 @@ function SiteSettingsPageWrapper() {
         icon={Construction}
         title="Site Settings"
         description="Manage your site settings"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: fetchSettings,
-                variant: 'outline',
-                disabled: true,
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: fetchSettings,
+            variant: 'outline',
+            disabled: true,
+          },
+        ]}
       >
         <div className="space-y-4">
           {/* Tabs skeleton */}
@@ -171,18 +166,14 @@ function SiteSettingsPageWrapper() {
         icon={Construction}
         title="Site Settings"
         description="Manage your site settings"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: fetchSettings,
-                variant: 'outline',
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: fetchSettings,
+            variant: 'outline',
+          },
+        ]}
       >
         <div className="flex items-center justify-center min-h-[400px]">
           <p className="text-muted-foreground">Failed to load settings</p>
@@ -205,20 +196,16 @@ function SiteSettingsPageWrapper() {
       icon={currentTab?.icon}
       title={currentTab?.label || 'Site Settings'}
       description={`Manage your site ${currentTab?.label.toLowerCase() || ''} settings`}
-      actions={
-        <DashboardPageHeaderActions
-          actions={[
-            {
-              label: 'Refresh',
-              icon: RefreshCw,
-              onClick: fetchSettings,
-              variant: 'outline',
-              disabled: isLoading,
-              loading: isLoading,
-            },
-          ]}
-        />
-      }
+      actions={[
+        {
+          label: 'Refresh',
+          icon: RefreshCw,
+          onClick: fetchSettings,
+          variant: 'outline',
+          disabled: isLoading,
+          loading: isLoading,
+        },
+      ]}
     >
       <Tabs value={activeTab} className="space-y-4 h-full flex flex-col">
         <div className="flex items-center justify-between gap-4">
@@ -302,18 +289,14 @@ export default function SiteSettingsPage() {
         icon={Construction}
         title="Site Settings"
         description="Manage your site settings"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: () => {},
-                variant: 'outline',
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: () => {},
+            variant: 'outline',
+          },
+        ]}
       >
         <div className="space-y-4">
           {/* Tabs skeleton */}

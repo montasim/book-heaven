@@ -592,14 +592,12 @@ export default function PhysicalLibraryBookPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['book-description'] !== false && (
                     <CardContent>
                       <ExpandableDescription
                         description={book.description}
                         isExpanded={expandedSections['book-description'] || false}
                       />
                     </CardContent>
-                    )}
                   </Card>
                 )}
 
@@ -611,19 +609,7 @@ export default function PhysicalLibraryBookPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          const shouldExpand = !expandedSections['authors-section']
-                          setExpandedSections((prev) => {
-                            const newSections = { ...prev }
-                            // Toggle the section
-                            newSections['authors-section'] = shouldExpand
-                            // Toggle all individual author descriptions
-                            book.authors.forEach((author) => {
-                              newSections[`author-${author.id}`] = shouldExpand
-                            })
-                            return newSections
-                          })
-                        }}
+                        onClick={() => toggleExpanded('authors-section')}
                         className="shrink-0"
                       >
                         {expandedSections['authors-section'] ? (
@@ -633,7 +619,6 @@ export default function PhysicalLibraryBookPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['authors-section'] !== false && (
                     <CardContent className="space-y-6">
                       {book.authors.map((author) => (
                         <div key={author.id} className="flex gap-4">
@@ -656,7 +641,7 @@ export default function PhysicalLibraryBookPage() {
                               <div className="text-muted-foreground mt-1">
                                 <ExpandableDescription
                                   description={author.description}
-                                  isExpanded={expandedSections[`author-${author.id}`] || false}
+                                  isExpanded={expandedSections['authors-section'] || false}
                                 />
                               </div>
                             )}
@@ -664,7 +649,6 @@ export default function PhysicalLibraryBookPage() {
                         </div>
                       ))}
                     </CardContent>
-                    )}
                   </Card>
                 )}
 
@@ -676,19 +660,7 @@ export default function PhysicalLibraryBookPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          const shouldExpand = !expandedSections['translators-section']
-                          setExpandedSections((prev) => {
-                            const newSections = { ...prev }
-                            // Toggle the section
-                            newSections['translators-section'] = shouldExpand
-                            // Toggle all individual translator descriptions
-                            book.translators.forEach((translator) => {
-                              newSections[`translator-${translator.id}`] = shouldExpand
-                            })
-                            return newSections
-                          })
-                        }}
+                        onClick={() => toggleExpanded('translators-section')}
                         className="shrink-0"
                       >
                         {expandedSections['translators-section'] ? (
@@ -698,7 +670,6 @@ export default function PhysicalLibraryBookPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['translators-section'] !== false && (
                     <CardContent className="space-y-6">
                       {book.translators.map((translator) => (
                         <div key={translator.id} className="flex gap-4">
@@ -721,7 +692,7 @@ export default function PhysicalLibraryBookPage() {
                               <div className="text-muted-foreground mt-1">
                                 <ExpandableDescription
                                   description={translator.description}
-                                  isExpanded={expandedSections[`translator-${translator.id}`] || false}
+                                  isExpanded={expandedSections['translators-section'] || false}
                                 />
                               </div>
                             )}
@@ -729,7 +700,6 @@ export default function PhysicalLibraryBookPage() {
                         </div>
                       ))}
                     </CardContent>
-                    )}
                   </Card>
                 )}
 
@@ -741,19 +711,7 @@ export default function PhysicalLibraryBookPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          const shouldExpand = !expandedSections['publication-section']
-                          setExpandedSections((prev) => {
-                            const newSections = { ...prev }
-                            // Toggle the section
-                            newSections['publication-section'] = shouldExpand
-                            // Toggle the publication description
-                            if (book.publication?.id) {
-                              newSections[`publication-${book.publication.id}`] = shouldExpand
-                            }
-                            return newSections
-                          })
-                        }}
+                        onClick={() => toggleExpanded('publication-section')}
                         className="shrink-0"
                       >
                         {expandedSections['publication-section'] ? (
@@ -763,7 +721,6 @@ export default function PhysicalLibraryBookPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['publication-section'] !== false && (
                     <CardContent className="space-y-6">
                       <div className="flex gap-4">
                         <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden relative">
@@ -790,14 +747,13 @@ export default function PhysicalLibraryBookPage() {
                             <div className="text-muted-foreground mt-1">
                               <ExpandableDescription
                                 description={book.publication.description}
-                                isExpanded={expandedSections[`publication-${book.publication.id}`] || false}
+                                isExpanded={expandedSections['publication-section'] || false}
                               />
                             </div>
                           )}
                         </div>
                       </div>
                     </CardContent>
-                    )}
                   </Card>
                 )}
               </TabsContent>

@@ -2,7 +2,6 @@
 
 import { deleteNotice, getNotices } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState } from 'react'
 import { Notice } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -84,23 +83,19 @@ export default function NoticesPage() {
         icon={Bell}
         title="Notices"
         description="Manage notices and announcements"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Add Notice',
-                icon: Plus,
-                onClick: () => setOpen('create'),
-              },
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: refreshNotices,
-                variant: 'outline',
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Add Notice',
+            icon: Plus,
+            onClick: () => setOpen('create'),
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: refreshNotices,
+            variant: 'outline',
+          },
+        ]}
       >
         {isLoading ? (
           <TableSkeleton />

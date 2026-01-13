@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { getCampaigns } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton, DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
@@ -113,17 +112,13 @@ function CampaignsPageContent() {
         icon={Megaphone}
         title="Campaigns"
         description="Manage email campaigns to engage with your audience"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'New Campaign',
-                icon: IconPlus,
-                onClick: () => setOpen('create'),
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'New Campaign',
+            icon: IconPlus,
+            onClick: () => setOpen('create'),
+          },
+        ]}
       >
         <div className="space-y-4">
           {/* Campaign Summary */}

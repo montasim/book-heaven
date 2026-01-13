@@ -2,7 +2,6 @@
 
 import { deletePublication, getPublications } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Publication } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -171,23 +170,19 @@ export default function PublicationsPage() {
         icon={IconBuildingStore}
         title="Publications"
         description="Manage publications in your system"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Add Publication',
-                icon: Plus,
-                onClick: () => setOpen('create'),
-              },
-              {
-                label: 'Refresh',
-                icon: RefreshCw,
-                onClick: refreshPublications,
-                variant: 'outline',
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Add Publication',
+            icon: Plus,
+            onClick: () => setOpen('create'),
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: refreshPublications,
+            variant: 'outline',
+          },
+        ]}
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

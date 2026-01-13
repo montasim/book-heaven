@@ -25,7 +25,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { LegalContentType } from '@prisma/client'
 
 interface LegalContent {
@@ -160,29 +159,25 @@ function LegalContentPageWrapper() {
       icon={FileText}
       title="Legal Content"
       description="Manage privacy policy, terms of service, and other legal pages"
-      actions={
-        <DashboardPageHeaderActions
-          actions={[
-            {
-              label: 'Reset',
-              icon: Plus,
-              onClick: () => {
-                if (activeTab) {
-                  setSeedingType(activeTab as LegalContentType)
-                  setSeedDialogOpen(true)
-                }
-              },
-              variant: 'outline',
-            },
-            ...(contents[activeTab] ? [{
-              label: 'Preview',
-              icon: Eye,
-              onClick: () => activeTab && handlePreview(activeTab),
-              variant: 'outline' as const,
-            }] : []),
-          ]}
-        />
-      }
+      actions={[
+        {
+          label: 'Reset',
+          icon: Plus,
+          onClick: () => {
+            if (activeTab) {
+              setSeedingType(activeTab as LegalContentType)
+              setSeedDialogOpen(true)
+            }
+          },
+          variant: 'outline',
+        },
+        ...(contents[activeTab] ? [{
+          label: 'Preview',
+          icon: Eye,
+          onClick: () => activeTab && handlePreview(activeTab),
+          variant: 'outline' as const,
+        }] : []),
+      ]}
     >
       {loading ? (
         <div className="space-y-4">

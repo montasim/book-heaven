@@ -2,7 +2,7 @@
 
 import { getLoans, markAsReturned } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions, ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
+import { type ActionConfig } from '@/components/dashboard/dashboard-page-header-actions'
 import { LendBookDrawer } from './components/lend-book-drawer'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Loan } from './data/schema'
@@ -92,25 +92,19 @@ export default function LoansPage() {
         icon={HandCoins}
         title="Loans"
         description="Manage book lending and returns"
-        actions={
-          <DashboardPageHeaderActions
-            actions={
-              [
-                {
-                  label: 'Lend Book',
-                  icon: Plus,
-                  onClick: () => setIsLendDialogOpen(true),
-                },
-                {
-                  label: 'Refresh',
-                  icon: RefreshCw,
-                  onClick: refreshLoans,
-                  variant: 'outline',
-                },
-              ] as ActionConfig[]
-            }
-          />
-        }
+        actions={[
+          {
+            label: 'Lend Book',
+            icon: Plus,
+            onClick: () => setIsLendDialogOpen(true),
+          },
+          {
+            label: 'Refresh',
+            icon: RefreshCw,
+            onClick: refreshLoans,
+            variant: 'outline',
+          },
+        ] as ActionConfig[]}
       >
         {/* Dashboard Summary */}
         {isLoading ? (

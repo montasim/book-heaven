@@ -13,7 +13,6 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import { CollapsibleSection } from '@/components/ui/collapsible-section'
@@ -203,31 +202,27 @@ function HelpCenterFAQsPageWrapper() {
       icon={HelpCircle}
       title="Help Center FAQs"
       description="Manage help center frequently asked questions"
-      actions={
-        <DashboardPageHeaderActions
-          actions={[
-            {
-              label: 'Seed Initial Data',
-              icon: Sprout,
-              onClick: () => setSeedDialogOpen(true),
-              variant: 'outline',
-            },
-            {
-              label: 'Add FAQ',
-              icon: Plus,
-              onClick: addFAQ,
-              variant: 'outline',
-            },
-            {
-              label: 'Save All',
-              icon: Save,
-              onClick: handleSaveFAQs,
-              disabled: saving,
-              loading: saving,
-            },
-          ]}
-        />
-      }
+      actions={[
+        {
+          label: 'Seed Initial Data',
+          icon: Sprout,
+          onClick: () => setSeedDialogOpen(true),
+          variant: 'outline',
+        },
+        {
+          label: 'Add FAQ',
+          icon: Plus,
+          onClick: addFAQ,
+          variant: 'outline',
+        },
+        {
+          label: 'Save All',
+          icon: Save,
+          onClick: handleSaveFAQs,
+          disabled: saving,
+          loading: saving,
+        },
+      ]}
     >
       {/* Stats Cards */}
       <DashboardSummary

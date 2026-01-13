@@ -20,7 +20,6 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { DashboardSummarySkeleton, FilterSectionSkeleton, BookRequestListSkeleton } from '@/components/data-table/table-skeleton'
@@ -198,18 +197,14 @@ function BookRequestsPageContent() {
       icon={FileQuestion}
       title="Book Requests"
       description="Manage and process book requests"
-      actions={
-        <DashboardPageHeaderActions
-          actions={[
-            {
-              label: 'Refresh',
-              icon: RefreshCw,
-              onClick: fetchRequests,
-              variant: 'outline',
-            },
-          ]}
-        />
-      }
+      actions={[
+        {
+          label: 'Refresh',
+          icon: RefreshCw,
+          onClick: fetchRequests,
+          variant: 'outline',
+        },
+      ]}
     >
       <div className="space-y-4">
         {/* Stats Cards */}

@@ -91,8 +91,10 @@ export default function BookDetailsPage() {
   })
 
   // PDF Reader Modal state - initialize based on search params
-  const shouldAutoOpenReader = searchParams?.get('openReader') === 'true'
+  const shouldAutoOpenReader = searchParams?.get('openReader') === 'true' || searchParams?.get('page') !== null
   const [isReaderModalOpen, setIsReaderModalOpen] = useState(shouldAutoOpenReader)
+  const pageParam = searchParams?.get('page')
+  const initialPageParam = pageParam ? parseInt(pageParam, 10) : null
 
   // Chat Modal state
   const [isChatModalOpen, setIsChatModalOpen] = useState(false)
@@ -802,19 +804,7 @@ export default function BookDetailsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          const shouldExpand = !expandedSections['authors-section']
-                          setExpandedSections((prev) => {
-                            const newSections = { ...prev }
-                            // Toggle the section
-                            newSections['authors-section'] = shouldExpand
-                            // Toggle all individual author descriptions
-                            book.authors.forEach((author) => {
-                              newSections[`author-${author.id}`] = shouldExpand
-                            })
-                            return newSections
-                          })
-                        }}
+                        onClick={() => toggleExpanded('authors-section')}
                         className="shrink-0"
                       >
                         {expandedSections['authors-section'] ? (
@@ -824,7 +814,6 @@ export default function BookDetailsPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['authors-section'] !== false && (
                     <CardContent className="space-y-6">
                       {book.authors.map((author) => (
                         <div key={author.id} className="flex gap-4">
@@ -847,7 +836,7 @@ export default function BookDetailsPage() {
                               <div className="text-muted-foreground mt-1">
                                 <ExpandableDescription
                                   description={author.description}
-                                  isExpanded={expandedSections[`author-${author.id}`] || false}
+                                  isExpanded={expandedSections['authors-section'] || false}
                                 />
                               </div>
                             )}
@@ -855,7 +844,6 @@ export default function BookDetailsPage() {
                         </div>
                       ))}
                     </CardContent>
-                    )}
                   </Card>
                 )}
 
@@ -867,21 +855,7 @@ export default function BookDetailsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          const shouldExpand = !expandedSections['translators-section']
-                          setExpandedSections((prev) => {
-                            const newSections = { ...prev }
-                            // Toggle the section
-                            newSections['translators-section'] = shouldExpand
-                            // Toggle all individual translator descriptions
-                            if (book.translators) {
-                              book.translators.forEach((translator) => {
-                                newSections[`translator-${translator.id}`] = shouldExpand
-                              })
-                            }
-                            return newSections
-                          })
-                        }}
+                        onClick={() => toggleExpanded('translators-section')}
                         className="shrink-0"
                       >
                         {expandedSections['translators-section'] ? (
@@ -891,7 +865,6 @@ export default function BookDetailsPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['translators-section'] !== false && (
                     <CardContent className="space-y-6">
                       {book.translators.map((translator) => (
                         <div key={translator.id} className="flex gap-4">
@@ -914,7 +887,7 @@ export default function BookDetailsPage() {
                               <div className="text-muted-foreground mt-1">
                                 <ExpandableDescription
                                   description={translator.description}
-                                  isExpanded={expandedSections[`translator-${translator.id}`] || false}
+                                  isExpanded={expandedSections['translators-section'] || false}
                                 />
                               </div>
                             )}
@@ -922,7 +895,6 @@ export default function BookDetailsPage() {
                         </div>
                       ))}
                     </CardContent>
-                    )}
                   </Card>
                 )}
 
@@ -934,21 +906,7 @@ export default function BookDetailsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          const shouldExpand = !expandedSections['publications-section']
-                          setExpandedSections((prev) => {
-                            const newSections = { ...prev }
-                            // Toggle the section
-                            newSections['publications-section'] = shouldExpand
-                            // Toggle all individual publication descriptions
-                            if (book.publications) {
-                              book.publications.forEach((publication) => {
-                                newSections[`publication-${publication.id}`] = shouldExpand
-                              })
-                            }
-                            return newSections
-                          })
-                        }}
+                        onClick={() => toggleExpanded('publications-section')}
                         className="shrink-0"
                       >
                         {expandedSections['publications-section'] ? (
@@ -958,7 +916,6 @@ export default function BookDetailsPage() {
                         )}
                       </Button>
                     </CardHeader>
-                    {expandedSections['publications-section'] !== false && (
                     <CardContent className="space-y-6">
                       {book.publications.map((publication) => (
                         <div key={publication.id} className="flex gap-4">
@@ -986,7 +943,7 @@ export default function BookDetailsPage() {
                               <div className="text-muted-foreground mt-1">
                                 <ExpandableDescription
                                   description={publication.description}
-                                  isExpanded={expandedSections[`publication-${publication.id}`] || false}
+                                  isExpanded={expandedSections['publications-section'] || false}
                                 />
                               </div>
                             )}
@@ -994,7 +951,6 @@ export default function BookDetailsPage() {
                         </div>
                       ))}
                     </CardContent>
-                    )}
                   </Card>
                 )}
 
@@ -1430,7 +1386,7 @@ export default function BookDetailsPage() {
           bookId={bookId}
           fileUrl={book.fileUrl}
           directFileUrl={book.directFileUrl}
-          initialPage={book.readingProgress?.currentPage}
+          initialPage={initialPageParam || book.readingProgress?.currentPage}
         />
       )}
     </div>

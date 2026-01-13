@@ -2,7 +2,6 @@
 
 import { deleteSeries, getSeries } from './actions'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { Series } from './data/schema'
 import useDialogState from '@/hooks/use-dialog-state'
@@ -149,17 +148,13 @@ export default function SeriesPage() {
         icon={Layers}
         title="Series"
         description="Manage book series in your system"
-        actions={
-          <DashboardPageHeaderActions
-            actions={[
-              {
-                label: 'Add Series',
-                icon: Plus,
-                onClick: () => setOpen('create'),
-              },
-            ]}
-          />
-        }
+        actions={[
+          {
+            label: 'Add Series',
+            icon: Plus,
+            onClick: () => setOpen('create'),
+          },
+        ]}
       >
         {selectedRows.length > 0 && (
           <div className='mb-4 flex items-center justify-between rounded-lg border bg-muted/50 p-4'>

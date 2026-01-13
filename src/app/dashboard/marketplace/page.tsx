@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { CollapsibleSection } from '@/components/ui/collapsible-section'
 import {
@@ -193,30 +192,26 @@ export default function AdminMarketplacePage() {
             icon={ShoppingBag}
             title="Marketplace Overview"
             description="Monitor and manage the peer-to-peer book marketplace"
-            actions={
-                <DashboardPageHeaderActions
-                    actions={[
-                        {
-                            label: '7 Days',
-                            icon: Calendar,
-                            onClick: () => setDateRange('7d'),
-                            variant: dateRange === '7d' ? 'default' : 'outline',
-                        },
-                        {
-                            label: '30 Days',
-                            icon: Calendar,
-                            onClick: () => setDateRange('30d'),
-                            variant: dateRange === '30d' ? 'default' : 'outline',
-                        },
-                        {
-                            label: '90 Days',
-                            icon: Calendar,
-                            onClick: () => setDateRange('90d'),
-                            variant: dateRange === '90d' ? 'default' : 'outline',
-                        },
-                    ]}
-                />
-            }
+            actions={[
+                {
+                    label: '7 Days',
+                    icon: Calendar,
+                    onClick: () => setDateRange('7d'),
+                    variant: dateRange === '7d' ? 'default' : 'outline',
+                },
+                {
+                    label: '30 Days',
+                    icon: Calendar,
+                    onClick: () => setDateRange('30d'),
+                    variant: dateRange === '30d' ? 'default' : 'outline',
+                },
+                {
+                    label: '90 Days',
+                    icon: Calendar,
+                    onClick: () => setDateRange('90d'),
+                    variant: dateRange === '90d' ? 'default' : 'outline',
+                },
+            ]}
         >
             {isLoading ? (
                 <>

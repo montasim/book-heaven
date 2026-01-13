@@ -8,7 +8,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { DollarSign, TrendingUp } from 'lucide-react'
 import { IconNumber7Small, IconNumber30Small, IconNumber90Small, IconClearAll } from '@tabler/icons-react'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
-import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
 import { DashboardSummarySkeleton } from '@/components/data-table/table-skeleton'
 import { CostOverTimeChart } from './components/cost-over-time-chart'
@@ -146,36 +145,32 @@ export default function BookCostAnalyticsPage() {
       icon={TrendingUp}
       title={isAdmin ? 'Book Cost Analytics' : 'My Book Costs'}
       description={isAdmin ? 'Track and analyze book acquisition costs across the library' : 'Track your book spending and collection value'}
-      actions={
-        <DashboardPageHeaderActions
-          actions={[
-            {
-              label: 'Days',
-              icon: IconNumber7Small,
-              onClick: () => setDateRange('7d'),
-              variant: dateRange === '7d' ? 'default' : 'outline',
-            },
-            {
-              label: 'Days',
-              icon: IconNumber30Small,
-              onClick: () => setDateRange('30d'),
-              variant: dateRange === '30d' ? 'default' : 'outline',
-            },
-            {
-              label: 'Days',
-              icon: IconNumber90Small,
-              onClick: () => setDateRange('90d'),
-              variant: dateRange === '90d' ? 'default' : 'outline',
-            },
-            {
-              label: 'All Time',
-              icon: IconClearAll,
-              onClick: () => setDateRange('all'),
-              variant: dateRange === 'all' ? 'default' : 'outline',
-            },
-          ]}
-        />
-      }
+      actions={[
+        {
+          label: 'Days',
+          icon: IconNumber7Small,
+          onClick: () => setDateRange('7d'),
+          variant: dateRange === '7d' ? 'default' : 'outline',
+        },
+        {
+          label: 'Days',
+          icon: IconNumber30Small,
+          onClick: () => setDateRange('30d'),
+          variant: dateRange === '30d' ? 'default' : 'outline',
+        },
+        {
+          label: 'Days',
+          icon: IconNumber90Small,
+          onClick: () => setDateRange('90d'),
+          variant: dateRange === '90d' ? 'default' : 'outline',
+        },
+        {
+          label: 'All Time',
+          icon: IconClearAll,
+          onClick: () => setDateRange('all'),
+          variant: dateRange === 'all' ? 'default' : 'outline',
+        },
+      ]}
     >
 
       {/* Summary Cards */}

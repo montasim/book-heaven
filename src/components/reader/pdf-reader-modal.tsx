@@ -257,6 +257,44 @@ export function PDFReaderModal({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
 
+  // Handle overlay visibility in mobile fullscreen mode
+  useEffect(() => {
+    if (isMobileFullscreen) {
+      // Hide the dialog overlay when in mobile fullscreen
+      const overlay = document.querySelector('[data-radix-portal] > div[class*="bg-black/80"]')
+      if (overlay) {
+        ;(overlay as HTMLElement).style.display = 'none'
+      }
+      // Also try alternative selector
+      const overlayAlt = document.querySelector('[data-radix-dialog-overlay]')
+      if (overlayAlt) {
+        ;(overlayAlt as HTMLElement).style.display = 'none'
+      }
+    } else {
+      // Show overlay again
+      const overlay = document.querySelector('[data-radix-portal] > div[class*="bg-black/80"]')
+      if (overlay) {
+        ;(overlay as HTMLElement).style.display = ''
+      }
+      const overlayAlt = document.querySelector('[data-radix-dialog-overlay]')
+      if (overlayAlt) {
+        ;(overlayAlt as HTMLElement).style.display = ''
+      }
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      const overlay = document.querySelector('[data-radix-portal] > div[class*="bg-black/80"]')
+      if (overlay) {
+        ;(overlay as HTMLElement).style.display = ''
+      }
+      const overlayAlt = document.querySelector('[data-radix-dialog-overlay]')
+      if (overlayAlt) {
+        ;(overlayAlt as HTMLElement).style.display = ''
+      }
+    }
+  }, [isMobileFullscreen])
+
   const fileUrl = propFileUrl || book?.fileUrl
   const initialPage = propInitialPage || readingProgress?.currentPage || 1
 
@@ -269,7 +307,7 @@ export function PDFReaderModal({
         ref={dialogContentRef}
         className={
           isMobileFullscreen
-            ? "fixed inset-0 h-screen w-screen p-0 gap-0 border-0 rounded-none overflow-hidden [&>button]:hidden flex flex-col z-[9999]"
+            ? "!fixed !inset-0 !left-0 !top-0 !h-screen !w-screen !max-w-none !translate-x-0 !translate-y-0 p-0 gap-0 border-0 rounded-none overflow-hidden [&>button]:hidden flex flex-col z-[9999]"
             : "h-[95vh] sm:h-[95vh] w-[95vw] max-w-none p-0 gap-0 border-0 rounded-lg overflow-hidden [&>button]:hidden flex flex-col max-h-[100dvh]"
         }
         style={{
