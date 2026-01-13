@@ -226,11 +226,6 @@ export const sidebarData: SidebarData = {
           url: ROUTES.dashboardMarketplaceReviews.href,
           icon: Star,
         },
-        {
-          title: 'Analytics',
-          url: ROUTES.marketplaceAnalytics.href,
-          icon: BarChart3,
-        },
       ],
     },
 

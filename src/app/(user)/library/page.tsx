@@ -523,7 +523,7 @@ function LibraryPageContent() {
       >
         {/* Dashboard Summary - Always visible at top */}
         {booksLoading ? (
-          <DashboardSummarySkeleton />
+          <DashboardSummarySkeleton count={4} />
         ) : (
           <DashboardSummary
             summaries={[
