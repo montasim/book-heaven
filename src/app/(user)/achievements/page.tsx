@@ -23,8 +23,10 @@ import {
 } from '@/components/achievements/achievements-page-skeleton'
 import { Trophy, Sparkles, Target, BookOpen, TrendingUp, Award, ChevronRight, ChevronDown } from 'lucide-react'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import Link from 'next/link'
 import type { AchievementWithProgress } from '@/lib/achievements/types'
+import { ACHIEVEMENTS } from '@/lib/achievements/definitions'
 
 interface AchievementAction {
   label: string
@@ -42,7 +44,7 @@ export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<AchievementWithProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isChecking, setIsChecking] = useState(false)
-  const [isGuidanceExpanded, setIsGuidanceExpanded] = useState(false)
+  const [isGuidanceExpanded, setIsGuidanceExpanded] = useState(true)
 
   useEffect(() => {
     if (!user) return
@@ -52,11 +54,42 @@ export default function AchievementsPage() {
         const response = await fetch('/api/user/achievements')
         const result = await response.json()
 
-        if (result.success) {
+        if (result.success && result.data && result.data.length > 0) {
+          // Use data from database
           setAchievements(result.data)
+        } else {
+          // Database is empty or API failed - use achievement definitions directly
+          console.log('No achievements in database, using definitions')
+          const achievementsFromDefinitions = ACHIEVEMENTS.map(a => ({
+            ...a,
+            id: a.code,
+            userProgress: 0,
+            userUnlocked: false,
+            isVisible: true,
+            requirements: a.requirements as any,
+            unlockCount: 0,
+            entryById: '',
+            entryAt: new Date(),
+            updatedAt: new Date(),
+          }))
+          setAchievements(achievementsFromDefinitions as any)
         }
       } catch (error) {
         console.error('Error fetching achievements:', error)
+        // Fallback to achievement definitions on error
+        const achievementsFromDefinitions = ACHIEVEMENTS.map(a => ({
+          ...a,
+          id: a.code,
+          userProgress: 0,
+          userUnlocked: false,
+          isVisible: true,
+          requirements: a.requirements as any,
+          unlockCount: 0,
+          entryById: '',
+          entryAt: new Date(),
+          updatedAt: new Date(),
+        }))
+        setAchievements(achievementsFromDefinitions as any)
       } finally {
         setIsLoading(false)
       }
@@ -224,13 +257,16 @@ export default function AchievementsPage() {
       title="Achievements"
       description="Unlock achievements by reading, taking quizzes, and exploring the platform"
       actions={
-        <Button
-          onClick={handleCheckAchievements}
-          disabled={isChecking}
-        >
-          <Sparkles className="h-4 w-4 mr-2" />
-          {isChecking ? 'Checking...' : 'Check for New'}
-        </Button>
+        <DashboardPageHeaderActions
+          actions={[
+            {
+              label: isChecking ? 'Checking...' : 'Check for New',
+              icon: Sparkles,
+              onClick: handleCheckAchievements,
+              disabled: isChecking,
+            },
+          ]}
+        />
       }
     >
       <ScrollArea className='faded-bottom -mx-4 flex-1 scroll-smooth px-4 md:pb-16 h-full'>
@@ -268,7 +304,12 @@ export default function AchievementsPage() {
               <div className="text-center py-8 text-muted-foreground">
                 Loading achievements...
               </div>
-            ) : achievements.length === 0 ? null : (
+            ) : achievements.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No achievements available yet. Start exploring the platform to unlock achievements!</p>
+              </div>
+            ) : (
               <div className="space-y-6">
             {Object.entries(achievementsByCategory).map(([category, items]) => {
             const categoryConfig: Record<string, { label: string; icon: any }> = {
