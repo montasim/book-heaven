@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DollarSign, TrendingUp } from 'lucide-react'
+import { IconNumber7Small, IconNumber30Small, IconNumber90Small, IconClearAll } from '@tabler/icons-react'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
 import { DashboardPageHeaderActions } from '@/components/dashboard/dashboard-page-header-actions'
 import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
@@ -149,22 +150,26 @@ export default function BookCostAnalyticsPage() {
         <DashboardPageHeaderActions
           actions={[
             {
-              label: '7 Days',
+              label: 'Days',
+              icon: IconNumber7Small,
               onClick: () => setDateRange('7d'),
               variant: dateRange === '7d' ? 'default' : 'outline',
             },
             {
-              label: '30 Days',
+              label: 'Days',
+              icon: IconNumber30Small,
               onClick: () => setDateRange('30d'),
               variant: dateRange === '30d' ? 'default' : 'outline',
             },
             {
-              label: '90 Days',
+              label: 'Days',
+              icon: IconNumber90Small,
               onClick: () => setDateRange('90d'),
               variant: dateRange === '90d' ? 'default' : 'outline',
             },
             {
               label: 'All Time',
+              icon: IconClearAll,
               onClick: () => setDateRange('all'),
               variant: dateRange === 'all' ? 'default' : 'outline',
             },
