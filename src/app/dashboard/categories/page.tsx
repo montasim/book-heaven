@@ -170,7 +170,7 @@ export default function CategoriesPage() {
       <DashboardPage
         icon={IconTag}
         title="Categories"
-        description="Manage book categories in your system"
+        description="Manage categories in your system"
         actions={
           <DashboardPageHeaderActions
             actions={[

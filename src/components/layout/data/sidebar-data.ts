@@ -217,11 +217,6 @@ export const sidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'My Posts',
-          url: ROUTES.marketplacePosts.href,
-          icon: ShoppingBag,
-        },
-        {
           title: 'Conversations',
           url: ROUTES.marketplaceConversations.href,
           icon: MessageSquare,
