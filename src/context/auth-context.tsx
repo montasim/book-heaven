@@ -10,6 +10,11 @@ interface User {
   role: string
   isPremium: boolean
   showMoodRecommendations?: boolean
+  firstName?: string
+  lastName?: string | null
+  avatar?: string | null
+  directAvatarUrl?: string | null
+  bio?: string | null
 }
 
 interface AuthContextType {

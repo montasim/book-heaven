@@ -220,3 +220,17 @@ body {
     background: transparent;
   }
 }
+
+/* Infinite scroll animation for featured posts carousel */
+@keyframes scroll-right-to-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-right-to-left {
+  animation: scroll-right-to-left 40s linear infinite;
+}

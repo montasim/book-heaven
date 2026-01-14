@@ -10,10 +10,14 @@ interface Team {
   plan: string
 }
 
+type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+
 interface BaseNavItem {
   title: string
   badge?: string
   icon?: React.ElementType
+  /** Roles that can see this item. If undefined, all roles can see it */
+  roles?: UserRole[]
 }
 
 type NavLink = BaseNavItem & {
@@ -31,6 +35,8 @@ type NavItem = NavCollapsible | NavLink
 interface NavGroup {
   title: string
   items: NavItem[]
+  /** Roles that can see this group. If undefined, all roles can see it */
+  roles?: UserRole[]
 }
 
 interface SidebarData {
@@ -39,4 +45,4 @@ interface SidebarData {
   navGroups: NavGroup[]
 }
 
-export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink }
+export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink, UserRole }

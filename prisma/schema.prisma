@@ -646,6 +646,10 @@ model User {
   // Campaign management
   campaigns              Campaign[]                @relation("UserCampaigns")
 
+  // Blog & Community
+  blogPosts              BlogPost[]                @relation("UserBlogPosts")
+  blogComments           BlogComment[]             @relation("UserBlogComments")
+
   // Subscription management
   subscription           Subscription?
 
@@ -1692,6 +1696,122 @@ enum LegalContentType {
   COOKIE_POLICY
   DISCLAIMER
   ABOUT
+}
+
+// ============================================================================
+// BLOG & COMMUNITY
+// ============================================================================
+
+// Blog Categories for organizing posts
+model BlogCategory {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  slug        String      @unique
+  description String?     @db.Text
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  posts       BlogPost[]
+
+  @@index([slug])
+  @@index([order])
+  @@map("blog_categories")
+}
+
+// Blog Tags for flexible categorization
+model BlogTag {
+  id        String      @id @default(uuid())
+  name      String      @unique
+  slug      String      @unique
+  createdAt DateTime    @default(now())
+  posts     BlogPostTag[]
+
+  @@index([slug])
+  @@map("blog_tags")
+}
+
+// Blog Posts - main content model
+model BlogPost {
+  id              String      @id @default(uuid())
+  title           String
+  slug            String      @unique
+  excerpt         String?     @db.Text
+  content         String      @db.Text
+  coverImage      String?
+  authorId        String
+  author          User        @relation("UserBlogPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId      String?
+  category        BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags            BlogPostTag[]
+  comments        BlogComment[]
+  status          PostStatus  @default(DRAFT)
+  publishedAt     DateTime?
+  scheduledFor    DateTime?
+  seoTitle        String?
+  seoDescription  String?
+  seoKeywords     String[]
+  featured        Boolean     @default(false)
+  allowComments   Boolean     @default(true)
+  viewCount       Int         @default(0)
+  readTime        Int?        // in minutes
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([featured])
+  @@map("blog_posts")
+}
+
+// Junction table for posts-tags many-to-many
+model BlogPostTag {
+  postId    String
+  tagId     String
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([postId])
+  @@index([tagId])
+  @@map("blog_post_tags")
+}
+
+// Blog Comments
+model BlogComment {
+  id          String        @id @default(uuid())
+  content     String        @db.Text
+  authorId    String
+  author      User          @relation("UserBlogComments", fields: [authorId], references: [id], onDelete: Cascade)
+  postId      String
+  post        BlogPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      BlogComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     BlogComment[] @relation("CommentReplies")
+  status      CommentStatus @default(APPROVED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([status])
+  @@map("blog_comments")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
 }
 
 // ============================================================================

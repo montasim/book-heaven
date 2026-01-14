@@ -13,7 +13,7 @@ import { NavUser } from './nav-user'
 import { TeamSwitcher } from './team-switcher'
 import { sidebarData } from './data/sidebar-data'
 import {useAuth} from "@/context/auth-context"
-import type { NavGroup as NavGroupType } from './types'
+import type { NavGroup as NavGroupType, NavItem, UserRole } from './types'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth()
@@ -24,28 +24,57 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setIsMounted(true)
   }, [])
 
-  // Determine if user has admin privileges
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
+  // Filter navigation items based on user role
+  const filterNavItems = (items: NavItem[]): NavItem[] => {
+    if (!user?.role) return []
 
-  // Filter navigation groups based on user role
-  let filteredNavGroups: NavGroupType[] = []
-
-  if (isMounted && user) {
-    if (isAdmin) {
-      // Admin: show all groups, but remove redundant Dashboard from "Other" group
-      filteredNavGroups = sidebarData.navGroups.map(group => {
-        if (group.title === 'Other') {
+    return items
+      .filter(item => {
+        // If item has roles specified, check if user's role is included
+        if (item.roles && !item.roles.includes(user.role as UserRole)) {
+          return false
+        }
+        return true
+      })
+      .map(item => {
+        // If item has nested items, filter those too
+        if ('items' in item && item.items) {
           return {
-            ...group,
-            items: group.items.filter(item => item.title !== 'Dashboard')
+            ...item,
+            items: item.items.filter(subItem => {
+              // If sub-item has roles specified, check if user's role is included
+              if (subItem.roles && !subItem.roles.includes(user.role as UserRole)) {
+                return false
+              }
+              return true
+            })
           }
         }
-        return group
+        return item
       })
-    } else {
-      // Regular User: show only "Other" group (which now includes Dashboard)
-      filteredNavGroups = sidebarData.navGroups.filter(group => group.title === 'Other')
-    }
+  }
+
+  // Filter navigation groups based on user role
+  const filteredNavGroups: NavGroupType[] = []
+
+  if (isMounted && user?.role) {
+    sidebarData.navGroups.forEach(group => {
+      // Check if group has roles and if user's role is included
+      if (group.roles && !group.roles.includes(user.role as UserRole)) {
+        return // Skip this group
+      }
+
+      // Filter items within the group
+      const filteredItems = filterNavItems(group.items)
+
+      // Only add group if it has items after filtering
+      if (filteredItems.length > 0) {
+        filteredNavGroups.push({
+          ...group,
+          items: filteredItems
+        })
+      }
+    })
   }
 
   return (

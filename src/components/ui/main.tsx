@@ -15,7 +15,7 @@ export const Main = ({ fixed, noPadding, noMobileNavPadding, ...props }: MainPro
         'peer-[.header-fixed]/header:mt-16',
           !noPadding && 'p-4',
         !noMobileNavPadding && 'pb-mobile-nav-safe',
-        fixed && 'fixed-main flex flex-col flex-grow overflow-hidden'
+        fixed && 'fixed-main flex flex-col flex-grow overflow-y-auto'
       )}
       {...props}
     />

@@ -37,7 +37,7 @@ import {
     Monitor,
     Languages,
 } from 'lucide-react'
-import { type SidebarData } from '../types'
+import { type SidebarData, UserRole } from '../types'
 import { ROUTES } from '@/lib/routes/client-routes'
 
 export const sidebarData: SidebarData = {
@@ -65,10 +65,11 @@ export const sidebarData: SidebarData = {
   ],
   navGroups: [
     // ============================================================================
-    // OVERVIEW
+    // OVERVIEW - Admin & Super Admin only
     // ============================================================================
     {
       title: 'Overview',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
       items: [
         {
           title: 'Dashboard',
@@ -84,10 +85,11 @@ export const sidebarData: SidebarData = {
     },
 
     // ============================================================================
-    // LIBRARY MANAGEMENT
+    // LIBRARY MANAGEMENT - Admin & Super Admin only
     // ============================================================================
     {
       title: 'Library Management',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
       items: [
         {
           title: 'Books',
@@ -123,6 +125,7 @@ export const sidebarData: SidebarData = {
     },
     {
       title: 'Library Operations',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
       items: [
         {
           title: 'Book Requests',
@@ -143,15 +146,21 @@ export const sidebarData: SidebarData = {
     },
 
     // ============================================================================
-    // CONTENT MANAGEMENT
+    // CONTENT MANAGEMENT - Admin & Super Admin (Blog), All roles (Blog Posts)
     // ============================================================================
     {
       title: 'Content Management',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
       items: [
         {
           title: 'Site Settings',
           url: ROUTES.siteSettings.href,
           icon: Construction,
+        },
+        {
+          title: 'Blog Posts',
+          url: ROUTES.dashboardBlog.href,
+          icon: FileText,
         },
         {
           title: 'Pricing Content',
@@ -162,6 +171,7 @@ export const sidebarData: SidebarData = {
           title: 'Legal Content',
           url: ROUTES.dashboardLegal.href,
           icon: FileText,
+          roles: ['SUPER_ADMIN'],
         },
         {
           title: 'Notices',
@@ -177,10 +187,32 @@ export const sidebarData: SidebarData = {
     },
 
     // ============================================================================
-    // USER MANAGEMENT
+    // BLOG - All roles (view), Admin & Super Admin (manage)
+    // ============================================================================
+    {
+      title: 'Blog',
+      items: [
+        {
+          title: 'Blog Posts',
+          url: ROUTES.dashboardBlog.href,
+          icon: FileText,
+          roles: ['ADMIN', 'SUPER_ADMIN', 'USER'],
+        },
+        {
+          title: 'Comments',
+          url: ROUTES.dashboardBlogComments.href,
+          icon: MessageSquare,
+          roles: ['ADMIN', 'SUPER_ADMIN'],
+        },
+      ],
+    },
+
+    // ============================================================================
+    // USER MANAGEMENT - Admin & Super Admin only
     // ============================================================================
     {
       title: 'User Management',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
       items: [
         {
           title: 'Users',
@@ -206,10 +238,11 @@ export const sidebarData: SidebarData = {
     },
 
     // ============================================================================
-    // MARKETPLACE
+    // MARKETPLACE - Admin & Super Admin only
     // ============================================================================
     {
       title: 'Marketplace',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
       items: [
         {
           title: 'Overview',
@@ -230,7 +263,7 @@ export const sidebarData: SidebarData = {
     },
 
     // ============================================================================
-    // PERSONAL
+    // PERSONAL - All roles (except Moods which is admin only)
     // ============================================================================
     {
       title: 'Personal',
@@ -254,26 +287,13 @@ export const sidebarData: SidebarData = {
           title: 'Moods',
           url: ROUTES.moods.href,
           icon: Smile,
+          roles: ['ADMIN', 'SUPER_ADMIN'],
         },
       ],
     },
 
     // ============================================================================
-    // GAMES
-    // ============================================================================
-    {
-      title: 'Games',
-      items: [
-        {
-          title: 'Quiz',
-          url: ROUTES.quiz.href,
-          icon: Brain,
-        },
-      ],
-    },
-
-    // ============================================================================
-    // SETTINGS
+    // SETTINGS - All roles
     // ============================================================================
     {
       title: 'Settings',

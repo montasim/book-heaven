@@ -475,6 +475,23 @@ export const ROUTES = {
     href: '/library?tab=my-uploads',
     icon: Bookmark,
   },
+
+  // Blog Routes
+  blog: {
+    label: 'Blog',
+    href: '/blog',
+    icon: FileText,
+  },
+  dashboardBlog: {
+    label: 'Blog Posts',
+    href: '/dashboard/blog',
+    icon: FileText,
+  },
+  dashboardBlogComments: {
+    label: 'Blog Comments',
+    href: '/dashboard/blog/comments',
+    icon: MessageSquare,
+  },
 } as const
 
 export type RouteKey = keyof typeof ROUTES

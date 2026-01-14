@@ -22,7 +22,7 @@ import {
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, ShoppingBag, MessageSquare } from 'lucide-react'
+import { BookOpen, User, Settings, LogOut, CreditCard, Brain, ChevronDown, ShoppingBag, MessageSquare, FileText } from 'lucide-react'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
 import { NotificationBell } from '@/components/notifications/notification-bell'
@@ -144,6 +144,12 @@ export function UserTopbar({
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link href={ROUTES.blog.href} className="w-full cursor-pointer lg:hidden">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Blog
+                    </Link>
+                </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
@@ -288,6 +294,18 @@ export function UserTopbar({
               <Brain className="h-4 w-4" />
               <span>Quiz</span>
             </Link>
+              <Link
+                  href={ROUTES.blog.href}
+                  className={cn(
+                      "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                      pathname?.startsWith('/blog')
+                          ? "text-primary bg-accent"
+                          : "text-muted-foreground hover:text-primary hover:bg-accent"
+                  )}
+              >
+                  <FileText className="h-4 w-4" />
+                  <span>Blog</span>
+              </Link>
           </nav>
         )}
 
