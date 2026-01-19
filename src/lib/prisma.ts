@@ -47,9 +47,17 @@ import { config } from '@/config'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 const createPrismaClient = () => {
-    const pool = new Pool({ connectionString: config.databaseUrl })
+    const pool = new Pool({
+        connectionString: config.databaseUrl,
+        max: 10, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+        connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+    })
     const adapter = new PrismaPg(pool)
-    return new PrismaClient({ adapter })
+    return new PrismaClient({
+        adapter,
+        log: config.isDevelopment ? ['error', 'warn'] : ['error'],
+    })
 }
 
 export const prisma = globalForPrisma.prisma || createPrismaClient()

@@ -641,14 +641,15 @@ function BooksPageContent({
 
             {/* Error State */}
             {error && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">
-                  Unable to load books. Please try again later.
-                </p>
-                <Button onClick={() => refetch()}>
-                  Try Again
-                </Button>
-              </div>
+              <EmptyStateCard
+                icon={BookOpen}
+                title='Unable to load books'
+                description='Please try again later.'
+                action={{
+                  label: 'Try Again',
+                  onClick: () => refetch(),
+                }}
+              />
             )}
 
             {/* Books Display */}
