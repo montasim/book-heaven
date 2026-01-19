@@ -170,9 +170,21 @@ function BooksPageContent({
               {/* Desktop Header */}
               <div className="hidden lg:flex lg:items-center justify-between mb-4 gap-6">
                 <div>
-                  <h1 className="text-xl font-bold">Find your favourite Books</h1>
+                  <h1 className="text-xl font-bold">
+                    {selectedMood ? (
+                      <>
+                        <span className="text-xl mr-2">{selectedMood.emoji}</span>
+                        {selectedMood.name} Mood Recommendations
+                      </>
+                    ) : (
+                      'Find your favourite Books'
+                    )}
+                  </h1>
                   <p className="text-muted-foreground">
-                    {booksData?.pagination?.totalBooks || 0} books available
+                    {selectedMood
+                      ? `${moodBooks.length} books found`
+                      : `${booksData?.pagination?.totalBooks || 0} books available`
+                    }
                   </p>
                 </div>
 
@@ -214,9 +226,21 @@ function BooksPageContent({
                 <div className="flex items-center justify-between mb-4">
                   {/* Left Side - Discover Books Info */}
                   <div>
-                    <h1 className="text-xl font-bold">Discover Books</h1>
+                    <h1 className="text-xl font-bold">
+                      {selectedMood ? (
+                        <>
+                          <span className="text-xl mr-1">{selectedMood.emoji}</span>
+                          {selectedMood.name} Mood
+                        </>
+                      ) : (
+                        'Discover Books'
+                      )}
+                    </h1>
                     <p className="text-muted-foreground">
-                      {booksData?.pagination?.totalBooks || 0} books available
+                      {selectedMood
+                        ? `${moodBooks.length} books`
+                        : `${booksData?.pagination?.totalBooks || 0} books available`
+                      }
                     </p>
                   </div>
 
@@ -552,11 +576,11 @@ function BooksPageContent({
             )}
 
             {/* Mood-Based Recommendations Section */}
-            {(!user || user.showMoodRecommendations !== false) && (
+            {(!user || user.showMoodRecommendations !== false) && !selectedMood && (
               isLoading ? (
                 <MoodRecommendationsSkeleton />
               ) : (
-                <div className="mt-4 md:mt-0 lg:mt-0 mb-6">
+                <div className="mt-2 md:mt-0 lg:mt-0 mb-6">
                   <Card>
                     <CardHeader className="cursor-pointer py-3 sm:py-6 px-4 sm:px-6" onClick={() => setShowMoodPicker(!showMoodPicker)}>
                       <div className="flex items-center justify-between">
@@ -571,51 +595,10 @@ function BooksPageContent({
                     </CardHeader>
                     {showMoodPicker && (
                       <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-                        {!selectedMood ? (
-                          <MoodSelector onSelectMood={setSelectedMood} />
-                        ) : (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl">{selectedMood.emoji}</span>
-                                <div>
-                                  <h3 className="font-semibold">{selectedMood.name} Mood</h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {selectedMood.description}
-                                  </p>
-                                </div>
-                              </div>
-                              <Button variant="outline" size="sm" onClick={() => setSelectedMood(null)}>
-                                Change Mood
-                              </Button>
-                            </div>
-
-                            {isLoadingMood ? (
-                              <MoodRecommendationsBooksSkeleton />
-                            ) : moodBooks.length > 0 ? (
-                              <BookGrid
-                                books={moodBooks}
-                                viewMode={viewMode}
-                                viewMoreHref={(book) => `/books/${book.id}`}
-                                showTypeBadge={true}
-                                showPremiumBadge={true}
-                                showCategories={true}
-                                showReaderCount={true}
-                                showAddToBookshelf={true}
-                                showUploader={true}
-                                showLockOverlay={true}
-                                coverHeight="tall"
-                                showProgressActions={true}
-                              />
-                            ) : (
-                              <EmptyStateCard
-                                icon={BookOpen}
-                                title='No books found for this mood'
-                                description='Try selecting another mood to see different book recommendations.'
-                              />
-                            )}
-                          </div>
-                        )}
+                        <MoodSelector onSelectMood={(mood) => {
+                          setSelectedMood(mood)
+                          setShowMoodPicker(false)
+                        }} />
                       </CardContent>
                     )}
                   </Card>
@@ -623,8 +606,32 @@ function BooksPageContent({
               )
             )}
 
+            {/* Active Mood Filter Indicator */}
+            {selectedMood && (
+              <div className="mb-6">
+                <Card>
+                  <CardContent className="py-4 px-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{selectedMood.emoji}</span>
+                        <div>
+                          <h3 className="font-semibold">{selectedMood.name} Mood</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedMood.description}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedMood(null)}>
+                        Clear
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Loading State */}
-            {isLoading && (
+            {(isLoading || (selectedMood && isLoadingMood)) && (
               <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"}>
                 {[...Array(9)].map((_, i) => (
                   <BookCardSkeleton key={i} viewMode={viewMode} />
@@ -645,9 +652,42 @@ function BooksPageContent({
             )}
 
             {/* Books Display */}
-            {!isLoading && !error && (
+            {!isLoading && !error && !isLoadingMood && (
               <>
-                {books.length === 0 ? (
+                {/* Show mood books if mood is selected, otherwise show regular books */}
+                {selectedMood ? (
+                  moodBooks.length === 0 ? (
+                    <Card>
+                      <CardContent className="pt-12 pb-12">
+                        <div className="text-center">
+                          <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">No books found for this mood</h3>
+                          <p className="text-muted-foreground mb-4">
+                            Try selecting another mood to see different book recommendations.
+                          </p>
+                          <Button onClick={() => setSelectedMood(null)}>
+                            Clear Mood Filter
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <BookGrid
+                      books={moodBooks}
+                      viewMode={viewMode}
+                      viewMoreHref={(book) => `/books/${book.id}`}
+                      showTypeBadge={true}
+                      showPremiumBadge={true}
+                      showCategories={true}
+                      showReaderCount={true}
+                      showAddToBookshelf={true}
+                      showUploader={true}
+                      showLockOverlay={true}
+                      coverHeight="tall"
+                      showProgressActions={true}
+                    />
+                  )
+                ) : books.length === 0 ? (
                   <Card>
                     <CardContent className="pt-12 pb-12">
                       <div className="text-center">
@@ -685,7 +725,7 @@ function BooksPageContent({
             )}
 
             {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
+            {!selectedMood && pagination && pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">
                 <Button
                   variant="outline"
