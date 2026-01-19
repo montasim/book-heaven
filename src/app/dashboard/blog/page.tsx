@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
+import { DashboardSummary } from '@/components/dashboard/dashboard-summary'
+import { DashboardSummarySkeleton } from '@/components/dashboard/dashboard-summary-skeleton'
 import { DataTable } from '@/components/data-table/data-table'
 import { TableSkeleton } from '@/components/data-table/table-skeleton'
 import { getColumns } from './components/columns'
 import { EmptyStateCard } from '@/components/ui/empty-state-card'
-import { BlogPost, PostStatus, getBlogPosts } from './actions'
-import { FileText, Plus, RefreshCw } from 'lucide-react'
+import { BlogPost, PostStatus, getBlogPosts, BlogStats, getBlogStats } from './actions'
+import { FileText, Plus, RefreshCw, Eye, File, Archive, Clock, Star, MessageSquare } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -24,6 +26,8 @@ export default function BlogManagementPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [posts, setPosts] = useState<BlogPost[]>([])
+  const [stats, setStats] = useState<BlogStats | null>(null)
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [totalCount, setTotalCount] = useState(0)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
@@ -40,6 +44,21 @@ export default function BlogManagementPage() {
 
   // Track last fetched page to prevent duplicates
   const lastFetchedRef = useRef<string>('')
+
+  // Fetch stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getBlogStats()
+        setStats(data)
+      } catch (error) {
+        console.error('Error fetching blog stats:', error)
+      } finally {
+        setIsLoadingStats(false)
+      }
+    }
+    fetchStats()
+  }, [])
 
   const fetchPostsForPage = useCallback(async (pageIndex: number, pageSize: number, force = false) => {
     const fetchKey = `${pageIndex}-${pageSize}-${statusFilter}-${search}`
@@ -95,8 +114,17 @@ export default function BlogManagementPage() {
   }, [pagination.pageIndex, pagination.pageSize, fetchPostsForPage])
 
   const refreshPosts = async () => {
-    const { pageIndex, pageSize } = paginationRef.current
-    await fetchPostsForPage(pageIndex, pageSize, true) // Force refresh
+    // Refresh both stats and posts
+    setIsLoadingStats(true)
+    try {
+      const [statsData] = await Promise.all([
+        getBlogStats(),
+        fetchPostsForPage(paginationRef.current.pageIndex, paginationRef.current.pageSize, true)
+      ])
+      setStats(statsData)
+    } catch (error) {
+      console.error('Error refreshing:', error)
+    }
   }
 
   const handleSearch = () => {
@@ -105,6 +133,50 @@ export default function BlogManagementPage() {
   }
 
   const columns = useMemo(() => getColumns(refreshPosts), [refreshPosts])
+
+  // Prepare summary items
+  const summaryItems = useMemo(() => {
+    if (!stats) return []
+
+    return [
+      {
+        title: 'Total Posts',
+        value: stats.totalPosts,
+        description: 'All blog posts',
+        icon: FileText,
+      },
+      {
+        title: 'Published',
+        value: stats.publishedPosts,
+        description: 'Live posts',
+        icon: File,
+      },
+      {
+        title: 'Drafts',
+        value: stats.draftPosts,
+        description: 'Unpublished posts',
+        icon: FileText,
+      },
+      {
+        title: 'Scheduled',
+        value: stats.scheduledPosts,
+        description: 'Scheduled to publish',
+        icon: Clock,
+      },
+      {
+        title: 'Total Views',
+        value: stats.totalViews.toLocaleString(),
+        description: 'All time views',
+        icon: Eye,
+      },
+      {
+        title: 'Comments',
+        value: stats.totalComments,
+        description: 'Total comments',
+        icon: MessageSquare,
+      },
+    ]
+  }, [stats])
 
   return (
     <DashboardPage
@@ -125,6 +197,13 @@ export default function BlogManagementPage() {
         },
       ]}
     >
+      {/* Dashboard Summary */}
+      {isLoadingStats ? (
+        <DashboardSummarySkeleton />
+      ) : stats ? (
+        <DashboardSummary summaries={summaryItems} />
+      ) : null}
+
       {/* Filters */}
       <div className='mb-4 flex flex-col sm:flex-row gap-4'>
         <div className='flex-1 flex gap-2'>

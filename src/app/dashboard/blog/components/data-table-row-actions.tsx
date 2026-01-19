@@ -27,6 +27,7 @@ import { BlogPost } from '../actions'
 import { useToast } from '@/hooks/use-toast'
 import { deleteBlogPost, toggleFeaturedPost } from '../actions'
 import { useState } from 'react'
+import { useAuth } from '@/context/auth-context'
 
 interface DataTableRowActionsProps {
   row: Row<BlogPost>
@@ -37,8 +38,12 @@ export function DataTableRowActions({ row, onSuccess }: DataTableRowActionsProps
   const post = row.original
   const router = useRouter()
   const { toast } = useToast()
+  const { user } = useAuth()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -101,19 +106,24 @@ export function DataTableRowActions({ row, onSuccess }: DataTableRowActionsProps
             <Pencil className='mr-2 h-4 w-4' />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleToggleFeatured}>
-            {post.featured ? (
-              <>
-                <StarOff className='mr-2 h-4 w-4' />
-                Unfeature
-              </>
-            ) : (
-              <>
-                <Star className='mr-2 h-4 w-4' />
-                Feature
-              </>
-            )}
-          </DropdownMenuItem>
+          {/* Only show Feature option for admins */}
+          {isAdmin && (
+            <>
+              <DropdownMenuItem onClick={handleToggleFeatured}>
+                {post.featured ? (
+                  <>
+                    <StarOff className='mr-2 h-4 w-4' />
+                    Unfeature
+                  </>
+                ) : (
+                  <>
+                    <Star className='mr-2 h-4 w-4' />
+                    Feature
+                  </>
+                )}
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <AlertDialogTrigger asChild>
             <DropdownMenuItem

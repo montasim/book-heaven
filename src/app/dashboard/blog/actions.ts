@@ -1139,6 +1139,76 @@ export async function deleteBlogComment(id: string) {
 }
 
 // ============================================================================
+// Blog Statistics
+// ============================================================================
+
+export interface BlogStats {
+  totalPosts: number
+  publishedPosts: number
+  draftPosts: number
+  scheduledPosts: number
+  archivedPosts: number
+  featuredPosts: number
+  totalViews: number
+  totalComments: number
+}
+
+export async function getBlogStats(): Promise<BlogStats> {
+  const session = await getSession()
+  const isAdmin = session?.role === 'ADMIN' || session?.role === 'SUPER_ADMIN'
+  const currentUserId = session?.userId
+
+  // Build where clause based on user role
+  const where: any = {}
+  if (!isAdmin) {
+    // Non-admins only see their own posts
+    where.authorId = currentUserId
+  }
+
+  const [
+    totalPosts,
+    publishedPosts,
+    draftPosts,
+    scheduledPosts,
+    archivedPosts,
+    featuredPosts,
+    totalViews,
+    totalComments,
+  ] = await Promise.all([
+    prisma.blogPost.count({ where }),
+    prisma.blogPost.count({ where: { ...where, status: 'PUBLISHED' } }),
+    prisma.blogPost.count({ where: { ...where, status: 'DRAFT' } }),
+    prisma.blogPost.count({ where: { ...where, status: 'SCHEDULED' } }),
+    prisma.blogPost.count({ where: { ...where, status: 'ARCHIVED' } }),
+    prisma.blogPost.count({ where: { ...where, featured: true } }),
+    // For views and comments, admins see all, users see their own posts' stats
+    isAdmin
+      ? prisma.blogPost.aggregate({ _sum: { viewCount: true } })
+      : prisma.blogPost.aggregate({ where: { authorId: currentUserId }, _sum: { viewCount: true } }),
+    isAdmin
+      ? prisma.blogComment.count()
+      : prisma.blogComment.count({
+          where: {
+            post: {
+              authorId: currentUserId,
+            },
+          },
+        }),
+  ])
+
+  return {
+    totalPosts,
+    publishedPosts,
+    draftPosts,
+    scheduledPosts,
+    archivedPosts,
+    featuredPosts,
+    totalViews: (totalViews._sum?.viewCount || 0) as number,
+    totalComments: totalComments as number,
+  }
+}
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 

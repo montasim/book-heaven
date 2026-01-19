@@ -160,6 +160,20 @@ export const API_ROUTES: Record<string, ServerRoute> = {
     access: RoleAccess.AUTHENTICATED,
   },
 
+  // User Blog Routes (AUTHENTICATED - users manage their own blogs)
+  userBlogs: {
+    path: '/api/user/blog',
+    methods: ['GET', 'POST'],
+    description: 'Get own blogs or create new blog post',
+    access: RoleAccess.AUTHENTICATED,
+  },
+  userBlogById: {
+    path: '/api/user/blog/*',
+    methods: ['GET', 'PATCH', 'DELETE'],
+    description: 'Get, update, or delete own blog post by ID',
+    access: RoleAccess.AUTHENTICATED,
+  },
+
   // ============================================================================
   // MARKETPLACE ROUTES (AUTHENTICATED)
   // ============================================================================

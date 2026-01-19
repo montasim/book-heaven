@@ -559,7 +559,7 @@ export const ROUTES = {
     label: 'Blog Posts',
     href: '/dashboard/blog',
     icon: FileText,
-    access: RoleAccess.ADMIN_ONLY,
+    access: RoleAccess.AUTHENTICATED,
   },
   dashboardBlogComments: {
     label: 'Blog Comments',
