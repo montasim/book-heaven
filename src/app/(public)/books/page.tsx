@@ -902,10 +902,40 @@ function BooksPageWrapper() {
   )
 }
 
+// Full page loading skeleton
+function BooksPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto p-4 pb-6">
+        {/* Header Skeleton */}
+        <BooksHeaderSkeleton />
+
+        {/* Filter Sidebar Skeleton */}
+        <div className="flex gap-6">
+          <BooksFilterSidebarSkeleton />
+
+          {/* Books Grid Skeleton */}
+          <div className="flex-1">
+            {/* Mood Recommendations Skeleton */}
+            <MoodRecommendationsSkeleton />
+
+            {/* Book Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(9)].map((_, i) => (
+                <BookCardSkeleton key={i} viewMode="grid" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
 // Wrapper with Suspense boundary for useSearchParams
 export default function BooksPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<BooksPageSkeleton />}>
       <BooksPageWrapper />
     </Suspense>
   )
