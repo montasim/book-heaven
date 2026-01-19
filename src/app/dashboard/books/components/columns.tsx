@@ -33,7 +33,7 @@ const bookTypeLabels = {
   AUDIO: 'Audio',
 }
 
-// Expandable tags component
+// Expandable tags component with badge styling
 function ExpandableTags({
   items,
   variant,
@@ -85,6 +85,56 @@ function ExpandableTags({
   )
 }
 
+// Simple text links component (no badge styling)
+function SimpleTextLinks({
+  items,
+  maxVisible = 1,
+  basePath,
+}: {
+  items: Array<{ id: string; name: string }>
+  maxVisible?: number
+  basePath: string
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  if (!items || items.length === 0) {
+    return <span className='text-muted-foreground text-sm'>None</span>
+  }
+
+  const visibleItems = isExpanded ? items : items.slice(0, maxVisible)
+  const hiddenCount = items.length - maxVisible
+
+  return (
+    <div className='flex flex-wrap gap-1 max-w-48'>
+      {visibleItems.map((item) => (
+        <Link
+          key={item.id}
+          href={`${basePath}/${item.id}`}
+          className='text-xs hover:underline text-foreground'
+        >
+          {item.name}
+        </Link>
+      ))}
+      {!isExpanded && hiddenCount > 0 && (
+        <button
+          onClick={() => setIsExpanded(true)}
+          className='text-xs text-muted-foreground hover:text-foreground'
+        >
+          +{hiddenCount} more
+        </button>
+      )}
+      {isExpanded && items.length > maxVisible && (
+        <button
+          onClick={() => setIsExpanded(false)}
+          className='text-xs text-muted-foreground hover:text-foreground'
+        >
+          Show less
+        </button>
+      )}
+    </div>
+  )
+}
+
 export function getColumns(processingProgress: Map<string, ProcessingProgress>): ColumnDef<Book>[] {
   return [
   {
@@ -124,7 +174,9 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
     ),
     cell: ({ row }) => (
       <div className='flex items-center gap-2'>
-        <LongText className='max-w-48'>{row.getValue('name')}</LongText>
+        <Link href={`/dashboard/books/${row.original.id}`} className='hover:underline'>
+          <LongText className='max-w-48'>{row.getValue('name')}</LongText>
+        </Link>
       </div>
     ),
     meta: {
@@ -143,10 +195,8 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
     ),
     cell: ({ row }) => {
       const type = row.getValue('type') as keyof typeof bookTypeIcons
-      const Icon = bookTypeIcons[type]
       return (
-        <Badge variant='outline' className='capitalize flex items-center gap-1'>
-          <Icon className='h-3 w-3' />
+        <Badge variant='secondary' className='capitalize'>
           {bookTypeLabels[type]}
         </Badge>
       )
@@ -179,7 +229,7 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
     header: 'Authors',
     cell: ({ row }) => {
       const authors = (row.original as any).authors || []
-      return <ExpandableTags items={authors} variant='secondary' maxVisible={1} basePath='/dashboard/authors' />
+      return <SimpleTextLinks items={authors} maxVisible={1} basePath='/dashboard/authors' />
     },
     enableSorting: false,
   },
@@ -188,10 +238,7 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
     header: 'Translators',
     cell: ({ row }) => {
       const translators = (row.original as any).translators || []
-      if (!translators || translators.length === 0) {
-        return <span className='text-muted-foreground text-sm'>None</span>
-      }
-      return <ExpandableTags items={translators} variant='outline' maxVisible={1} basePath='/dashboard/translators' />
+      return <SimpleTextLinks items={translators} maxVisible={1} basePath='/dashboard/translators' />
     },
     enableSorting: false,
   },
@@ -200,22 +247,7 @@ export function getColumns(processingProgress: Map<string, ProcessingProgress>):
     header: 'Publications',
     cell: ({ row }) => {
       const publications = (row.original as any).publications || []
-      return (
-        <div className='flex flex-wrap gap-1 max-w-48'>
-          {publications.slice(0, 2).map((pub: any, index: number) => (
-            <Link key={pub.id} href={`/dashboard/publications/${pub.id}`}>
-              <Badge variant='outline' className='text-xs hover:underline cursor-pointer'>
-                {pub.name}
-              </Badge>
-            </Link>
-          ))}
-          {publications.length > 2 && (
-            <Badge variant='outline' className='text-xs'>
-              +{publications.length - 2} more
-            </Badge>
-          )}
-        </div>
-      )
+      return <SimpleTextLinks items={publications} maxVisible={2} basePath='/dashboard/publications' />
     },
     enableSorting: false,
   },

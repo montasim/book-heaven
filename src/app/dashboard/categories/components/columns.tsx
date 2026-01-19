@@ -1,6 +1,7 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -46,7 +47,9 @@ export const columns: ColumnDef<Category>[] = [
       <DataTableColumnHeader column={column} title='Name' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36'>{row.getValue('name')}</LongText>
+      <Link href={`/dashboard/categories/${row.original.id}`} className='hover:underline'>
+        <LongText className='max-w-36'>{row.getValue('name')}</LongText>
+      </Link>
     ),
     meta: {
       className: cn(
