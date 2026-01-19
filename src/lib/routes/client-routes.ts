@@ -44,8 +44,9 @@ import {
   Link2,
   Ticket,
 } from 'lucide-react'
+import { AccessConfig, AccessLevel, RoleAccess } from '@/lib/auth/roles'
 
-export interface AppRoute {
+export interface AppRoute extends AccessConfig {
   label: string
   href: string
   icon: React.ComponentType<{ className?: string }>
@@ -62,6 +63,7 @@ export const ROUTES = {
     label: 'Home',
     href: '/',
     icon: Home,
+    access: RoleAccess.ALL,
   },
 
   // Books & Library
@@ -69,11 +71,13 @@ export const ROUTES = {
     label: 'Books',
     href: '/books',
     icon: BookOpen,
+    access: RoleAccess.ALL,
   },
   library: {
     label: 'Library',
     href: '/library',
     icon: Library,
+    access: RoleAccess.ALL,
   },
 
   // Quiz
@@ -81,6 +85,7 @@ export const ROUTES = {
     label: 'Quiz',
     href: '/quiz',
     icon: Brain,
+    access: RoleAccess.ALL,
   },
 
   // Premium
@@ -88,6 +93,7 @@ export const ROUTES = {
     label: 'Premium',
     href: '/premium',
     icon: Crown,
+    access: RoleAccess.ALL,
   },
 
   // Dashboard
@@ -95,6 +101,7 @@ export const ROUTES = {
     label: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Settings
@@ -102,6 +109,7 @@ export const ROUTES = {
     label: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // User Settings Sub-routes
@@ -109,31 +117,37 @@ export const ROUTES = {
     label: 'Account',
     href: '/dashboard/settings/account',
     icon: User,
+    access: RoleAccess.AUTHENTICATED,
   },
   settingsAppearance: {
     label: 'Appearance',
     href: '/dashboard/settings/appearance',
     icon: Palette,
+    access: RoleAccess.AUTHENTICATED,
   },
   settingsBilling: {
     label: 'Billing',
     href: '/dashboard/settings/billing',
     icon: CreditCard,
+    access: RoleAccess.AUTHENTICATED,
   },
   settingsNotifications: {
     label: 'Notifications',
     href: '/dashboard/settings/notifications',
     icon: Bell,
+    access: RoleAccess.AUTHENTICATED,
   },
   settingsSubscription: {
     label: 'Subscription',
     href: '/dashboard/settings/subscription',
     icon: Crown,
+    access: RoleAccess.AUTHENTICATED,
   },
   settingsDisplay: {
     label: 'Display',
     href: '/dashboard/settings/display',
     icon: Monitor,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Marketplace
@@ -141,6 +155,7 @@ export const ROUTES = {
     label: 'Marketplace',
     href: '/marketplace',
     icon: ShoppingBag,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Messages
@@ -148,6 +163,7 @@ export const ROUTES = {
     label: 'Messages',
     href: '/dashboard/marketplace/messages',
     icon: MessageSquare,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Library Sub-routes
@@ -155,6 +171,7 @@ export const ROUTES = {
     label: 'My Requests',
     href: '/library/my-requests',
     icon: Inbox,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Activity
@@ -162,6 +179,7 @@ export const ROUTES = {
     label: 'Activity',
     href: '/dashboard/activity',
     icon: BarChart3,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Support Routes
@@ -169,16 +187,19 @@ export const ROUTES = {
     label: 'Help Center',
     href: '/help-center',
     icon: HelpCircle,
+    access: RoleAccess.ALL,
   },
   about: {
     label: 'About Us',
     href: '/about',
     icon: Info,
+    access: RoleAccess.ALL,
   },
   contact: {
     label: 'Contact',
     href: '/contact',
     icon: Mail,
+    access: RoleAccess.ALL,
   },
 
   // Legal Routes
@@ -186,11 +207,13 @@ export const ROUTES = {
     label: 'Terms of Service',
     href: '/terms',
     icon: FileCheck,
+    access: RoleAccess.ALL,
   },
   privacy: {
     label: 'Privacy Policy',
     href: '/privacy',
     icon: Lock,
+    access: RoleAccess.ALL,
   },
 
   // Categories
@@ -198,6 +221,7 @@ export const ROUTES = {
     label: 'Categories',
     href: '/categories',
     icon: FolderTree,
+    access: RoleAccess.ALL,
   },
 
   // Authors
@@ -205,6 +229,7 @@ export const ROUTES = {
     label: 'Authors',
     href: '/authors',
     icon: Users,
+    access: RoleAccess.ALL,
   },
 
   // Translators
@@ -212,6 +237,7 @@ export const ROUTES = {
     label: 'Translators',
     href: '/translators',
     icon: Users,
+    access: RoleAccess.ALL,
   },
 
   // Series
@@ -219,6 +245,7 @@ export const ROUTES = {
     label: 'Series',
     href: '/series',
     icon: Hash,
+    access: RoleAccess.ALL,
   },
 
   // Publications
@@ -226,6 +253,7 @@ export const ROUTES = {
     label: 'Publications',
     href: '/publications',
     icon: Globe,
+    access: RoleAccess.ALL,
   },
 
   // Physical Library
@@ -233,6 +261,7 @@ export const ROUTES = {
     label: 'Physical Library',
     href: '/physical-library',
     icon: Library,
+    access: RoleAccess.ALL,
   },
 
   // Quiz & Leaderboard
@@ -240,6 +269,7 @@ export const ROUTES = {
     label: 'Leaderboard',
     href: '/quiz/leaderboard',
     icon: Trophy,
+    access: RoleAccess.ALL,
   },
 
   // Notices
@@ -247,6 +277,7 @@ export const ROUTES = {
     label: 'Notices',
     href: '/notices',
     icon: Megaphone,
+    access: RoleAccess.ALL,
   },
 
   // Auth Routes
@@ -254,31 +285,37 @@ export const ROUTES = {
     label: 'Sign In',
     href: '/auth/sign-in',
     icon: LogIn,
+    access: RoleAccess.ALL,
   },
   signUp: {
     label: 'Sign Up',
     href: '/auth/sign-up',
     icon: UserPlus,
+    access: RoleAccess.ALL,
   },
   login: {
     label: 'Login',
     href: '/login',
     icon: LogIn,
+    access: RoleAccess.ALL,
   },
   signUpSimple: {
     label: 'Sign Up',
     href: '/sign-up',
     icon: UserPlus,
+    access: RoleAccess.ALL,
   },
   otp: {
     label: 'OTP',
     href: '/otp',
     icon: Lock,
+    access: RoleAccess.ALL,
   },
   forgotPassword: {
     label: 'Forgot Password',
     href: '/forgot-password',
     icon: HelpCircle,
+    access: RoleAccess.ALL,
   },
 
   // Marketplace Routes
@@ -286,16 +323,19 @@ export const ROUTES = {
     label: 'My Posts',
     href: '/dashboard/marketplace/posts',
     icon: ShoppingBag,
+    access: RoleAccess.AUTHENTICATED,
   },
   marketplaceConversations: {
     label: 'Conversations',
     href: '/dashboard/marketplace/conversations',
     icon: MessageSquare,
+    access: RoleAccess.AUTHENTICATED,
   },
   marketplaceAnalytics: {
     label: 'Analytics',
     href: '/dashboard/marketplace/analytics',
     icon: BarChart3,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Messages Route
@@ -303,6 +343,7 @@ export const ROUTES = {
     label: 'Messages',
     href: '/messages',
     icon: MessageSquare,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Offers
@@ -310,11 +351,13 @@ export const ROUTES = {
     label: 'My Offers',
     href: '/offers/sent',
     icon: TrendingUp,
+    access: RoleAccess.AUTHENTICATED,
   },
   offersReceived: {
     label: 'Received Offers',
     href: '/offers/received',
     icon: Inbox,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Site Settings
@@ -322,6 +365,7 @@ export const ROUTES = {
     label: 'Site Settings',
     href: '/dashboard/site-settings',
     icon: Settings,
+    access: RoleAccess.ADMIN_ONLY,
   },
 
   // Moods
@@ -329,11 +373,13 @@ export const ROUTES = {
     label: 'Moods',
     href: '/dashboard/moods',
     icon: Sparkles,
+    access: RoleAccess.AUTHENTICATED,
   },
   seedMoods: {
     label: 'Seed Moods',
     href: '/dashboard/seed-moods',
     icon: RefreshCw,
+    access: RoleAccess.ADMIN_ONLY,
   },
 
   // Subscription
@@ -341,11 +387,13 @@ export const ROUTES = {
     label: 'Sign Up',
     href: '/signup',
     icon: UserPlus,
+    access: RoleAccess.ALL,
   },
   pricing: {
     label: 'Pricing',
     href: '/pricing',
     icon: Crown,
+    access: RoleAccess.ALL,
   },
 
   // Dashboard Routes
@@ -353,46 +401,55 @@ export const ROUTES = {
     label: 'Users',
     href: '/dashboard/users',
     icon: Users,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardCampaigns: {
     label: 'Campaigns',
     href: '/dashboard/campaigns',
     icon: Mail,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardNotices: {
     label: 'Notices',
     href: '/dashboard/notices',
     icon: Bell,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardActivities: {
     label: 'Activity Logs',
     href: '/dashboard/activities',
     icon: BarChart3,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardSupportTickets: {
     label: 'Support Tickets',
     href: '/dashboard/support-tickets',
     icon: MessageSquare,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardHelpCenterFaqs: {
     label: 'Help Center FAQs',
     href: '/dashboard/help-center/faqs',
     icon: HelpCircle,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardAdminContactSubmissions: {
     label: 'Contact Submissions',
     href: '/dashboard/admin/contact-submissions',
     icon: Mail,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardLegal: {
     label: 'Legal Content',
     href: '/dashboard/legal',
     icon: FileText,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardAdminContent: {
     label: 'Pricing Page Content',
     href: '/dashboard/admin/content',
     icon: Sparkles,
+    access: RoleAccess.ADMIN_ONLY,
   },
 
   // Library Management
@@ -400,46 +457,55 @@ export const ROUTES = {
     label: 'Books',
     href: '/dashboard/books',
     icon: BookOpen,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardSeries: {
     label: 'Series',
     href: '/dashboard/series',
     icon: List,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardAuthors: {
     label: 'Authors',
     href: '/dashboard/authors',
     icon: User,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardTranslators: {
     label: 'Translators',
     href: '/dashboard/translators',
     icon: User,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardPublications: {
     label: 'Publications',
     href: '/dashboard/publications',
     icon: Globe,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardCategories: {
     label: 'Categories',
     href: '/dashboard/categories',
     icon: Hash,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardBookRequests: {
     label: 'Book Requests',
     href: '/dashboard/book-requests',
     icon: BookMarked,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardLoans: {
     label: 'Borrowed Books',
     href: '/dashboard/borrowed-books',
     icon: ShieldCheck,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardBooksCostAnalytics: {
     label: 'Cost Analytics',
     href: '/dashboard/books/cost-analytics',
     icon: CreditCard,
+    access: RoleAccess.ADMIN_ONLY,
   },
 
   // Marketplace
@@ -447,16 +513,19 @@ export const ROUTES = {
     label: 'My Listings',
     href: '/marketplace/my-posts',
     icon: ShoppingBag,
+    access: RoleAccess.AUTHENTICATED,
   },
   dashboardMarketplace: {
     label: 'Marketplace Overview',
     href: '/dashboard/marketplace',
     icon: LayoutDashboard,
+    access: RoleAccess.AUTHENTICATED,
   },
   dashboardMarketplaceReviews: {
     label: 'Reviews',
     href: '/dashboard/marketplace/reviews',
     icon: Trophy,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Other Routes
@@ -464,16 +533,19 @@ export const ROUTES = {
     label: 'Borrowed Books',
     href: '/borrowed-books',
     icon: ShieldCheck,
+    access: RoleAccess.AUTHENTICATED,
   },
   achievements: {
     label: 'Achievements',
     href: '/achievements',
     icon: Trophy,
+    access: RoleAccess.AUTHENTICATED,
   },
   libraryMyUploads: {
     label: 'My Library',
     href: '/library?tab=my-uploads',
     icon: Bookmark,
+    access: RoleAccess.AUTHENTICATED,
   },
 
   // Blog Routes
@@ -481,16 +553,19 @@ export const ROUTES = {
     label: 'Blog',
     href: '/blog',
     icon: FileText,
+    access: RoleAccess.ALL,
   },
   dashboardBlog: {
     label: 'Blog Posts',
     href: '/dashboard/blog',
     icon: FileText,
+    access: RoleAccess.ADMIN_ONLY,
   },
   dashboardBlogComments: {
     label: 'Blog Comments',
     href: '/dashboard/blog/comments',
     icon: MessageSquare,
+    access: RoleAccess.ADMIN_ONLY,
   },
 } as const
 

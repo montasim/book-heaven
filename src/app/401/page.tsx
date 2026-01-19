@@ -3,23 +3,18 @@
 import { useRouter } from 'next/navigation'
 import { ErrorPage } from '@/components/error-page'
 
-export default function Error({
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
+export default function Unauthorized() {
   const router = useRouter()
 
   return (
     <ErrorPage
       config={{
-        code: '500',
-        title: 'Oops! Something Went Wrong!',
+        code: '401',
+        title: 'Authentication Required!',
         description: (
           <>
-            We encountered an unexpected error. <br />
-            Please try again or contact support if the problem persists.
+            You need to sign in to access this page. <br />
+            Please log in with your account to continue.
           </>
         ),
         secondaryButton: {
@@ -27,8 +22,8 @@ export default function Error({
           onClick: () => router.back(),
         },
         primaryButton: {
-          label: 'Try Again',
-          onClick: reset,
+          label: 'Sign In',
+          onClick: () => router.push('/auth/sign-in'),
         },
       }}
     />
