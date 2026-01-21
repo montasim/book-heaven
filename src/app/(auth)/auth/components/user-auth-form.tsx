@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
+import { IconBrandGithub, IconBrandGoogle } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -178,6 +178,41 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
     passwordForm.reset()
   }
 
+  // Social login handler
+  async function handleSocialLogin(provider: 'google' | 'github') {
+    setIsLoading(true)
+    try {
+      // Redirect to OAuth endpoint
+      const response = await fetch(`/api/auth/oauth/${provider}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        toast({
+          variant: 'destructive',
+          title: 'OAuth Error',
+          description: result.error || 'Failed to initiate OAuth flow',
+        })
+        return
+      }
+
+      // Redirect to OAuth provider
+      window.location.href = result.url
+    } catch (error) {
+      console.error('OAuth error:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'An error occurred. Please try again.',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Render Step 1: Email Input
   if (step === 'email') {
     return (
@@ -213,22 +248,24 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
                 </div>
               </div>
 
-              <div className='flex items-center gap-2'>
+              <div className='grid grid-cols-2 gap-2'>
                 <Button
                   variant='outline'
                   className='w-full'
                   type='button'
                   disabled={isLoading}
+                  onClick={() => handleSocialLogin('google')}
                 >
-                  <IconBrandGithub className='h-4 w-4' /> GitHub
+                  <IconBrandGoogle className='h-4 w-4 mr-2' /> Google
                 </Button>
                 <Button
                   variant='outline'
                   className='w-full'
                   type='button'
                   disabled={isLoading}
+                  onClick={() => handleSocialLogin('github')}
                 >
-                  <IconBrandFacebook className='h-4 w-4' /> Facebook
+                  <IconBrandGithub className='h-4 w-4 mr-2' /> GitHub
                 </Button>
               </div>
             </div>

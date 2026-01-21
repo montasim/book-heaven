@@ -593,6 +593,7 @@ model User {
   readingProgress     ReadingProgress[]
   achievements        UserAchievement[]  @relation("UserAchievements")
   sessions            UserSession[]
+  socialAccounts      SocialAccount[]   @relation("UserSocialAccounts")
   quizAttempts       QuizAttempt[]
   quizStreak          QuizStreak?
 
@@ -725,6 +726,38 @@ model UserSession {
 enum TokenType {
   ACCESS   // Short-lived token (15 minutes)
   REFRESH  // Long-lived token (7 days)
+}
+
+// ============================================================================
+// SOCIAL LOGIN / OAUTH
+// ============================================================================
+
+enum SocialProvider {
+  GOOGLE
+  GITHUB
+}
+
+model SocialAccount {
+  id              String          @id @default(uuid())
+  userId          String
+  provider        SocialProvider
+  providerAccountId String       @unique // Provider's unique ID for the user
+  providerEmail   String?        // Email from provider
+  accessToken     String?        @db.Text // OAuth access token
+  refreshToken    String?        @db.Text // OAuth refresh token (if available)
+  tokenExpiresAt  DateTime?      // Access token expiration
+  avatar          String?        // Profile picture from provider
+  profileUrl      String?        // Profile URL from provider
+  isActive        Boolean        @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  lastUsedAt      DateTime        @default(now())
+
+  user            User            @relation("UserSocialAccounts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([provider, providerAccountId])
+  @@map("social_accounts")
 }
 
 // ============================================================================
