@@ -158,11 +158,6 @@ export const sidebarData: SidebarData = {
           icon: Construction,
         },
         {
-          title: 'Blog Posts',
-          url: ROUTES.dashboardBlog.href,
-          icon: FileText,
-        },
-        {
           title: 'Pricing Content',
           url: ROUTES.dashboardAdminContent.href,
           icon: FileText,
