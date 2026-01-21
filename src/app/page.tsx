@@ -119,7 +119,7 @@ export default async function HomePage() {
             </div>
 
             {/* Heading */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+            <h1 className="text-5xl font-bold tracking-tight">
               Your Reading Journey,
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
@@ -169,7 +169,7 @@ export default async function HomePage() {
       <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <h2 className="text-3xl font-bold mb-4">
               Everything You Need for the Perfect Reading Experience
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -206,7 +206,7 @@ export default async function HomePage() {
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <h2 className="text-3xl font-bold mb-4">
               All Formats, One Platform
             </h2>
             <p className="text-lg text-muted-foreground">
@@ -239,7 +239,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-12 max-w-7xl mx-auto">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">Featured Books</h2>
+              <h2 className="text-3xl font-bold mb-2">Featured Books</h2>
               <p className="text-muted-foreground">Check out our latest additions</p>
             </div>
             <Button asChild variant="outline" className="hidden sm:flex">
@@ -292,7 +292,7 @@ export default async function HomePage() {
           <div className="max-w-5xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold">
+                <h2 className="text-3xl font-bold">
                   Why Choose Our Platform?
                 </h2>
                 <p className="text-lg text-muted-foreground">
@@ -368,7 +368,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4">
           <Card className="max-w-4xl mx-auto bg-gradient-to-br from-primary to-purple-600 text-white border-0 shadow-2xl">
             <CardContent className="p-12 md:p-16 text-center space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold">
+              <h2 className="text-3xl font-bold">
                 Ready to Transform Your Reading Experience?
               </h2>
               <p className="text-lg text-white/90 max-w-2xl mx-auto">
