@@ -172,21 +172,29 @@ export async function getBlogPosts(params: GetBlogPostsParams = {}) {
 
   const where: any = {}
 
-  // Non-admins can only see published posts (unless they're the author)
-  if (!isAdmin) {
-    where.OR = [
-      { status: 'PUBLISHED' },
-      currentUserId ? { authorId: currentUserId } : {},
-    ].filter((condition) => Object.keys(condition).length > 0)
+  // Non-admins can only see their own posts
+  // Admins can see all posts
+  if (!isAdmin && currentUserId) {
+    where.authorId = currentUserId
   }
 
   if (search) {
-    where.OR = [
-      ...(where.OR || []),
-      { title: { contains: search, mode: 'insensitive' } },
-      { excerpt: { contains: search, mode: 'insensitive' } },
-      { content: { contains: search, mode: 'insensitive' } },
-    ]
+    // For admins, search across all posts
+    // For non-admins, search only within their own posts
+    if (isAdmin) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { excerpt: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ]
+    } else {
+      // Non-admins already have authorId filter, just add search
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { excerpt: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ]
+    }
   }
 
   if (status) {
