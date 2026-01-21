@@ -5,6 +5,7 @@ import { WebSocketProvider } from '@/context/websocket-context'
 import { ThemeProvider } from 'next-themes'
 import { AppQueryClientProvider } from '@/components/providers/query-client-provider'
 import { RootLayoutClient } from '@/components/layout/root-layout-client'
+import { Toaster } from '@/components/ui/toaster'
 import { getSiteName, getSEOMetadata, getOGImage } from '@/lib/utils/site-settings'
 import './globals.css'
 
@@ -64,6 +65,7 @@ export default function RootLayout({
           </AuthProvider>
         </AppQueryClientProvider>
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   )

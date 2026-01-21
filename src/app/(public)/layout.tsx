@@ -2,7 +2,6 @@ import React from "react";
 import { Inter } from 'next/font/google'
 import type { Metadata } from 'next'
 import '../globals.css'
-import { Toaster } from '@/components/ui/toaster'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
 import { PublicHeader } from '@/components/layout/public-header'
 import { PublicFooter } from '@/components/layout/public-footer'
@@ -49,7 +48,6 @@ export default function PublicLayout({
               {/* Mobile Bottom Navigation */}
               <MobileBottomNav />
           </div>
-          <Toaster />
       </>
   )
 }
