@@ -1,466 +1,447 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { BookGrid } from '@/components/books/book-grid'
-import { BookCardSkeleton } from '@/components/books/book-card-skeleton'
-import {
-  BookOpen,
-  Sparkles,
-  Brain,
-  Target,
-  Headphones,
-  FileText,
-  Users,
-  ArrowRight,
-  Check,
-  Zap,
-  Trophy,
-} from 'lucide-react'
-import { ROUTES } from '@/lib/routes/client-routes'
+import Image from 'next/image'
+import { BookOpen, ArrowRight, Star, Menu, X } from 'lucide-react'
 
-async function getFeaturedBooks() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/public/books/featured?limit=6&sortBy=createdAt&sortOrder=desc`, {
-      next: { revalidate: 300 }, // Cache for 5 minutes
-    })
-
-    if (!response.ok) {
-      console.error(`API returned ${response.status}: ${response.statusText}`)
-      return { data: { books: [] } }
-    }
-
-    const contentType = response.headers.get('content-type')
-    if (!contentType?.includes('application/json')) {
-      console.error('API returned non-JSON response:', contentType)
-      return { data: { books: [] } }
-    }
-
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error('Failed to fetch featured books:', error)
-    return { data: { books: [] } }
+interface LandingData {
+  statistics: {
+    totalBooks: number
+    totalUsers: number
+    totalCategories: number
+    totalAuthors: number
+    totalPublications: number
+    activeReaders: number
+    premiumBooks: number
+    recentBooksCount: number
   }
+  featuredBooks: Array<{
+    id: string
+    name: string
+    image: string | null
+    directImageUrl: string | null
+    readersCount: number
+    authors: Array<{ name: string }>
+  }>
+  popularCategories: Array<{
+    id: string
+    name: string
+    bookCount: number
+  }>
+  recentBooks: Array<{
+    id: string
+    name: string
+    image: string | null
+    directImageUrl: string | null
+    authors: Array<{ name: string }>
+  }>
 }
 
-export default async function HomePage() {
-  const data = await getFeaturedBooks()
-  const featuredBooks = data?.data?.books || []
+export default function LandingPage() {
+  const [data, setData] = useState<LandingData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const features = [
-    {
-      icon: Brain,
-      title: 'AI-Powered Book Chat',
-      description: 'Interact with books using advanced AI. Ask questions, get summaries, and explore content like never before.',
-      color: 'text-purple-500',
-    },
-    {
-      icon: Sparkles,
-      title: 'Mood-Based Recommendations',
-      description: 'Discover books that match your current mood and preferences with our intelligent recommendation engine.',
-      color: 'text-pink-500',
-    },
-    {
-      icon: Trophy,
-      title: 'Interactive Quizzes',
-      description: 'Test your knowledge with book quizzes, compete on leaderboards, and track your reading streak.',
-      color: 'text-amber-500',
-    },
-    {
-      icon: BookOpen,
-      title: 'Multiple Formats',
-      description: 'Access eBooks, audiobooks, and hard copy references all in one unified platform.',
-      color: 'text-blue-500',
-    },
-  ]
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/public/landing')
+        const json = await res.json()
+        if (json.success) {
+          setData(json.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch landing data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
-  const bookTypes = [
-    {
-      icon: FileText,
-      title: 'eBooks',
-      description: 'Digital books with built-in reader',
-      count: '1000+',
-    },
-    {
-      icon: Headphones,
-      title: 'Audiobooks',
-      description: 'Listen on the go',
-      count: '500+',
-    },
-    {
-      icon: BookOpen,
-      title: 'Hard Copies',
-      description: 'Physical library references',
-      count: '2000+',
-    },
-  ]
-
-  const benefits = [
-    'Track your reading progress automatically',
-    'Create and organize personal bookshelves',
-    'Join a community of avid readers',
-    'Access premium content and features',
-    'Compete in quizzes and earn achievements',
-  ]
+  const getImageUrl = (image: string | null, directUrl: string | null) => {
+    return directUrl || image || '/placeholder-book.jpg'
+  }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-rose-100/50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-rose-500/30 group-hover:scale-105 transition-all duration-300">
+                <BookOpen className="h-6 w-6 text-white" strokeWidth={2.5} />
+              </div>
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">Book Heaven</span>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#featured" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">Featured</a>
+              <a href="#categories" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">Categories</a>
+              <a href="#new" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">New Arrivals</a>
+            </div>
+
+            <div className="hidden md:flex items-center gap-4">
+              <Link href="/auth/sign-in" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">
+                Sign In
+              </Link>
+              <Link
+                href="/sign-up"
+                className="bg-gradient-to-r from-rose-500 to-orange-500 text-white px-5 py-2.5 rounded-2xl hover:from-rose-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg hover:shadow-rose-500/30 hover:scale-105 text-sm font-semibold"
+              >
+                Join
+              </Link>
+            </div>
+
+            <button
+              className="md:hidden p-2 text-slate-700"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-rose-100/50 bg-white/95 backdrop-blur-xl">
+            <div className="px-4 py-4 space-y-3">
+              <a href="#featured" className="block text-sm font-semibold text-slate-900">Featured</a>
+              <a href="#categories" className="block text-sm font-semibold text-slate-900">Categories</a>
+              <a href="#new" className="block text-sm font-semibold text-slate-900">New Arrivals</a>
+              <div className="pt-3 border-t border-rose-100/50 space-y-3">
+                <Link href="/auth/sign-in" className="block text-sm font-semibold text-slate-900">Sign In</Link>
+                <Link href="/sign-up" className="block bg-gradient-to-r from-rose-500 to-orange-500 text-white px-5 py-2.5 rounded-2xl text-center text-sm font-semibold">Join</Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary/10 via-background to-background">
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-rose-400/30 to-orange-400/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-orange-400/30 to-amber-400/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-        <div className="container mx-auto px-4 py-20 md:py-32 relative">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">AI-Powered Digital Library</span>
-            </div>
-
-            {/* Heading */}
-            <h1 className="text-5xl font-bold tracking-tight">
-              Your Reading Journey,
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
-                Reimagined with AI
-              </span>
-            </h1>
-
-            {/* Subheading */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover, read, and interact with books like never before. Chat with AI, get mood-based recommendations,
-              and join a community of passionate readers.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Button asChild size="lg" className="w-full sm:w-auto text-base h-12 px-8">
-                <Link href={ROUTES.signUpSimple.href}>
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-base h-12 px-8">
-                <Link href={ROUTES.books.href}>Browse Books</Link>
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-6 pt-8 border-t border-border/50">
-              <div className="text-center">
-                <div className="text-3xl font-bold">10K+</div>
-                <div className="text-sm text-muted-foreground">Books Available</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold">5K+</div>
-                <div className="text-sm text-muted-foreground">Active Readers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold">50+</div>
-                <div className="text-sm text-muted-foreground">Categories</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              Everything You Need for the Perfect Reading Experience
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Our platform combines cutting-edge AI technology with a vast library to deliver an unmatched reading experience.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-6">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20"
-              >
-                <CardContent className="p-6 lg:p-8">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg bg-gradient-to-br from-background to-muted ${feature.color}`}>
-                      <feature.icon className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
-                        {feature.title}
-                      </h3>
-                      <p className="text-muted-foreground">{feature.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Book Types Section */}
-      <section className="py-20 md:py-28 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              All Formats, One Platform
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Access books in any format you prefer, all seamlessly integrated.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-6 max-w-5xl mx-auto">
-            {bookTypes.map((type, index) => (
-              <Card
-                key={index}
-                className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-              >
-                <CardContent className="p-8 space-y-4">
-                  <div className="inline-flex p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <type.icon className="h-8 w-8 text-primary" />
-                  </div>
-                  <div className="text-3xl font-bold">{type.count}</div>
-                  <h3 className="text-xl font-semibold">{type.title}</h3>
-                  <p className="text-muted-foreground">{type.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Books Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-12 max-w-7xl mx-auto">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">Featured Books</h2>
-              <p className="text-muted-foreground">Check out our latest additions</p>
-            </div>
-            <Button asChild variant="outline" className="hidden sm:flex">
-              <Link href={ROUTES.books.href}>
-                View All Books
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="max-w-7xl mx-auto">
-            {featuredBooks.length > 0 ? (
-              <BookGrid
-                books={featuredBooks}
-                viewMode="grid"
-                viewMoreHref={(book) => `/books/${book.id}`}
-                showTypeBadge={true}
-                showPremiumBadge={true}
-                showCategories={true}
-                showReaderCount={true}
-                showAddToBookshelf={true}
-                showUploader={true}
-                showLockOverlay={true}
-                coverHeight="tall"
-                showProgressActions={false}
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <BookCardSkeleton key={i} viewMode="grid" />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-8 text-center sm:hidden">
-            <Button asChild variant="outline" className="w-full sm:w-auto">
-              <Link href={ROUTES.books.href}>
-                View All Books
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-br from-primary/5 via-purple-500/5 to-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <h2 className="text-3xl font-bold">
-                  Why Choose Our Platform?
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Experience the future of digital reading with a platform designed for modern book lovers.
-                </p>
-
-                <div className="space-y-4">
-                  {benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="mt-0.5 flex-shrink-0">
-                        <Check className="h-5 w-5 text-primary" />
-                      </div>
-                      <span className="text-muted-foreground">{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-4">
-                  <Button asChild size="lg" className="group">
-                    <Link href={ROUTES.signUpSimple.href}>
-                      Start Your Journey
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
-                </div>
+        <div className="max-w-7xl mx-auto relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="inline-block">
+                <span className="text-xs font-black tracking-[0.2em] text-rose-600 uppercase bg-gradient-to-r from-rose-50 to-orange-50 px-4 py-2 rounded-full border-2 border-rose-100">
+                  Your Digital Library
+                </span>
               </div>
 
-              <div className="relative">
-                <Card className="shadow-2xl border-2">
-                  <CardContent className="p-8 space-y-6">
-                    <div className="text-center space-y-2">
-                      <div className="inline-flex items-center justify-center p-3 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white mb-4">
-                        <Zap className="h-8 w-8" />
-                      </div>
-                      <h3 className="text-xl font-bold">Join For Free Today</h3>
-                      <p className="text-muted-foreground">
-                        Get instant access to thousands of books and start your reading adventure
-                      </p>
-                    </div>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-slate-900">
+                Great stories
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500">belong to</span>
+                <br />
+                everyone
+              </h1>
 
-                    <div className="space-y-3 pt-4 border-t">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Free Books</span>
-                        <span className="font-semibold">Unlimited Access</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">AI Chat</span>
-                        <span className="font-semibold">1000 messages/mo</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Quizzes</span>
-                        <span className="font-semibold">Unlimited</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Reading Tracking</span>
-                        <span className="font-semibold">Full Features</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Decorative elements */}
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-2xl" />
-                <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-2xl" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto bg-gradient-to-br from-primary to-purple-600 text-white border-0 shadow-2xl">
-            <CardContent className="p-12 md:p-16 text-center space-y-6">
-              <h2 className="text-3xl font-bold">
-                Ready to Transform Your Reading Experience?
-              </h2>
-              <p className="text-lg text-white/90 max-w-2xl mx-auto">
-                Join thousands of readers who are already enjoying the future of digital libraries.
-                Sign up now and get started for free.
+              <p className="text-lg sm:text-xl text-slate-600 max-w-lg leading-relaxed font-medium">
+                Discover thousands of books. Connect with fellow readers. Experience AI-powered reading assistance.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <Button
-                  asChild
-                  size="lg"
-                  variant="secondary"
-                  className="w-full sm:w-auto text-base h-12 px-8"
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link
+                  href="/books"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white px-8 py-4 rounded-2xl hover:from-rose-600 hover:to-orange-600 transition-all shadow-xl hover:shadow-2xl hover:shadow-rose-500/30 hover:scale-105 font-bold text-lg"
                 >
-                  <Link href={ROUTES.signUpSimple.href}>
-                    Create Free Account
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-base h-12 px-8 bg-transparent text-white border-white/30 hover:bg-white/10 hover:text-white"
+                  Explore Collection
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="inline-flex items-center justify-center border-2 border-slate-200 text-slate-800 px-8 py-4 rounded-2xl hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-semibold"
                 >
-                  <Link href={ROUTES.signIn.href}>Sign In</Link>
-                </Button>
+                  Start Reading
+                </Link>
               </div>
 
-              <div className="flex items-center justify-center gap-4 pt-4 text-sm text-white/80">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4" />
-                  <span>No credit card required</span>
+              {!loading && data && (
+                <div className="grid grid-cols-3 gap-8 pt-8 border-t border-slate-200/60">
+                  <div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">
+                      {data.statistics.totalBooks.toLocaleString()}
+                    </div>
+                    <div className="text-sm font-semibold text-slate-600 mt-1">Books</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">
+                      {data.statistics.activeReaders.toLocaleString()}
+                    </div>
+                    <div className="text-sm font-semibold text-slate-600 mt-1">Readers</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-slate-900 tracking-tight">
+                      {data.statistics.totalCategories}
+                    </div>
+                    <div className="text-sm font-semibold text-slate-600 mt-1">Categories</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4" />
-                  <span>Free forever plan</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4" />
-                  <span>Cancel anytime</span>
+              )}
+            </div>
+
+            <div className="relative">
+              <div className="aspect-[4/5] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-50 rounded-[2rem] overflow-hidden border-8 border-white shadow-2xl relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-rose-100/50 via-orange-100/50 to-amber-100/50 flex items-center justify-center">
+                  <div className="text-center">
+                    <BookOpen className="h-32 w-32 text-rose-400/30 mx-auto" strokeWidth={1} />
+                    <p className="text-slate-500 text-sm font-medium mt-4">Your Reading Awaits</p>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gradient-to-br from-rose-500 to-orange-500 rounded-[2rem] flex items-center justify-center p-6 shadow-2xl shadow-rose-500/30">
+                <div className="text-center">
+                  <div className="text-4xl font-black text-white leading-none tracking-tight">
+                    {!loading && data && data.statistics.totalAuthors.toLocaleString()}
+                  </div>
+                  <div className="text-sm font-semibold text-rose-100 mt-2">Authors</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Books */}
+      {!loading && data && data.featuredBooks.length > 0 && (
+        <section id="featured" className="py-20 px-4 sm:px-6 lg:px-8 bg-white relative">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <span className="text-xs font-black tracking-[0.2em] text-rose-600 uppercase">Curated</span>
+                <h2 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">Featured Books</h2>
+              </div>
+              <Link href="/books" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors group">
+                View All
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {data.featuredBooks.slice(0, 6).map((book) => (
+                <Link
+                  key={book.id}
+                  href={`/books/${book.id}`}
+                  className="group"
+                >
+                  <div className="aspect-[2/3] bg-gradient-to-br from-slate-100 to-slate-200 mb-4 overflow-hidden border border-slate-200 rounded-2xl shadow-lg group-hover:shadow-2xl group-hover:shadow-rose-500/15 transition-all duration-300">
+                    {book.image || book.directImageUrl ? (
+                      <Image
+                        src={getImageUrl(book.image, book.directImageUrl)}
+                        alt={book.name}
+                        width={400}
+                        height={600}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-100 to-orange-100">
+                        <BookOpen className="h-16 w-16 text-rose-300" strokeWidth={1} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-black text-rose-600 uppercase tracking-wider">
+                      {book.authors.map(a => a.name).join(', ')}
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
+                      {book.name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                        <span className="text-sm font-semibold text-slate-700">{book.readersCount}</span>
+                      </div>
+                      <span className="text-sm font-medium text-slate-500">readers</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center sm:hidden">
+              <Link
+                href="/books"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-rose-600"
+              >
+                View All Books
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Categories */}
+      {!loading && data && data.popularCategories.length > 0 && (
+        <section id="categories" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-rose-600 via-orange-600 to-amber-500 relative overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+          </div>
+
+          <div className="max-w-7xl mx-auto relative">
+            <div className="text-center mb-12">
+              <span className="text-xs font-black tracking-[0.2em] text-rose-100 uppercase">Browse</span>
+              <h2 className="text-4xl font-black text-white mt-2 tracking-tight">Categories</h2>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {data.popularCategories.slice(0, 8).map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/books?category=${category.id}`}
+                  className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all p-6 border border-white/20 hover:border-white/30 rounded-2xl"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-rose-100 transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm font-medium text-rose-100">
+                        {category.bookCount} books
+                      </p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-rose-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* New Arrivals */}
+      {!loading && data && data.recentBooks.length > 0 && (
+        <section id="new" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-rose-50/40 relative">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <span className="text-xs font-black tracking-[0.2em] text-rose-600 uppercase">Fresh</span>
+                <h2 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">New Arrivals</h2>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {data.recentBooks.map((book) => (
+                <Link
+                  key={book.id}
+                  href={`/books/${book.id}`}
+                  className="group"
+                >
+                  <div className="aspect-[2/3] bg-gradient-to-br from-slate-200 to-slate-300 mb-4 overflow-hidden border border-slate-300 rounded-xl shadow-md group-hover:shadow-xl group-hover:shadow-rose-500/15 transition-all duration-300">
+                    {book.image || book.directImageUrl ? (
+                      <Image
+                        src={getImageUrl(book.image, book.directImageUrl)}
+                        alt={book.name}
+                        width={300}
+                        height={450}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-200 to-orange-200">
+                        <BookOpen className="h-12 w-12 text-rose-400" strokeWidth={1} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
+                      {book.name}
+                    </h3>
+                    <p className="text-sm font-medium text-slate-600">
+                      {book.authors.map(a => a.name).join(', ')}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section */}
+      <section className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-rose-600 via-orange-600 to-amber-500 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/10 rounded-full blur-3xl" />
+
+        <div className="max-w-4xl mx-auto text-center relative">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[0.95] tracking-tight mb-6">
+            Start your reading
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-200 to-amber-200">journey today</span>
+          </h2>
+          <p className="text-lg text-rose-50/90 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
+            Join thousands of readers discovering their next favorite book on Book Heaven
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center justify-center gap-2 bg-white text-rose-600 px-10 py-4 rounded-2xl hover:bg-orange-50 transition-all shadow-2xl hover:shadow-3xl hover:shadow-rose-900/50 hover:scale-105 font-bold text-lg"
+            >
+              Get Started Free
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link
+              href="/books"
+              className="inline-flex items-center justify-center border-2 border-white/30 text-white px-10 py-4 rounded-2xl hover:bg-white/10 hover:border-white/50 transition-all font-semibold text-lg backdrop-blur-sm"
+            >
+              Browse Books
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-muted/30 border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-6 mb-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-primary" />
-                <span className="font-bold text-lg">Book Heaven</span>
+      <footer className="bg-gradient-to-br from-slate-900 via-rose-950 to-orange-950 text-slate-100 py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <BookOpen className="h-5 w-5 text-white" strokeWidth={2} />
+                </div>
+                <span className="text-lg font-black">Book Heaven</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                AI-powered digital library for modern readers.
+              <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                Your personal library, reimagined for the digital age
               </p>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Explore</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href={ROUTES.books.href} className="hover:text-foreground transition-colors">Books</Link></li>
-                <li><Link href={ROUTES.categories.href} className="hover:text-foreground transition-colors">Categories</Link></li>
-                <li><Link href={ROUTES.authors.href} className="hover:text-foreground transition-colors">Authors</Link></li>
+              <h3 className="font-bold mb-4 text-white text-sm tracking-wide uppercase">Discover</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/books" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Books</Link></li>
+                <li><Link href="/marketplace" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Marketplace</Link></li>
+                <li><Link href="/blog" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Blog</Link></li>
+                <li><Link href="/quiz" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Quiz</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Community</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href={ROUTES.quiz.href} className="hover:text-foreground transition-colors">Quizzes</Link></li>
-                <li><Link href={ROUTES.library.href} className="hover:text-foreground transition-colors">Library</Link></li>
-                <li><Link href={ROUTES.premium.href} className="hover:text-foreground transition-colors">Premium</Link></li>
+              <h3 className="font-bold mb-4 text-white text-sm tracking-wide uppercase">Support</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/help-center" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Help Center</Link></li>
+                <li><Link href="/contact" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Contact</Link></li>
+                <li><Link href="/pricing" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Pricing</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Account</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href={ROUTES.signIn.href} className="hover:text-foreground transition-colors">Sign In</Link></li>
-                <li><Link href={ROUTES.signUp.href} className="hover:text-foreground transition-colors">Sign Up</Link></li>
-                <li><Link href={ROUTES.settings.href} className="hover:text-foreground transition-colors">Settings</Link></li>
+              <h3 className="font-bold mb-4 text-white text-sm tracking-wide uppercase">Legal</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/privacy" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Book Heaven. All rights reserved.</p>
+          <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm text-slate-500">
+            <p className="font-medium">© 2025 Book Heaven. All rights reserved.</p>
           </div>
         </div>
       </footer>
