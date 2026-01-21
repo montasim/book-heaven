@@ -681,7 +681,7 @@ function BooksPageContent({
                       showPremiumBadge={true}
                       showCategories={true}
                       showReaderCount={true}
-                      showAddToBookshelf={true}
+                      showAddToBookshelf={!!user}
                       showUploader={true}
                       showLockOverlay={true}
                       coverHeight="tall"
@@ -715,7 +715,7 @@ function BooksPageContent({
                     showPremiumBadge={true}
                     showCategories={true}
                     showReaderCount={true}
-                    showAddToBookshelf={true}
+                    showAddToBookshelf={!!user}
                     showUploader={true}
                     showLockOverlay={true}
                     coverHeight="tall"
@@ -848,7 +848,7 @@ function BooksPageContent({
                           showPremiumBadge={true}
                           showCategories={true}
                           showReaderCount={true}
-                          showAddToBookshelf={true}
+                          showAddToBookshelf={!!user}
                           showUploader={true}
                           showLockOverlay={true}
                           showProgressActions={true}
@@ -879,7 +879,7 @@ function BooksPageContent({
                           showPremiumBadge={true}
                           showCategories={true}
                           showReaderCount={true}
-                          showAddToBookshelf={true}
+                          showAddToBookshelf={!!user}
                           showUploader={true}
                           showLockOverlay={true}
                           coverHeight="tall"
