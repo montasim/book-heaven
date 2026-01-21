@@ -18,13 +18,13 @@ export default function SignIn() {
         <Card className='m-4 p-4'>
             <div className='flex flex-col space-y-2 text-left mb-4'>
                 <h1 className='text-xl font-semibold tracking-tight'>
-                    {authStep === 'email' ? 'Login' : 'Welcome back'}
+                    {authStep === 'email' ? 'Sign in or create an account' : 'Welcome back'}
                 </h1>
                 <p className='text-sm text-muted-foreground'>
                     {authStep === 'email' ? (
                         <>
                             Enter your email to continue <br />
-                            We&apos;ll guide you through the sign-in process
+                            We&apos;ll check if you have an account or help you create one
                         </>
                     ) : (
                         <>

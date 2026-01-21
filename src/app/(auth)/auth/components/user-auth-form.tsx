@@ -91,14 +91,14 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
         setStep('password')
         onStepChange?.('password', data.email)
         toast({
-          title: 'Email found',
-          description: 'Please enter your password',
+          title: 'Account found',
+          description: 'Please enter your password to sign in',
         })
       } else {
         // Email doesn't exist - redirect to sign-up with pre-filled email
         toast({
-          title: 'Email not found',
-          description: 'Redirecting to sign-up...',
+          title: 'New account',
+          description: 'No account found. Redirecting to create your account...',
         })
         // Redirect to sign-up with email as query parameter
         router.push(`/sign-up?email=${encodeURIComponent(data.email)}`)

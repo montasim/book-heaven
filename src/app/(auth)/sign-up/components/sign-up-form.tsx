@@ -147,6 +147,15 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             title: 'Invitation Expired',
             description: 'This invitation link has already been used or expired.',
           })
+        } else if (result.error?.toLowerCase().includes('already exists')) {
+          // Redirect to sign-in page if email already exists
+          toast({
+            title: 'Account Already Exists',
+            description: 'An account with this email already exists. Redirecting you to sign in...',
+          })
+          setTimeout(() => {
+            router.push(ROUTES.signIn.href)
+          }, 1500)
         } else {
           toast({
             variant: 'destructive',
