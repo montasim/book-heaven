@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Check, X, Mail, Trash2 } from 'lucide-react'
+import { AvatarUpload } from './avatar-upload'
 
 interface ProfileFormClientProps {
   defaultValues: Partial<ProfileFormValues>
@@ -250,6 +251,10 @@ export function ProfileFormClient({ defaultValues }: ProfileFormClientProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+        <div className="pb-6 border-b">
+          <AvatarUpload />
+        </div>
+
         <FormField
           control={form.control}
           name='username'

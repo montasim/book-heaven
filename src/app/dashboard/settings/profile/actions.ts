@@ -5,6 +5,10 @@ import { profileFormSchema, type ProfileFormValues } from './schema'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth/session'
 import { createHash } from 'crypto'
+import { uploadFile, deleteFile } from '@/lib/google-drive'
+import { config } from '@/config'
+import { extractGoogleDriveFileId } from '@/lib/google-drive-utils'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 type GetProfileResult =
   | { status: 'success', data: ProfileFormValues }
@@ -268,5 +272,92 @@ export async function verifyEmailChangeOtp(newEmail: string, code: string): Prom
   } catch (error) {
     console.error('verifyEmailOtp error:', error)
     return { success: false, message: 'Failed to verify code' }
+  }
+}
+
+// Upload avatar
+type UploadAvatarResult =
+  | { success: true, message: string, avatarUrl: string, fileId: string }
+  | { success: false, message: string }
+
+export async function uploadAvatar(formData: FormData): Promise<UploadAvatarResult> {
+  try {
+    const session = await requireAuth()
+    if (!session) return { success: false, message: 'Not authenticated' }
+
+    const file = formData.get('avatar') as File
+
+    if (!file) {
+      return { success: false, message: 'No file provided' }
+    }
+
+    // Validate file type
+    if (file.type !== 'image/png') {
+      return { success: false, message: 'Only PNG format is allowed' }
+    }
+
+    // Validate file size (1MB = 1024 * 1024 bytes)
+    const maxSize = 1024 * 1024 // 1MB
+    if (file.size > maxSize) {
+      return { success: false, message: 'File size must be under 1MB' }
+    }
+
+    // Get current user avatar to delete old one
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { avatar: true, directAvatarUrl: true }
+    })
+
+    // Upload to Google Drive
+    const { previewUrl, directUrl, fileId } = await uploadFile(file, config.google.driveFolderId)
+
+    // Delete old avatar from Google Drive if it exists
+    if (currentUser?.avatar) {
+      try {
+        await deleteFile(currentUser.avatar)
+      } catch (deleteError) {
+        console.warn('Failed to delete old avatar from Google Drive:', deleteError)
+        // Continue even if deletion fails
+      }
+    }
+
+    // Update user avatar in database
+    await prisma.user.update({
+      where: { id: session.userId },
+      data: {
+        avatar: previewUrl,
+        directAvatarUrl: directUrl
+      }
+    })
+
+    revalidatePath('/dashboard/settings/profile')
+    revalidatePath('/dashboard/users')
+
+    return { success: true, message: 'Avatar uploaded successfully', avatarUrl: directUrl, fileId }
+  } catch (error) {
+    console.error('uploadAvatar error:', error)
+    return { success: false, message: 'Failed to upload avatar' }
+  }
+}
+
+// Get avatar URL
+export async function getAvatarUrl(): Promise<{ avatarUrl: string | null }> {
+  try {
+    const session = await requireAuth()
+    if (!session) return { avatarUrl: null }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { avatar: true, directAvatarUrl: true }
+    })
+
+    // Prioritize avatar field (preview URL) which works with the image proxy
+    const rawAvatarUrl = user?.avatar || user?.directAvatarUrl || null
+
+    // Return proxied URL for Google Drive images, otherwise return as-is
+    return { avatarUrl: rawAvatarUrl ? (getProxiedImageUrl(rawAvatarUrl) || rawAvatarUrl) : null }
+  } catch (error) {
+    console.error('getAvatarUrl error:', error)
+    return { avatarUrl: null }
   }
 }

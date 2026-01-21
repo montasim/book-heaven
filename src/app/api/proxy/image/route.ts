@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { googleDriveUrlSchema } from '@/lib/validation'
+import { extractGoogleDriveFileId } from '@/lib/google-drive-utils'
 
 // Map of file extensions to MIME types
 const CONTENT_TYPE_MAP: Record<string, string> = {

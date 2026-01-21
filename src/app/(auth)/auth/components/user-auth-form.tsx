@@ -182,10 +182,16 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
   async function handleSocialLogin(provider: 'google' | 'github') {
     setIsLoading(true)
     try {
+      // Get redirect and connect parameters from current URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const redirect = urlParams.get('redirect')
+      const connect = urlParams.get('connect')
+
       // Redirect to OAuth endpoint
       const response = await fetch(`/api/auth/oauth/${provider}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirect, connect }),
       })
 
       const result = await response.json()

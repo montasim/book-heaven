@@ -54,7 +54,7 @@ const createPrismaClient = () => {
         idleTimeoutMillis: 60000, // Close idle clients after 60 seconds (increased)
         connectionTimeoutMillis: 10000, // Return an error after 10 seconds if connection could not be established
         // Connection eviction - remove idle connections after timeout
-        idleInTransactionSessionTimeout: 60, // Close idle transactions after 60 seconds
+        idle_in_transaction_session_timeout: 60, // Close idle transactions after 60 seconds
     })
     const adapter = new PrismaPg(pool)
     return new PrismaClient({

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 
 import {
@@ -32,6 +32,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import {useAuth} from "@/context/auth-context";
 import { getUserInitials } from '@/lib/utils/user'
 import { ROUTES } from '@/lib/routes/client-routes'
+import { getProxiedImageUrl } from '@/lib/image-proxy'
 
 export function NavUser({
   user,
@@ -40,11 +41,19 @@ export function NavUser({
     name: string
     email: string
     avatar?: string | null
+    directAvatarUrl?: string | null
   }
 }) {
   const { isMobile } = useSidebar()
   const { logout } = useAuth()
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+
+  // Get proxied avatar URL for Google Drive images
+  // Prioritize avatar field (preview URL) which works with the image proxy
+  const avatarUrl = useMemo(() => {
+    const rawUrl = user?.avatar ?? user?.directAvatarUrl ?? undefined
+    return rawUrl ? (getProxiedImageUrl(rawUrl) || rawUrl) : undefined
+  }, [user?.avatar, user?.directAvatarUrl])
 
   const handleLogout = () => {
     setIsLogoutDialogOpen(true)
@@ -66,7 +75,7 @@ export function NavUser({
                 className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
               >
                 <Avatar className='h-8 w-8 rounded-lg'>
-                  <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
+                  <AvatarImage src={avatarUrl} alt={user.name} />
                   <AvatarFallback className='rounded-lg'>
                     {getUserInitials(user)}
                   </AvatarFallback>
@@ -89,7 +98,7 @@ export function NavUser({
               <DropdownMenuLabel className='p-0 font-normal'>
                 <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
                   <Avatar className='h-8 w-8 rounded-lg'>
-                    <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
+                    <AvatarImage src={avatarUrl} alt={user.name} />
                     <AvatarFallback className='rounded-lg'>
                       {getUserInitials(user)}
                     </AvatarFallback>

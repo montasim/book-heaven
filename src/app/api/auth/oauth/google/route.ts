@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json().catch(() => ({}))
+    const { redirect, connect } = body
+
     // Get the base URL from environment or request
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
                    request.headers.get('host') ||
@@ -16,11 +19,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate state parameter for security
+    // Generate state parameter for security with redirect info
     const state = Buffer.from(
       JSON.stringify({
         random: Math.random().toString(36).substring(7),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        redirect: redirect || null,
+        connect: connect || null
       })
     ).toString('base64')
 

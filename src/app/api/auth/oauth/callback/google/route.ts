@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const code = searchParams.get('code')
+    const state = searchParams.get('state')
     const error = searchParams.get('error')
 
     if (error) {
@@ -43,6 +44,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(
         new URL('/auth/sign-in?error=no_code', request.url)
       )
+    }
+
+    // Parse state parameter to get redirect info
+    let stateData: { redirect?: string | null; connect?: string | null } | null = null
+    try {
+      if (state) {
+        stateData = JSON.parse(Buffer.from(state, 'base64').toString())
+      }
+    } catch (e) {
+      console.error('Failed to parse state:', e)
+    }
+
+    // Helper function to determine redirect URL
+    const getRedirectUrl = (userRole: string) => {
+      // If connecting an account from settings, redirect back with connected parameter
+      if (stateData?.connect && stateData?.redirect) {
+        return new URL(`${stateData.redirect}?connected=${stateData.connect}`, request.url)
+      }
+      // If a redirect URL was provided, use it
+      if (stateData?.redirect) {
+        return new URL(stateData.redirect, request.url)
+      }
+      // Default redirect based on user role
+      return userRole === 'USER' ? new URL('/books', request.url) : new URL('/dashboard', request.url)
     }
 
     // Exchange code for access token
@@ -95,14 +120,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if social account exists
+    // Check if social account exists by provider's unique ID
     const existingSocial = await prisma.socialAccount.findUnique({
-      where: {
-        provider_providerAccountId: {
-          provider: 'GOOGLE',
-          providerAccountId: googleId
-        }
-      },
+      where: { providerAccountId: googleId },
       include: { user: true }
     })
 
@@ -149,10 +169,7 @@ export async function GET(request: NextRequest) {
       })
 
       // Set cookies
-      const response = NextResponse.redirect(
-        user.role === 'USER' ? new URL('/books', request.url) :
-                               new URL('/dashboard', request.url)
-      )
+      const response = NextResponse.redirect(getRedirectUrl(user.role))
 
       response.cookies.set('accessToken', accessTokenJwt, {
         httpOnly: true,
@@ -216,10 +233,7 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      const response = NextResponse.redirect(
-        existingUser.role === 'USER' ? new URL('/books', request.url) :
-                                        new URL('/dashboard', request.url)
-      )
+      const response = NextResponse.redirect(getRedirectUrl(existingUser.role))
 
       response.cookies.set('accessToken', accessTokenJwt, {
         httpOnly: true,
@@ -289,7 +303,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const response = NextResponse.redirect(new URL('/books', request.url))
+    const response = NextResponse.redirect(getRedirectUrl(newUser.role))
 
     response.cookies.set('accessToken', accessTokenJwt, {
       httpOnly: true,
