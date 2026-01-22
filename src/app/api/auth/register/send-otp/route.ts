@@ -32,6 +32,7 @@ import {
 } from '@/lib/auth/request-utils'
 import { AuthIntent, SendOtpResponse } from '@/lib/auth/types'
 import { findValidInviteByToken, markInviteAsUsed, findInviteByToken } from '@/lib/auth/repositories/invite.repository'
+import { validateTurnstileFromRequest } from '@/lib/auth/turnstile'
 
 const OTP_EXPIRY_MINUTES = 10
 
@@ -48,6 +49,13 @@ export async function POST(request: NextRequest) {
 
         const { email: rawEmail, inviteToken } = body
 
+        // Verify Turnstile token
+        const clientIp = getClientIp(request)
+        const turnstileError = await validateTurnstileFromRequest(body, clientIp)
+        if (turnstileError) {
+            return errorResponse(turnstileError, 400)
+        }
+
         // Sanitize and validate email
         const email = sanitizeEmail(rawEmail)
         if (!validateEmail(email)) {
@@ -55,7 +63,6 @@ export async function POST(request: NextRequest) {
         }
 
         // Rate limiting
-        const clientIp = getClientIp(request)
         try {
             await checkRateLimit(email, clientIp, RateLimitAction.SEND_OTP)
         } catch (error: any) {

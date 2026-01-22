@@ -36,6 +36,7 @@ import { LoginResponse } from '@/lib/auth/types'
 import { logActivity } from '@/lib/activity/logger'
 import { ActivityAction, ActivityResourceType } from '@prisma/client'
 import { sendLoginNotificationEmail } from '@/lib/auth/email'
+import { validateTurnstileFromRequest } from '@/lib/auth/turnstile'
 
 export async function POST(request: NextRequest) {
     try {
@@ -50,6 +51,13 @@ export async function POST(request: NextRequest) {
 
         const { email: rawEmail, password } = body
 
+        // Verify Turnstile token
+        const clientIp = getClientIp(request)
+        const turnstileError = await validateTurnstileFromRequest(body, clientIp)
+        if (turnstileError) {
+            return errorResponse(turnstileError, 400)
+        }
+
         // Sanitize and validate email
         const email = sanitizeEmail(rawEmail)
         if (!validateEmail(email)) {
@@ -57,7 +65,6 @@ export async function POST(request: NextRequest) {
         }
 
         // Rate limiting
-        const clientIp = getClientIp(request)
         try {
             await checkRateLimit(email, clientIp, RateLimitAction.LOGIN)
         } catch (error: any) {

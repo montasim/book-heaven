@@ -1,6 +1,6 @@
 'use client'
 
-import { HTMLAttributes, useState, Suspense } from 'react'
+import { HTMLAttributes, useState, Suspense, useRef } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { OtpInput, ResendButton } from '@/components/ui/otp-input'
 import { Card, CardContent } from '@/components/ui/card'
+import { Turnstile } from '@/components/ui/turnstile'
 import { Loader2, Mail } from 'lucide-react'
 
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -91,9 +92,11 @@ const Header = () => (
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const turnstileRef = useRef<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState<'email' | 'otp' | 'details'>('email')
   const [email, setEmail] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [otpExpiresAt, setOtpExpiresAt] = useState<string>('')
   const [showResend, setShowResend] = useState(false)
   const [resendSuccessful, setResendSuccessful] = useState(false)
@@ -134,7 +137,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       const response = await fetch('/api/auth/register/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, inviteToken }),
+        body: JSON.stringify({ ...data, inviteToken, turnstileToken }),
       })
 
       const result = await response.json()
@@ -451,7 +454,29 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                   </FormItem>
                 )}
               />
-              <Button className='mt-2' disabled={isLoading}>
+              <div className='flex justify-start'>
+                <Turnstile
+                  ref={turnstileRef}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => {
+                    setTurnstileToken(null)
+                    toast({
+                      variant: 'destructive',
+                      title: 'CAPTCHA failed',
+                      description: 'Please complete the CAPTCHA verification',
+                    })
+                  }}
+                  onExpire={() => {
+                    setTurnstileToken(null)
+                    toast({
+                      variant: 'destructive',
+                      title: 'CAPTCHA expired',
+                      description: 'Please complete the CAPTCHA verification again',
+                    })
+                  }}
+                />
+              </div>
+              <Button className='mt-2' disabled={isLoading || !turnstileToken}>
                 {isLoading ? 'Sending...' : 'Continue'}
               </Button>
             </div>

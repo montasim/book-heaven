@@ -1,6 +1,6 @@
 'use client'
 
-import { HTMLAttributes, useState } from 'react'
+import { HTMLAttributes, useState, useRef } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { Turnstile } from '@/components/ui/turnstile'
 
 import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
@@ -47,9 +48,11 @@ const passwordSchema = z.object({
 export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
   const router = useRouter()
   const { refreshUser } = useAuth()
+  const turnstileRef = useRef<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState<'email' | 'password'>('email')
   const [email, setEmail] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
 
   const emailForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -128,6 +131,7 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
         body: JSON.stringify({
           email,
           password: data.password,
+          turnstileToken,
         }),
       })
 
@@ -313,7 +317,29 @@ export function UserAuthForm({ className, onStepChange }: UserAuthFormProps) {
                 </FormItem>
               )}
             />
-            <Button className='mt-2' disabled={isLoading}>
+            <div className='flex justify-start'>
+              <Turnstile
+                ref={turnstileRef}
+                onSuccess={(token) => setTurnstileToken(token)}
+                onError={() => {
+                  setTurnstileToken(null)
+                  toast({
+                    variant: 'destructive',
+                    title: 'CAPTCHA failed',
+                    description: 'Please complete the CAPTCHA verification',
+                  })
+                }}
+                onExpire={() => {
+                  setTurnstileToken(null)
+                  toast({
+                    variant: 'destructive',
+                    title: 'CAPTCHA expired',
+                    description: 'Please complete the CAPTCHA verification again',
+                  })
+                }}
+              />
+            </div>
+            <Button className='mt-2' disabled={isLoading || !turnstileToken}>
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             <Button
