@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
-import bcrypt from 'bcrypt'
+import { createLoginSession } from '@/lib/auth/session'
 
 const ACCESS_TOKEN_EXPIRY = '15m'
 const REFRESH_TOKEN_EXPIRY = '7d'
@@ -168,6 +168,18 @@ export async function GET(request: NextRequest) {
         }
       })
 
+      // Create login session for the app
+      await createLoginSession(
+        user.id,
+        user.email,
+        user.name,
+        user.role,
+        user.firstName || '',
+        user.lastName,
+        user.isPremium || false,
+        user.avatar
+      )
+
       // Set cookies
       const response = NextResponse.redirect(getRedirectUrl(user.role))
 
@@ -232,6 +244,18 @@ export async function GET(request: NextRequest) {
           userAgent: request.headers.get('user-agent') || undefined
         }
       })
+
+      // Create login session for the app
+      await createLoginSession(
+        existingUser.id,
+        existingUser.email,
+        existingUser.name,
+        existingUser.role,
+        existingUser.firstName || '',
+        existingUser.lastName,
+        existingUser.isPremium || false,
+        existingUser.avatar
+      )
 
       const response = NextResponse.redirect(getRedirectUrl(existingUser.role))
 
@@ -302,6 +326,18 @@ export async function GET(request: NextRequest) {
         userAgent: request.headers.get('user-agent') || undefined
       }
     })
+
+    // Create login session for the app
+    await createLoginSession(
+      newUser.id,
+      newUser.email,
+      newUser.name,
+      newUser.role,
+      newUser.firstName || '',
+      newUser.lastName,
+      newUser.isPremium || false,
+      newUser.avatar
+    )
 
     const response = NextResponse.redirect(getRedirectUrl(newUser.role))
 
