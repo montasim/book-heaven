@@ -65,31 +65,31 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/20 to-blue-50/30">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-rose-100/50 shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-violet-100/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-rose-500/30 group-hover:scale-105 transition-all duration-300">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/30 group-hover:scale-105 transition-all duration-300">
                 <BookOpen className="h-6 w-6 text-white" strokeWidth={2.5} />
               </div>
-              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-rose-600 to-orange-600 bg-clip-text text-transparent">Book Heaven</span>
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">Book Heaven</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#featured" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">Featured</a>
-              <a href="#categories" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">Categories</a>
-              <a href="#new" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">New Arrivals</a>
+              <a href="#featured" className="text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors">Featured</a>
+              <a href="#categories" className="text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors">Categories</a>
+              <a href="#new" className="text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors">New Arrivals</a>
             </div>
 
             <div className="hidden md:flex items-center gap-4">
-              <Link href="/auth/sign-in" className="text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors">
+              <Link href="/auth/sign-in" className="text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors">
                 Sign In
               </Link>
               <Link
                 href="/sign-up"
-                className="bg-gradient-to-r from-rose-500 to-orange-500 text-white px-5 py-2.5 rounded-2xl hover:from-rose-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg hover:shadow-rose-500/30 hover:scale-105 text-sm font-semibold"
+                className="bg-gradient-to-r from-blue-500 to-violet-500 text-white px-5 py-2.5 rounded-2xl hover:from-blue-600 hover:to-violet-600 transition-all shadow-md hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 text-sm font-semibold"
               >
                 Join
               </Link>
@@ -105,14 +105,14 @@ export default function LandingPage() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-rose-100/50 bg-white/95 backdrop-blur-xl">
+          <div className="md:hidden border-t border-violet-100/50 bg-white/95 backdrop-blur-xl">
             <div className="px-4 py-4 space-y-3">
               <a href="#featured" className="block text-sm font-semibold text-slate-900">Featured</a>
               <a href="#categories" className="block text-sm font-semibold text-slate-900">Categories</a>
               <a href="#new" className="block text-sm font-semibold text-slate-900">New Arrivals</a>
-              <div className="pt-3 border-t border-rose-100/50 space-y-3">
+              <div className="pt-3 border-t border-violet-100/50 space-y-3">
                 <Link href="/auth/sign-in" className="block text-sm font-semibold text-slate-900">Sign In</Link>
-                <Link href="/sign-up" className="block bg-gradient-to-r from-rose-500 to-orange-500 text-white px-5 py-2.5 rounded-2xl text-center text-sm font-semibold">Join</Link>
+                <Link href="/sign-up" className="block bg-gradient-to-r from-blue-500 to-violet-500 text-white px-5 py-2.5 rounded-2xl text-center text-sm font-semibold">Join</Link>
               </div>
             </div>
           </div>
@@ -122,14 +122,14 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-rose-400/30 to-orange-400/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-orange-400/30 to-amber-400/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/30 to-violet-400/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-violet-400/30 to-pink-400/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
         <div className="max-w-7xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="inline-block">
-                <span className="text-xs font-black tracking-[0.2em] text-rose-600 uppercase bg-gradient-to-r from-rose-50 to-orange-50 px-4 py-2 rounded-full border-2 border-rose-100">
+                <span className="text-xs font-black tracking-[0.2em] text-blue-600 uppercase bg-gradient-to-r from-blue-50 to-violet-50 px-4 py-2 rounded-full border-2 border-blue-100">
                   Your Digital Library
                 </span>
               </div>
@@ -137,7 +137,7 @@ export default function LandingPage() {
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-slate-900">
                 Great stories
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500">belong to</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-violet-500 to-pink-500">belong to</span>
                 <br />
                 everyone
               </h1>
@@ -149,14 +149,14 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link
                   href="/books"
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white px-8 py-4 rounded-2xl hover:from-rose-600 hover:to-orange-600 transition-all shadow-xl hover:shadow-2xl hover:shadow-rose-500/30 hover:scale-105 font-bold text-lg"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-violet-500 text-white px-8 py-4 rounded-2xl hover:from-blue-600 hover:to-violet-600 transition-all shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-105 font-bold text-lg"
                 >
                   Explore Collection
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="inline-flex items-center justify-center border-2 border-slate-200 text-slate-800 px-8 py-4 rounded-2xl hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-semibold"
+                  className="inline-flex items-center justify-center border-2 border-slate-200 text-slate-800 px-8 py-4 rounded-2xl hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all font-semibold"
                 >
                   Start Reading
                 </Link>
@@ -187,20 +187,20 @@ export default function LandingPage() {
             </div>
 
             <div className="relative">
-              <div className="aspect-[4/5] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-50 rounded-[2rem] overflow-hidden border-8 border-white shadow-2xl relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-rose-100/50 via-orange-100/50 to-amber-100/50 flex items-center justify-center">
+              <div className="aspect-[4/5] bg-gradient-to-br from-blue-100 via-violet-50 to-pink-50 rounded-[2rem] overflow-hidden border-8 border-white shadow-2xl relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-violet-100/50 to-pink-100/50 flex items-center justify-center">
                   <div className="text-center">
-                    <BookOpen className="h-32 w-32 text-rose-400/30 mx-auto" strokeWidth={1} />
+                    <BookOpen className="h-32 w-32 text-blue-400/30 mx-auto" strokeWidth={1} />
                     <p className="text-slate-500 text-sm font-medium mt-4">Your Reading Awaits</p>
                   </div>
                 </div>
               </div>
-              <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gradient-to-br from-rose-500 to-orange-500 rounded-[2rem] flex items-center justify-center p-6 shadow-2xl shadow-rose-500/30">
+              <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gradient-to-br from-blue-500 to-violet-500 rounded-[2rem] flex items-center justify-center p-6 shadow-2xl shadow-blue-500/30">
                 <div className="text-center">
                   <div className="text-4xl font-black text-white leading-none tracking-tight">
                     {!loading && data && data.statistics.totalAuthors.toLocaleString()}
                   </div>
-                  <div className="text-sm font-semibold text-rose-100 mt-2">Authors</div>
+                  <div className="text-sm font-semibold text-blue-100 mt-2">Authors</div>
                 </div>
               </div>
             </div>
@@ -214,10 +214,10 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <span className="text-xs font-black tracking-[0.2em] text-rose-600 uppercase">Curated</span>
+                <span className="text-xs font-black tracking-[0.2em] text-blue-600 uppercase">Curated</span>
                 <h2 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">Featured Books</h2>
               </div>
-              <Link href="/books" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-rose-600 transition-colors group">
+              <Link href="/books" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors group">
                 View All
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -230,7 +230,7 @@ export default function LandingPage() {
                   href={`/books/${book.id}`}
                   className="group"
                 >
-                  <div className="aspect-[2/3] bg-gradient-to-br from-slate-100 to-slate-200 mb-4 overflow-hidden border border-slate-200 rounded-2xl shadow-lg group-hover:shadow-2xl group-hover:shadow-rose-500/15 transition-all duration-300">
+                  <div className="aspect-[2/3] bg-gradient-to-br from-slate-100 to-slate-200 mb-4 overflow-hidden border border-slate-200 rounded-2xl shadow-lg group-hover:shadow-2xl group-hover:shadow-blue-500/15 transition-all duration-300">
                     {book.image || book.directImageUrl ? (
                       <Image
                         src={getImageUrl(book.image, book.directImageUrl)}
@@ -240,16 +240,16 @@ export default function LandingPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-100 to-orange-100">
-                        <BookOpen className="h-16 w-16 text-rose-300" strokeWidth={1} />
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-violet-100">
+                        <BookOpen className="h-16 w-16 text-blue-300" strokeWidth={1} />
                       </div>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <div className="text-xs font-black text-rose-600 uppercase tracking-wider">
+                    <div className="text-xs font-black text-blue-600 uppercase tracking-wider">
                       {book.authors.map(a => a.name).join(', ')}
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
                       {book.name}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export default function LandingPage() {
             <div className="mt-12 text-center sm:hidden">
               <Link
                 href="/books"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-rose-600"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-blue-600"
               >
                 View All Books
                 <ArrowRight className="h-4 w-4" />
@@ -279,7 +279,7 @@ export default function LandingPage() {
 
       {/* Categories */}
       {!loading && data && data.popularCategories.length > 0 && (
-        <section id="categories" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-rose-600 via-orange-600 to-amber-500 relative overflow-hidden">
+        <section id="categories" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 via-violet-600 to-pink-600 relative overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
@@ -287,7 +287,7 @@ export default function LandingPage() {
 
           <div className="max-w-7xl mx-auto relative">
             <div className="text-center mb-12">
-              <span className="text-xs font-black tracking-[0.2em] text-rose-100 uppercase">Browse</span>
+              <span className="text-xs font-black tracking-[0.2em] text-blue-100 uppercase">Browse</span>
               <h2 className="text-4xl font-black text-white mt-2 tracking-tight">Categories</h2>
             </div>
 
@@ -300,14 +300,14 @@ export default function LandingPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-rose-100 transition-colors">
+                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-100 transition-colors">
                         {category.name}
                       </h3>
-                      <p className="text-sm font-medium text-rose-100">
+                      <p className="text-sm font-medium text-blue-100">
                         {category.bookCount} books
                       </p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-rose-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="h-5 w-5 text-violet-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
                   </div>
                 </Link>
               ))}
@@ -318,11 +318,11 @@ export default function LandingPage() {
 
       {/* New Arrivals */}
       {!loading && data && data.recentBooks.length > 0 && (
-        <section id="new" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-rose-50/40 relative">
+        <section id="new" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-blue-50/40 relative">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <span className="text-xs font-black tracking-[0.2em] text-rose-600 uppercase">Fresh</span>
+                <span className="text-xs font-black tracking-[0.2em] text-blue-600 uppercase">Fresh</span>
                 <h2 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">New Arrivals</h2>
               </div>
             </div>
@@ -334,7 +334,7 @@ export default function LandingPage() {
                   href={`/books/${book.id}`}
                   className="group"
                 >
-                  <div className="aspect-[2/3] bg-gradient-to-br from-slate-200 to-slate-300 mb-4 overflow-hidden border border-slate-300 rounded-xl shadow-md group-hover:shadow-xl group-hover:shadow-rose-500/15 transition-all duration-300">
+                  <div className="aspect-[2/3] bg-gradient-to-br from-slate-200 to-slate-300 mb-4 overflow-hidden border border-slate-300 rounded-xl shadow-md group-hover:shadow-xl group-hover:shadow-blue-500/15 transition-all duration-300">
                     {book.image || book.directImageUrl ? (
                       <Image
                         src={getImageUrl(book.image, book.directImageUrl)}
@@ -344,13 +344,13 @@ export default function LandingPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-200 to-orange-200">
-                        <BookOpen className="h-12 w-12 text-rose-400" strokeWidth={1} />
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-200 to-violet-200">
+                        <BookOpen className="h-12 w-12 text-blue-400" strokeWidth={1} />
                       </div>
                     )}
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-base font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
+                    <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
                       {book.name}
                     </h3>
                     <p className="text-sm font-medium text-slate-600">
@@ -365,7 +365,7 @@ export default function LandingPage() {
       )}
 
       {/* CTA Section */}
-      <section className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-rose-600 via-orange-600 to-amber-500 relative overflow-hidden">
+      <section className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 via-violet-600 to-pink-600 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/10 rounded-full blur-3xl" />
 
@@ -373,15 +373,15 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[0.95] tracking-tight mb-6">
             Start your reading
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-200 to-amber-200">journey today</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-200 to-pink-200">journey today</span>
           </h2>
-          <p className="text-lg text-rose-50/90 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
+          <p className="text-lg text-blue-50/90 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
             Join thousands of readers discovering their next favorite book on Book Heaven
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/sign-up"
-              className="inline-flex items-center justify-center gap-2 bg-white text-rose-600 px-10 py-4 rounded-2xl hover:bg-orange-50 transition-all shadow-2xl hover:shadow-3xl hover:shadow-rose-900/50 hover:scale-105 font-bold text-lg"
+              className="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-10 py-4 rounded-2xl hover:bg-violet-50 transition-all shadow-2xl hover:shadow-3xl hover:shadow-blue-900/50 hover:scale-105 font-bold text-lg"
             >
               Get Started Free
               <ArrowRight className="h-5 w-5" />
@@ -397,12 +397,12 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-br from-slate-900 via-rose-950 to-orange-950 text-slate-100 py-16 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-gradient-to-br from-slate-900 via-blue-950 to-violet-950 text-slate-100 py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <BookOpen className="h-5 w-5 text-white" strokeWidth={2} />
                 </div>
                 <span className="text-lg font-black">Book Heaven</span>
@@ -415,27 +415,27 @@ export default function LandingPage() {
             <div>
               <h3 className="font-bold mb-4 text-white text-sm tracking-wide uppercase">Discover</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/books" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Books</Link></li>
-                <li><Link href="/marketplace" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Marketplace</Link></li>
-                <li><Link href="/blog" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Blog</Link></li>
-                <li><Link href="/quiz" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Quiz</Link></li>
+                <li><Link href="/books" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Books</Link></li>
+                <li><Link href="/marketplace" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Marketplace</Link></li>
+                <li><Link href="/blog" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Blog</Link></li>
+                <li><Link href="/quiz" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Quiz</Link></li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-bold mb-4 text-white text-sm tracking-wide uppercase">Support</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/help-center" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Help Center</Link></li>
-                <li><Link href="/contact" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Contact</Link></li>
-                <li><Link href="/pricing" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Pricing</Link></li>
+                <li><Link href="/help-center" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Help Center</Link></li>
+                <li><Link href="/contact" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Contact</Link></li>
+                <li><Link href="/pricing" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Pricing</Link></li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-bold mb-4 text-white text-sm tracking-wide uppercase">Legal</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/privacy" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-slate-400 hover:text-rose-400 transition-colors font-medium">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-slate-400 hover:text-blue-400 transition-colors font-medium">Terms of Service</Link></li>
               </ul>
             </div>
           </div>

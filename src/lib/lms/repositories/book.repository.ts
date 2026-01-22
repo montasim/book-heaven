@@ -631,8 +631,8 @@ export async function updateBook(
       return { id }
     },
     {
-      maxWait: 10000, // Increase timeout to 10 seconds
-      timeout: 10000,
+      maxWait: 30000, // Maximum time to wait for a transaction to start
+      timeout: 30000, // Maximum time for transaction to execute (30 seconds)
     }
   )
 

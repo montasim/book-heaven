@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
                 search: '**', // ✅ allow any query string
             },
         ],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'drive.google.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'photos.app.goo.gl',
+            },
+        ],
     },
     // Reduce memory usage during builds
     experimental: {
