@@ -187,18 +187,115 @@ export default function LandingPage() {
             </div>
 
             <div className="relative">
-              <div className="aspect-[4/5] bg-gradient-to-br from-blue-100 via-violet-50 to-pink-50 rounded-[2rem] overflow-hidden border-8 border-white shadow-2xl relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-violet-100/50 to-pink-100/50 flex items-center justify-center">
-                  <div className="text-center">
-                    <BookOpen className="h-32 w-32 text-blue-400/30 mx-auto" strokeWidth={1} />
-                    <p className="text-slate-500 text-sm font-medium mt-4">Your Reading Awaits</p>
+              {/* Book Stack Display */}
+              <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden">
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-violet-50 to-pink-50" />
+
+                {/* Featured Books Stack */}
+                {!loading && data && data.featuredBooks.length > 0 ? (
+                  <div className="absolute inset-0 p-8 flex items-center justify-center">
+                    {data.featuredBooks.slice(0, 4).map((book, index) => {
+                      const imageUrl = getImageUrl(book.image, book.directImageUrl)
+                      const hasImage = book.image || book.directImageUrl
+
+                      return (
+                        <div
+                          key={book.id}
+                          className="absolute transition-all duration-500 ease-out hover:z-20 group cursor-pointer"
+                          style={{
+                            transform: `
+                              translateX(${(index - 1.5) * 40}px)
+                              translateY(${Math.abs(index - 1.5) * 20}px)
+                              rotate(${(index - 1.5) * 8}deg)
+                            `,
+                            zIndex: 10 - index,
+                            filter: `
+                              brightness(${1 - index * 0.1})
+                              drop-shadow(${index * 4}px ${index * 8}px ${20 + index * 10}px rgba(0,0,0,0.15))
+                            `
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = `
+                              translateX(${(index - 1.5) * 20}px)
+                              translateY(${Math.abs(index - 1.5) * 10}px)
+                              rotate(${(index - 1.5) * 4}deg)
+                              scale(1.05)
+                            `
+                            e.currentTarget.style.filter = 'brightness(1) drop-shadow(0 20px 40px rgba(0,0,0,0.3))'
+                            e.currentTarget.style.zIndex = '30'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = `
+                              translateX(${(index - 1.5) * 40}px)
+                              translateY(${Math.abs(index - 1.5) * 20}px)
+                              rotate(${(index - 1.5) * 8}deg)
+                            `
+                            e.currentTarget.style.filter = `
+                              brightness(${1 - index * 0.1})
+                              drop-shadow(${index * 4}px ${index * 8}px ${20 + index * 10}px rgba(0,0,0,0.15))
+                            `
+                            e.currentTarget.style.zIndex = `${10 - index}`
+                          }}
+                        >
+                          <Link href={`/books/${book.id}`}>
+                            <div
+                                                              className={`
+                              w-56 h-80 rounded-2xl overflow-hidden border-4 border-white
+                              ${hasImage ? 'bg-white' : 'bg-gradient-to-br from-blue-200 to-violet-200'}
+                              shadow-xl transition-shadow duration-300
+                              group-hover:shadow-2xl
+                            `}
+                            >
+                              {hasImage ? (
+                                <Image
+                                  src={imageUrl}
+                                  alt={book.name}
+                                  width={224}
+                                  height={320}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <BookOpen className="h-20 w-20 text-blue-400/40" strokeWidth={1} />
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        </div>
+                      )
+                    })}
                   </div>
-                </div>
+                ) : (
+                  /* Loading/Empty State */
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="relative w-32 h-32 mx-auto mb-4">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-violet-400/20 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+                        <div className="relative w-32 h-32 bg-gradient-to-br from-blue-100 to-violet-100 rounded-full flex items-center justify-center">
+                          {loading ? (
+                            <BookOpen className="h-16 w-16 text-blue-400/50 animate-pulse" strokeWidth={1} />
+                          ) : (
+                            <BookOpen className="h-16 w-16 text-blue-400/50" strokeWidth={1} />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-slate-500 text-sm font-medium">
+                        {loading ? 'Loading books...' : 'Your Reading Awaits'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Decorative border */}
+                <div className="absolute inset-0 rounded-[2rem] border-8 border-white/40" />
               </div>
+
+              {/* Authors Badge */}
               <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gradient-to-br from-blue-500 to-violet-500 rounded-[2rem] flex items-center justify-center p-6 shadow-2xl shadow-blue-500/30">
                 <div className="text-center">
                   <div className="text-4xl font-black text-white leading-none tracking-tight">
-                    {!loading && data && data.statistics.totalAuthors.toLocaleString()}
+                    {!loading && data ? data.statistics.totalAuthors.toLocaleString() : '—'}
                   </div>
                   <div className="text-sm font-semibold text-blue-100 mt-2">Authors</div>
                 </div>
