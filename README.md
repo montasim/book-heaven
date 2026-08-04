@@ -137,11 +137,19 @@ to run. Then install, prepare the database, and start without Infisical:
 ```bash
 npm install
 npx prisma generate
-npx prisma migrate deploy
+npx prisma db push
 npm run dev:plain
 ```
 
 Open <http://localhost:3000>.
+
+The repository contains [`prisma/schema.prisma`](prisma/schema.prisma), but it
+does not currently contain a committed `prisma/migrations/` directory.
+`prisma db push` is therefore the verified way to create an empty development
+database from the checked-in schema. It can change the target schema without a
+reviewable migration history; use only a disposable or backed-up development
+database. Before a production release, create, review, and commit migrations
+instead of treating `db push` as a deployment workflow.
 
 The checked-in `.env.example` is a reference template: many server-side
 variables are commented out because production secrets are normally injected
@@ -222,8 +230,9 @@ reproducible path until the socket-server source is restored; use the configured
 external socket service or HTTP polling fallback instead.
 
 Use `npx prisma studio` to inspect a configured development database. Schema
-migrations live under `prisma/migrations/` and should be reviewed before they
-are applied to shared or production data.
+changes are currently represented only by
+[`prisma/schema.prisma`](prisma/schema.prisma); no committed migration history
+is available on the default branch.
 
 ## Documentation
 
@@ -250,7 +259,7 @@ src/app/               Public, authenticated, admin, and API routes
 src/components/        Shared and feature-facing React components
 src/lib/               Auth, AI, storage, jobs, payments, and domain services
 src/types/             Shared TypeScript contracts
-prisma/                PostgreSQL schema and migrations
+prisma/                PostgreSQL schema (no committed migrations yet)
 docs/                  Setup, feature, and operational notes
 ```
 
@@ -260,8 +269,13 @@ The maintained beta is hosted at
 [bookheavenbeta.vercel.app](https://bookheavenbeta.vercel.app). A complete
 deployment may also include PostgreSQL, Google Drive, Redis, a Socket.IO
 service, the PDF processor, Resend, AI providers, and Stripe. Store secrets in
-the deployment platform or Infisical, use production callback URLs, and apply
-database migrations as an explicit release step.
+the deployment platform or Infisical and use production callback URLs.
+
+The repository is not yet ready to reproduce database releases: it has no
+committed migrations. Establish and test a migration history before deploying
+the schema to a new production database or changing an existing one. Do not run
+`prisma db push` against production data without a reviewed backup and recovery
+plan.
 
 ## Security and limitations
 
@@ -274,6 +288,8 @@ database migrations as an explicit release step.
 - Real-time messaging is optional; HTTP polling is the documented fallback.
 - The checked-in WebSocket scripts reference a missing `server.ts` and cannot
   currently start a local socket process from this branch.
+- The Prisma schema is checked in, but migration files are absent. Production
+  schema creation and upgrades are not reproducible from this branch.
 - The repository has no committed automated test command. A successful build
   and lint run do not replace integration testing of configured services.
 
