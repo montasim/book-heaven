@@ -1,6 +1,23 @@
 {
   "name": "nextjs",
   "version": "0.1.0",
+  "description": "Admin Dashboard UI built with Shadcn and Next.js.",
+  "keywords": [
+    "nextjs",
+    "admin-dashboard",
+    "book-management",
+    "shadcn-ui",
+    "typescript",
+    "tailwindcss",
+    "react",
+    "prisma",
+    "postgresql",
+    "firebase",
+    "socket-io",
+    "zod",
+    "redis",
+    "jwt"
+  ],
   "private": true,
   "scripts": {
     "dev": "infisical run --env=dev -- next dev --turbopack",
