@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
     },
     // Reduce memory usage during builds
     experimental: {
+        // Keep parallel build workers within Vercel's memory budget.
+        cpus: 2,
         proxyClientMaxBodySize: '30mb',
 
         // Optimize package imports to reduce bundle size
