@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
 import { AuthProvider } from '@/context/auth-context'
 import { WebSocketProvider } from '@/context/websocket-context'
 import { ThemeProvider } from 'next-themes'
@@ -68,6 +69,15 @@ export default function RootLayout({
         </AppQueryClientProvider>
         </ThemeProvider>
         <Toaster />
+        <Script
+          id="support-kori-widget"
+          src="https://www.supportkori.com/widget.js"
+          data-id="montasim"
+          data-message="Support montasim"
+          data-color="#FFDD00"
+          data-position="right"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
